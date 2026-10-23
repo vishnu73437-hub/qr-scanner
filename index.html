@@ -88,7 +88,7 @@ async function startCamera(){
   if(!tg?.initData){showStatus("Open the scanner from inside Telegram so the volunteer can be authenticated.","bad");return;}
   try{
     $("reader").classList.remove("hidden");$("startScan").classList.add("hidden");$("stopScan").classList.remove("hidden");
-    scanner=new Html5Qrcode("reader");
+    scanner=new Html5Qrcode("reader",{verbose:true});
     
 
 await scanner.start(
