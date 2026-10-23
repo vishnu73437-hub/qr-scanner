@@ -90,12 +90,14 @@ async function startCamera(){
     $("reader").classList.remove("hidden");$("startScan").classList.add("hidden");$("stopScan").classList.remove("hidden");
     scanner=new Html5Qrcode("reader");
     
+
 await scanner.start(
-  { facingMode: { ideal: "environment" } },
+  { facingMode: "environment" },
   { fps: 10, qrbox: { width: 240, height: 240 } },
   text => checkQr(text),
   error => console.debug("QR scan:", error)
 );
+    
 
     showStatus("Camera active — point it at a guest QR pass.","neutral");
   }catch(e){showStatus("Camera could not start. Allow camera permission or use manual entry. "+e,"bad");}
