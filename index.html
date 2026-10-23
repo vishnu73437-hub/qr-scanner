@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>KSMU H5 Diwali Scanner</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<style>
+:root{--purple:#32104d;--purple2:#4a1a69;--gold:#d9b15f;--cream:#fff6df;--green:#3bc477;--red:#ff6b6b}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#552477,var(--purple) 55%,#180b27);color:var(--cream);font-family:system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh}
+main{max-width:520px;margin:auto;padding:20px 16px 36px}.brand{text-align:center;border:1px solid var(--gold);border-radius:20px;padding:20px 14px;margin-bottom:16px;box-shadow:0 8px 32px #0004}
+.lamp{font-size:32px}.brand h1{font-size:22px;line-height:1.2;color:#f3d58b;margin:8px 0}.brand p{margin:0;font-size:12px;letter-spacing:2px}
+.card{background:#ffffff0c;border:1px solid #d9b15f66;border-radius:18px;padding:16px;margin:12px 0}
+button{border:0;border-radius:12px;padding:14px 16px;font-weight:750;font-size:15px;cursor:pointer;width:100%;margin:6px 0;background:var(--gold);color:#241033}
+button.secondary{background:#ffffff12;color:var(--cream);border:1px solid #d9b15f88}button:disabled{opacity:.45}
+#reader{width:100%;overflow:hidden;border-radius:14px;background:#12091b}#reader video{border-radius:14px}
+.small{font-size:12px;opacity:.8;line-height:1.5}.status{padding:12px;border-radius:12px;margin:10px 0;white-space:pre-wrap;overflow-wrap:anywhere}.good{background:#1b603d;color:#eafff1}.bad{background:#752b37;color:#fff0f0}.neutral{background:#ffffff12}
+.hidden{display:none!important}.guestname{font-size:21px;font-weight:800;color:#f3d58b}.pill{display:inline-block;padding:5px 9px;border-radius:999px;background:#ffffff17;margin:3px;font-size:12px}
+</style>
+</head>
+<body>
+<main>
+  <header class="brand"><div class="lamp">🪔</div><h1>KSMU H5 DIWALI 2026</h1><p>A JOURNEY THROUGH INDIA</p><p style="margin-top:12px;color:#f3d58b">VOLUNTEER QR SCANNER</p></header>
+  <section class="card">
+    <div id="status" class="status neutral">Open this Mini App from your Telegram bot. Volunteer/admin access is checked by the server.</div>
+    <button id="startScan">📷 Start QR Scanner</button>
+    <button id="stopScan" class="secondary hidden">Stop camera</button>
+    <div id="reader" class="hidden"></div>
+    <p class="small">Allow camera access when asked. If camera scanning is unavailable, you can enter the pass code or QR token manually below.</p>
+    <label for="manual" class="small">Manual pass code / QR token</label>
+    <input id="manual" autocomplete="off" placeholder="H5-XXXXXXXX" style="width:100%;padding:13px;border-radius:10px;border:1px solid #d9b15f88;background:#170b22;color:white;margin-top:6px">
+    <button id="checkManual" class="secondary">Check pass</button>
+  </section>
+  <section id="guestCard" class="card hidden">
+    <div class="guestname" id="guestName"></div>
+    <div id="guestInfo"></div>
+    <div id="guestState" class="status neutral"></div>
+    <button id="recordEntry">✅ Record Event Entry</button>
+    <button id="recordFood">🍽️ Record Food Collection</button>
+    <div id="counts" class="small"></div>
+  </section>
+  <p class="small">Only scan event passes. Each entry and food collection can be recorded once. The QR is checked by the server; the screen alone never approves a pass.</p>
+</main>
+<script>
+const tg=window.Telegram?.WebApp;
+tg?.ready(); tg?.expand();
+const API_BASE = "https://unwjym.bot-keep.xyz";
+let currentQr="", currentGuest=null, scanner=null, busy=false;
+const $=id=>document.getElementById(id);
+function showStatus(message,kind="neutral"){ $("status").textContent=message; $("status").className="status "+kind; }
+async function api(path,payload){
+  const r=await fetch(API_BASE+path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({...payload,initData:tg?.initData||""})});
+  const data=await r.json().catch(()=>({ok:false,error:"Invalid server response"}));
+  if(!r.ok||!data.ok) throw new Error(data.error||"Request failed");
+  return data;
+}
+async function checkQr(value){
+  if(busy)return; busy=true; currentQr=value.trim(); $("guestCard").classList.add("hidden");
+  try{
+    const data=await api("/api/guest",{qr:currentQr}); currentGuest=data.guest;
+    $("guestName").textContent=data.guest.name;
+    $("guestInfo").innerHTML="";
+    [["Residence",data.guest.residence],["Food",data.guest.food],["Pass code",data.guest.passCode]].forEach(([k,v])=>{
+      const d=document.createElement("div");d.className="pill";d.textContent=k+": "+v;$("guestInfo").appendChild(d);
+    });
+    updateGuestState(data.guest);$("guestCard").classList.remove("hidden");
+    showStatus("✅ Valid approved pass","good");
+    await stopCamera();
+  }catch(e){showStatus("❌ "+e.message,"bad");}
+  finally{busy=false;}
+}
+function updateGuestState(g){
+  $("guestState").textContent=`Entry: ${g.entryUsed?"Already recorded":"Not yet recorded"}\nFood: ${g.foodUsed?"Already collected":"Not yet collected"}`;
+  $("recordEntry").disabled=g.entryUsed;$("recordFood").disabled=g.foodUsed;
+}
+async function record(action){
+  if(!currentQr||!currentGuest)return;
+  try{
+    const data=await api("/api/action",{qr:currentQr,action});
+    currentGuest=data.guest;updateGuestState(data.guest);
+    if(data.counts)$("counts").textContent=`Meals served — Vegetarian: ${data.counts.vegetarianServed} | Non-vegetarian: ${data.counts.nonVegetarianServed}`;
+    showStatus("✅ "+data.message,"good");
+  }catch(e){showStatus("⚠️ "+e.message,"bad");}
+}
+async function startCamera(){
+  if(!tg?.initData){showStatus("Open the scanner from inside Telegram so the volunteer can be authenticated.","bad");return;}
+  try{
+    $("reader").classList.remove("hidden");$("startScan").classList.add("hidden");$("stopScan").classList.remove("hidden");
+    scanner=new Html5Qrcode("reader");
+    await scanner.start({facingMode:"environment"},{fps:10,qrbox:{width:240,height:240}},text=>checkQr(text),()=>{});
+    showStatus("Camera active — point it at a guest QR pass.","neutral");
+  }catch(e){showStatus("Camera could not start. Allow camera permission or use manual entry. "+e,"bad");}
+}
+async function stopCamera(){
+  if(scanner){try{if(scanner.isScanning)await scanner.stop();await scanner.clear();}catch(e){}scanner=null;}
+  $("reader").classList.add("hidden");$("startScan").classList.remove("hidden");$("stopScan").classList.add("hidden");
+}
+$("startScan").addEventListener("click",startCamera);
+$("stopScan").addEventListener("click",stopCamera);
+$("checkManual").addEventListener("click",()=>checkQr($("manual").value));
+$("recordEntry").addEventListener("click",()=>record("entry"));
+$("recordFood").addEventListener("click",()=>record("food"));
+</script>
+</body>
+</html>
