@@ -11,14 +11,14 @@
 </main><script>
 const tg=window.Telegram?.WebApp;tg?.ready();tg?.expand();const API_BASE="https://unwjym.bot-keep.xyz";const $=id=>document.getElementById(id);let role="guest",currentQr="",currentGuest=null,scanner=null,busy=false,events=[];
 function status(m,k=""){ $("status").textContent=m;$("status").className="status "+k; }
-async function post(path,payload={}){
+async function post(path,payload={},timeoutMs=15000){
  const controller=new AbortController();
- const timer=setTimeout(()=>controller.abort(),15000);
+ const timer=setTimeout(()=>controller.abort(),timeoutMs);
  let r;
  try{
   r=await fetch(API_BASE+path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({...payload,initData:tg?.initData||""}),signal:controller.signal,cache:"no-store"});
  }catch(e){
-  if(e.name==="AbortError")throw new Error("EventHub API timed out after 15 seconds. Close the app and reopen it from the bot.");
+  if(e.name==="AbortError")throw new Error("EventHub API timed out after "+Math.round(timeoutMs/1000)+" seconds. Check Botkeep logs before retrying any announcement to avoid sending duplicates.");
   throw new Error("Could not reach EventHub API: "+(e.message||"network error"));
  }finally{clearTimeout(timer);}
  const d=await r.json().catch(()=>({ok:false,error:"Server returned a non-JSON response (HTTP "+r.status+")."}));
@@ -83,7 +83,7 @@ previewBtn.onclick=async()=>{
   confirmBtn.onclick=async()=>{
    if(!confirm("Send this message to "+d.recipient_count+" Telegram users for "+d.event.name+"? This cannot be undone."))return;
    confirmBtn.disabled=true;cancelBtn.disabled=true;result.textContent="Sending… Please keep this page open.";
-   try{const sent=await post("/api/admin",{action:"announcement_send",event_id:Number(eventSelect.value),audience:audience.value,message:message.value.trim()});result.textContent="Completed. Attempted: "+sent.attempted+" · Sent: "+sent.sent+" · Failed: "+sent.failed+" · Report ID: "+sent.announcement_id;result.className="status good";}
+   try{const sent=await post("/api/admin",{action:"announcement_send",event_id:Number(eventSelect.value),audience:audience.value,message:message.value.trim()},300000);result.textContent="Completed. Attempted: "+sent.attempted+" · Sent: "+sent.sent+" · Failed: "+sent.failed+" · Report ID: "+sent.announcement_id;result.className="status good";}
    catch(e){result.textContent="Send request failed: "+e.message;result.className="status bad";confirmBtn.disabled=false;cancelBtn.disabled=false;}
   };
   cancelBtn.onclick=()=>{box.remove();};
