@@ -11,9 +11,37 @@
 </main><script>
 const tg=window.Telegram?.WebApp;tg?.ready();tg?.expand();const API_BASE="https://unwjym.bot-keep.xyz";const $=id=>document.getElementById(id);let role="guest",currentQr="",currentGuest=null,scanner=null,busy=false,events=[];
 function status(m,k=""){ $("status").textContent=m;$("status").className="status "+k; }
-async function post(path,payload={}){const r=await fetch(API_BASE+path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({...payload,initData:tg?.initData||""})});const d=await r.json().catch(()=>({ok:false,error:"Invalid server response"}));if(!r.ok||!d.ok)throw new Error(d.error||"Request failed");return d;}
+async function post(path,payload={}){
+ const controller=new AbortController();
+ const timer=setTimeout(()=>controller.abort(),15000);
+ let r;
+ try{
+  r=await fetch(API_BASE+path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({...payload,initData:tg?.initData||""}),signal:controller.signal,cache:"no-store"});
+ }catch(e){
+  if(e.name==="AbortError")throw new Error("EventHub API timed out after 15 seconds. Close the app and reopen it from the bot.");
+  throw new Error("Could not reach EventHub API: "+(e.message||"network error"));
+ }finally{clearTimeout(timer);}
+ const d=await r.json().catch(()=>({ok:false,error:"Server returned a non-JSON response (HTTP "+r.status+")."}));
+ if(!r.ok||!d.ok)throw new Error("HTTP "+r.status+": "+(d.error||"Request failed"));
+ return d;
+}
 function showRole(r){role=r;$("guestView").classList.toggle("hidden",r!=="guest");$("volunteerView").classList.toggle("hidden",!['volunteer','admin'].includes(r));$("adminView").classList.toggle("hidden",r!=="admin");}
-async function boot(){if(!tg?.initData){status("Open this app inside Telegram using the bot button.","bad");return;}try{const d=await post("/api/role");showRole(d.role);status("Authenticated · "+d.role.toUpperCase(),"good");if(d.role==="admin"){await refreshStats();await loadEvents();}else if(d.role==="guest"){status("Guest access only. Use the bot to register or receive your QR pass.");}}catch(e){status(e.message,"bad");}}
+async function boot(){
+ status("Checking Telegram authentication…");
+ if(!tg){status("Telegram WebApp was not detected. Open Event App from the bot menu.","bad");return;}
+ if(!tg.initData){status("Telegram did not provide login data. Close this page and reopen it from the bot menu.","bad");return;}
+ try{
+  const d=await post("/api/role");
+  if(!["admin","volunteer","guest"].includes(d.role))throw new Error("The server replied, but did not return a valid user role.");
+  showRole(d.role);
+  status("Authenticated · "+d.role.toUpperCase(),"good");
+  if(d.role==="admin"){await refreshStats();await loadEvents();}
+  else if(d.role==="guest"){status("Authenticated as GUEST. Use the bot to register or receive your QR pass.","good");}
+ }catch(e){
+  console.error("EventHub boot/authentication error:",e);
+  status(e.message||"Authentication failed. Close and reopen the app from the bot menu.","bad");
+ }
+}
 async function refreshStats(){try{const d=await post("/api/admin",{action:"stats"});$("statGuests").textContent=d.stats.approvedGuests;$("statEntry").textContent=d.stats.checkedIn;$("statMeals").textContent=d.stats.mealsServed;$("statVols").textContent=d.stats.volunteers;}catch(e){status(e.message,"bad");}}
 async function loadEvents(){try{const d=await post("/api/admin",{action:"events"});events=d.events;$("eventsList").innerHTML="";if(!events.length){$("eventsList").textContent="No events yet.";return;}events.forEach(ev=>{const div=document.createElement("div");div.className="card";const title=document.createElement("strong");title.textContent=ev.name+" · "+ev.status;const meta=document.createElement("p");meta.className="small";meta.textContent=[ev.event_date,ev.venue,ev.description].filter(Boolean).join(" · ");div.append(title,meta);if(ev.status!=="archived"){const b=document.createElement("button");b.className="secondary";b.textContent="Archive event";b.onclick=async()=>{if(!confirm("Archive "+ev.name+"? Existing data will be retained."))return;try{await post("/api/admin",{action:"archive_event",event_id:ev.id});await loadEvents();status("Event archived.","good");}catch(e){status(e.message,"bad");}};div.append(b);}$("eventsList").append(div);});}catch(e){$("eventsList").textContent=e.message;}}
 $("createEvent").onclick=async()=>{try{const name=$("eventName").value.trim();const d=await post("/api/admin",{action:"create_event",name,description:$("eventDesc").value,event_date:$("eventDate").value,venue:$("eventVenue").value,registration_schema:[{key:"full_name",label:"Full name",type:"text",required:true},{key:"phone",label:"Phone",type:"tel",required:true}]});status(d.message,"good");$("eventName").value="";await loadEvents();}catch(e){status(e.message,"bad");}};
