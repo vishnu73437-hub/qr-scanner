@@ -77,5 +77,16 @@ async function record(action){if(!currentQr)return;try{const d=await api("/api/a
 Food: ${d.guest.foodUsed?"Collected":"Not collected"}`;$("recordEntry").disabled=d.guest.entryUsed;$("recordFood").disabled=d.guest.foodUsed;if(d.counts)$("counts").textContent=`Meals served — Vegetarian: ${d.counts.vegetarianServed} | Non-vegetarian: ${d.counts.nonVegetarianServed}`;status(d.message,"good");}catch(e){status(e.message,"bad");}}
 async function startCamera(){if(!tg?.initData){status("Open from Telegram to authenticate.","bad");return;}try{$("reader").classList.remove("hidden");$("startScan").classList.add("hidden");$("stopScan").classList.remove("hidden");scanner=new Html5Qrcode("reader");await scanner.start({facingMode:"environment"},{fps:10,qrbox:{width:240,height:240}},text=>checkQr(text),()=>{});status("Camera active — scan a pass.");}catch(e){status("Camera unavailable. Allow camera access or enter a pass code manually.","bad");}}
 async function stopCamera(){if(scanner){try{if(scanner.isScanning)await scanner.stop();await scanner.clear();}catch(e){}scanner=null;}$ ("reader").classList.add("hidden");$("startScan").classList.remove("hidden");$("stopScan").classList.add("hidden");}
-$("startScan").onclick=startCamera;$("stopScan").onclick=stopCamera;$("checkManual").onclick=()=>checkQr($("manual").value);$("recordEntry").onclick=()=>record("entry");$("recordFood").onclick=()=>record("food");$("guestPass").onclick=()=>tg?.sendData?.("mypass");$("guestEvent").onclick=()=>status("Event details are available in the bot chat.");boot();
+$("startScan").onclick=startCamera;$("stopScan").onclick=stopCamera;$("checkManual").onclick=()=>checkQr($("manual").value);$("recordEntry").onclick=()=>record("entry");$("recordFood").onclick=()=>record("food");async function requestMyPass(){
+  const button=$("guestPass");
+  button.disabled=true;
+  try{
+    const d=await post("/api/mypass");
+    status(d.message||"Your QR pass has been sent to this Telegram chat.","good");
+  }catch(e){status(e.message,"bad");}
+  finally{button.disabled=false;}
+}
+$("guestPass").onclick=requestMyPass;
+$("guestEvent").onclick=()=>status("Event details are available in the bot chat.");
+boot();
 </script></body></html>
