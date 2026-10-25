@@ -447,6 +447,15 @@ body.scan-mode #status{position:fixed!important;z-index:99992!important;top:6px!
 <section class="role-hero admin-hero"><div class="role-hero-copy"><div class="eyebrow">EVENTHUB · COMMAND CENTER</div><h2>Admin workspace</h2><p>Manage event details, registration approvals, guest QR passes, volunteers, reporting and announcements from this dashboard.</p></div><div class="role-hero-side"><span class="role-chip admin-chip">👑 ADMIN ONLY</span><span class="scanner-badge">● CONTROL PANEL</span></div></section>
 <section class="card kpi-card"><div class="section-heading"><div><div class="eyebrow">LIVE OVERVIEW</div><h3>Event operations</h3></div><div class="row"><button id="refreshStats" class="secondary compact-button" type="button">↻ Refresh</button><button id="runAdminDiagnostics" class="secondary compact-button" type="button">🧪 Test controls</button></div></div><div class="ops-kpis admin-kpis"><div class="ops-kpi"><span>GUESTS</span><strong id="statGuests">—</strong><small>Approved passes</small></div><div class="ops-kpi"><span>ENTRY</span><strong id="statEntry">—</strong><small>Checked in</small></div><div class="ops-kpi"><span>FOOD</span><strong id="statMeals">—</strong><small>Meals served</small></div><div class="ops-kpi"><span>TEAM</span><strong id="statVols">—</strong><small>Volunteers</small></div></div><div id="adminDiagnostics" class="small" aria-live="polite"></div></section>
 <section class="card admin-panel"><div class="section-heading"><div><div class="eyebrow">01 · EVENT SETTINGS</div><h3>📅 Event workspaces</h3></div><span class="panel-index">01</span></div><p class="small">Edit name, description, date, time and venue here. Changes update the guest Event Details screen; new workspaces remain drafts until an event-specific registration workflow is configured.</p><div id="eventsList" class="events-list">Loading events…</div><div class="form-divider"></div><h4>Create an event workspace</h4><label for="eventName">Event name</label><input id="eventName" placeholder="e.g. Medical Conference 2027" maxlength="120"><label for="eventDesc">Description</label><textarea id="eventDesc" rows="2" placeholder="Purpose, theme and important details"></textarea><div class="row form-row"><div><label for="eventDate">Date</label><input id="eventDate" type="date"></div><div><label for="eventTime">Time</label><input id="eventTime" placeholder="e.g. 5:30 PM" maxlength="40"></div></div><label for="eventVenue">Venue</label><input id="eventVenue" placeholder="Venue" maxlength="200"><button id="createEvent" type="button">＋ Create event workspace</button></section>
+<section class="card admin-panel" id="announcementPanel">
+<div class="section-heading"><div><div class="eyebrow">📢 BROADCAST</div><h3>Image & file announcements</h3><p class="small">Send a text, festival poster, image, PDF, or document to your selected audience.</p></div></div>
+<label for="announcementEvent">Event</label><select id="announcementEvent"><option value="">Loading events…</option></select>
+<label for="announcementAudience">Recipients</label><select id="announcementAudience"><option value="all_started">All users who have started the bot</option><option value="registered_guests">Approved registered guests</option></select>
+<label for="announcementMessage">Message / caption</label><textarea id="announcementMessage" rows="4" maxlength="3500" placeholder="Write your announcement…"></textarea>
+<label for="announcementFile">Attach image or file (optional, max 8 MB)</label><input id="announcementFile" type="file" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip">
+<div id="announcementFileInfo" class="small">No attachment selected. You can send text-only announcements too.</div>
+<button id="announcementPreview" type="button">Preview announcement</button><div id="announcementResult" class="small" aria-live="polite"></div>
+</section>
 <section class="card admin-panel pending-approvals-panel">
 <div class="section-heading"><div><div class="eyebrow">02 · REGISTRATION DESK</div><h3>📝 Pending approvals</h3><p class="small">Keep the dashboard compact. Open this queue only when you need to review registrations.</p></div><button id="loadPending" class="secondary compact-button" type="button" aria-expanded="false" aria-controls="pendingListWrap">Show pending approvals</button></div>
 <div id="pendingListWrap" class="hidden">
@@ -873,6 +882,38 @@ body>main{position:relative;z-index:1}
  }
  resize();raf=requestAnimationFrame(frame);window.addEventListener("resize",resize,{passive:true});document.addEventListener("visibilitychange",()=>{if(document.hidden){running=false;cancelAnimationFrame(raf)}else if(!running){running=true;last=0;raf=requestAnimationFrame(frame)}});
 })();
+
+async function announcementPayload(){
+ const eventId=Number($("announcementEvent").value||0),audience=$("announcementAudience").value,message=$("announcementMessage").value.trim(),file=$("announcementFile").files?.[0];
+ if(!eventId)throw new Error("Choose an event first.");if(!message&&!file)throw new Error("Enter a message or select an attachment.");
+ const payload={event_id:eventId,audience,message};
+ if(file){if(file.size>8*1024*1024)throw new Error("Attachments must be smaller than 8 MB.");
+  const dataUrl=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result||""));reader.onerror=()=>reject(new Error("Could not read the selected file."));reader.readAsDataURL(file);});
+  payload.media_type=file.type.startsWith("image/")?"photo":"document";payload.media_name=file.name;payload.media_base64=dataUrl.split(",")[1]||"";}
+ return payload;
+}
+async function initAnnouncementPanel(){
+ const select=$("announcementEvent");if(!select)return;
+ try{const d=await post("/api/admin",{action:"events"}),list=(d.events||[]).filter(e=>e.status!=="archived");select.textContent="";
+  if(!list.length){const o=document.createElement("option");o.value="";o.textContent="No active events";select.append(o);return;}
+  list.forEach(ev=>{const o=document.createElement("option");o.value=ev.id;o.textContent=ev.name+" · ID "+ev.id;select.append(o);});
+ }catch(e){select.innerHTML='<option value="">Could not load events</option>';status(e.message,"bad");}
+}
+$("announcementFile")?.addEventListener("change",()=>{const f=$("announcementFile").files?.[0];$("announcementFileInfo").textContent=f?f.name+" · "+(f.size/1024/1024).toFixed(2)+" MB · "+(f.type||"file"):"No attachment selected.";});
+$("announcementPreview")?.addEventListener("click",async()=>{
+ const button=$("announcementPreview"),out=$("announcementResult");button.disabled=true;out.textContent="Preparing preview…";
+ try{const payload=await announcementPayload(),d=await post("/api/admin",{...payload,action:"announcement_preview"});
+  out.textContent="Preview: "+d.event.name+" · "+d.recipient_count+" recipients"+(payload.media_name?" · Attachment: "+payload.media_name:"")+".";
+  const send=document.createElement("button");send.type="button";send.textContent="Confirm & send to "+d.recipient_count+" users";send.style.marginTop="10px";
+  const cancel=document.createElement("button");cancel.type="button";cancel.className="secondary";cancel.textContent="Cancel";cancel.style.marginTop="10px";cancel.style.marginLeft="8px";
+  const controls=document.createElement("div");controls.append(send,cancel);out.append(controls);
+  cancel.onclick=()=>{controls.remove();out.textContent="Sending cancelled. Nothing was sent.";};
+  send.onclick=async()=>{if(!confirm("Send this announcement to "+d.recipient_count+" recipients? This cannot be undone."))return;send.disabled=true;cancel.disabled=true;out.firstChild.textContent="Sending announcement… Please wait.";
+   try{const result=await post("/api/admin",{...payload,action:"announcement_send"},300000);out.textContent=result.message||("Sent: "+result.sent+" · Failed: "+result.failed);}
+   catch(e){out.textContent=e.message;send.disabled=false;cancel.disabled=false;}};
+ }catch(e){out.textContent=e.message;}finally{button.disabled=false;}
+});
+initAnnouncementPanel();
 </script>
 
 </body></html>
