@@ -151,6 +151,38 @@ button.secondary{
 }
 .notice{background:linear-gradient(120deg,#064e43,#103a4d);border-color:#3ce5ba;color:#e1fff5}
 
+
+
+/* Screenshot-matched mobile guest design: jewel-toned Diwali night, gold frames, emerald notice */
+@media(max-width:740px){
+  main{width:100%;padding:8px 14px calc(24px + env(safe-area-inset-bottom))}
+  #status{border:2px solid #ffd75b;background:linear-gradient(110deg,#075f49,#08724f 65%,#064c43);color:#fff8dc;border-radius:22px;padding:17px 18px;box-shadow:0 0 18px #ffb52d66,inset 0 1px #ffffff35;font-size:clamp(14px,3.8vw,18px)}
+  #guestView .guestLayout{display:flex;flex-direction:column;gap:0}
+  #guestView .guestMain,#guestView .guestSide{display:contents}
+  #guestView .guestHero{order:1;min-height:320px;padding:28px 24px 24px;border:2px solid #ffd75b;border-radius:30px;background:radial-gradient(ellipse at 80% 90%,rgba(255,131,31,.65),transparent 43%),radial-gradient(ellipse at 15% 10%,rgba(255,32,123,.5),transparent 45%),linear-gradient(145deg,#251054 0%,#4b1268 52%,#170d3b 100%);box-shadow:0 0 22px #ff9b2d66,0 14px 35px #080014aa,inset 0 1px #fff8;margin:14px 0 16px}
+  #guestView .guestHero:before{content:"✺  ✧  🪔  ✧  ✺";position:absolute;right:12px;bottom:12px;font-size:23px;letter-spacing:8px;color:#ffd75b;opacity:.9;text-shadow:0 0 12px #ff9a20}
+  #guestView .guestHero:after{content:"";position:absolute;inset:8px;border:1px solid #ffd75b55;border-radius:23px;pointer-events:none}
+  #guestView .guestHero .eyebrow{font-size:12px;letter-spacing:4px;color:#fff0b2}
+  #guestView .guestHero h2{font-size:clamp(34px,8.4vw,48px);line-height:1.02;color:#ffe17b;text-shadow:0 3px 20px #ff8d2455;margin:22px 0}
+  #guestView .guestHero p{font-size:clamp(16px,4.1vw,20px);line-height:1.48;color:#fff6f3;max-width:94%}
+  #guestView .guestHero .pill{background:#ffffff1c;border:1px solid #fff4;color:#fff;font-size:14px;padding:8px 13px}
+  #guestView .guestMain>.card{order:2}
+  #guestView .guestSide>.card:first-of-type{order:4}
+  #guestView .guestSide>.card:nth-of-type(2){order:5}
+  #guestView .notice{order:6}
+  #guestView .card{background:linear-gradient(145deg,rgba(65,15,87,.97),rgba(31,9,57,.98))!important;border:2px solid #ffcf55!important;border-radius:30px!important;box-shadow:0 0 20px #ff9b2d55,0 12px 28px #05000d88,inset 0 1px #ffffff20!important;padding:23px 22px;margin:12px 0}
+  #guestView .guestMain>.card h2{font-size:clamp(22px,5.7vw,29px);color:#fff8f3}
+  #guestView .guestMain>.card p{font-size:clamp(15px,3.8vw,18px);line-height:1.6}
+  #guestView #guestPass{min-height:64px;border:2px solid #ffcf55;border-radius:23px;background:linear-gradient(110deg,#ffe88a,#ffb52f 58%,#ff8e27);color:#29103c;font-size:clamp(20px,5vw,25px);box-shadow:0 0 20px #ffb52d55,inset 0 1px #fff9}
+  #guestView .guestSide>.card{order:4}
+  #guestView .guestSide>.card:nth-of-type(2){order:5}
+  #guestView .notice{border:2px solid #ffd75b;background:linear-gradient(110deg,#075f49,#08724f);border-radius:20px;color:#fff8dc}
+  #guestView .poster{display:none}
+}
+@media(min-width:741px){
+ #guestView .guestHero{background:radial-gradient(ellipse at 82% 90%,rgba(255,131,31,.48),transparent 40%),radial-gradient(ellipse at 15% 10%,rgba(255,32,123,.32),transparent 45%),linear-gradient(145deg,#251054,#4b1268 52%,#170d3b);border:2px solid #ffd75b}
+}
+
 </style></head>
 <body><main><header class="brand"><div style="font-size:30px">🪔</div><h1>DEEPOSTAV</h1><div style="font-family:Georgia,serif;font-size:clamp(15px,4vw,22px);color:#fff1d4">The Journey Through India</div><div class="small" style="margin-top:9px">7 NOVEMBER 2026 · KSMU HOSTEL 5</div></header><div id="status" class="status">Authenticating through Telegram…</div>
 <section id="guestView" class="hidden">
