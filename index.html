@@ -601,7 +601,7 @@ body.scan-mode #status{position:fixed!important;z-index:99992!important;top:6px!
  .announcement-preview-actions button{min-height:48px}
 }
 </style>
-</head>
+<style id="eventhub-guest-list-toggle">.guest-results-controls{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:14px}.guest-results-controls button{min-height:44px}#guestResultsCount{overflow-wrap:anywhere}</style></head>
 <body><div id="diwaliScene" aria-hidden="true"><svg viewBox="0 0 900 1500" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
 <defs>
 <linearGradient id="dsSky" x2="0" y2="1"><stop stop-color="#070b54"/><stop offset=".4" stop-color="#5b075d"/><stop offset="1" stop-color="#16052e"/></linearGradient>
@@ -689,7 +689,7 @@ body.scan-mode #status{position:fixed!important;z-index:99992!important;top:6px!
 <p class="small guest-manager-hint">Search by name, phone, pass code or Telegram ID.</p>
 </div>
 </details>
-<div id="guestResults" class="records-list guest-results" aria-live="polite"><div class="empty-state">Search for a guest or load recent guests to begin.</div></div>
+<div class="guest-results-controls"><button id="toggleGuestResults" class="secondary compact-button" type="button" aria-expanded="false" aria-controls="guestResults">Show guest list</button><span id="guestResultsCount" class="small" aria-live="polite">Guest list hidden</span></div><div id="guestResults" class="records-list guest-results hidden" aria-live="polite"><div class="empty-state">Search for a guest or load recent guests to begin.</div></div>
 </section>
 <section class="card admin-panel"><div class="section-heading"><div><div class="eyebrow">04 · PEOPLE & PERMISSIONS</div><h3>👥 Volunteer access</h3></div><span class="panel-index">04</span></div><p class="small">Grant or remove scanner access by Telegram numeric ID. Removing volunteer access disables scanner privileges. Existing guest pass records are retained.</p><label for="volId">Telegram numeric ID</label><div class="manual-row"><input id="volId" inputmode="numeric" placeholder="e.g. 123456789"><button id="addVol" type="button">＋ Add</button></div><div class="row"><button id="removeVol" class="secondary" type="button">Remove access</button><button id="listVols" class="secondary" type="button">List volunteers</button></div><div id="volList" class="volunteer-list small" aria-live="polite"></div></section>
 <section class="card admin-panel"><div class="section-heading"><div><div class="eyebrow">05 · PRIVILEGED ACCESS</div><h3>🔐 Admin access</h3></div><span class="panel-index">05</span></div><p class="small">Grant admin rights only to trusted organizers. Your configured owner/recovery admin ID is protected from removal here.</p><label for="adminId">Telegram numeric ID</label><div class="manual-row"><input id="adminId" inputmode="numeric" placeholder="e.g. 123456789"><button id="addAdmin" type="button">＋ Add admin</button></div><div class="row"><button id="removeAdmin" class="secondary" type="button">Remove admin</button><button id="listAdmins" class="secondary" type="button">List admins</button></div><div id="adminList" class="volunteer-list small" aria-live="polite"></div></section>
@@ -949,7 +949,9 @@ let guestSearchResults=[],guestPage=0,guestSearchRequest=0;
 const GUESTS_PER_PAGE=10;
 function renderGuestPage(){
  const box=$("guestResults");box.textContent="";
- if(!guestSearchResults.length){box.innerHTML='<div class="empty-state">No matching guest records. Try another search, or load recent guests.</div>';return;}
+ if(guestResultsCount)guestResultsCount.textContent=guestSearchResults.length+" guest"+(guestSearchResults.length===1?"":"s")+" loaded";
+ if(!guestSearchResults.length){setGuestResultsVisible(true);box.innerHTML='<div class="empty-state">No matching guest records. Try another search, or load recent guests.</div>';return;}
+ setGuestResultsVisible(true);
  const totalPages=Math.ceil(guestSearchResults.length/GUESTS_PER_PAGE);
  const summary=document.createElement("div");summary.className="guest-page-summary small";summary.textContent="Showing "+(guestPage*GUESTS_PER_PAGE+1)+"–"+Math.min((guestPage+1)*GUESTS_PER_PAGE,guestSearchResults.length)+" of "+guestSearchResults.length+" guests";box.append(summary);
  guestSearchResults.slice(guestPage*GUESTS_PER_PAGE,(guestPage+1)*GUESTS_PER_PAGE).forEach(g=>{
@@ -978,6 +980,9 @@ function renderGuestPage(){
  });
  if(totalPages>1){const pager=document.createElement("div");pager.className="guest-pagination";const prev=document.createElement("button");prev.type="button";prev.className="secondary";prev.textContent="← Previous";prev.disabled=guestPage===0;prev.onclick=()=>{guestPage--;renderGuestPage();};const page=document.createElement("span");page.className="small";page.textContent="Page "+(guestPage+1)+" of "+totalPages;const next=document.createElement("button");next.type="button";next.className="secondary";next.textContent="Next →";next.disabled=guestPage>=totalPages-1;next.onclick=()=>{guestPage++;renderGuestPage();};pager.append(prev,page,next);box.append(pager);}
 }
+const guestResults=$("guestResults"),guestResultsToggle=$("toggleGuestResults"),guestResultsCount=$("guestResultsCount");
+function setGuestResultsVisible(visible){guestResults.classList.toggle("hidden",!visible);guestResultsToggle.setAttribute("aria-expanded",String(visible));guestResultsToggle.textContent=visible?"Minimize guest list":"Show guest list";}
+guestResultsToggle.onclick=()=>setGuestResultsVisible(guestResults.classList.contains("hidden"));
 async function searchGuests(){
  const box=$("guestResults");if(!box)return;
  const requestId=++guestSearchRequest,query=$("guestSearch").value.trim(),statusFilter=$("guestStatus").value;
