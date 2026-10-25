@@ -717,7 +717,23 @@ async function loadMyGuestStylePass(){
   box.append(heading,img,info,download);
   if(p.createdForStaff)status("Your standard staff pass was created. The same QR works for entry and food collection.","good");
   else status("Your existing approved pass is ready. Its saved food preference is unchanged.","good");
- }catch(e){box.textContent=e.message;status(e.message,"bad");}finally{button.disabled=false;}
+ }catch(e){
+  const raw=String(e.message||"");
+  let userMessage=raw;
+  if(/HTTP 403|not active|inactive pass/i.test(raw)){
+   userMessage="PASS-403 · This event pass is inactive. Please contact the event administrator to reactivate it. No new pass was created.";
+  }else if(/HTTP 401|authentication/i.test(raw)){
+   userMessage="PASS-401 · Your Telegram session could not be verified. Close and reopen EventHub from the official bot.";
+  }else if(/HTTP 404|no pass|not found/i.test(raw)){
+   userMessage="PASS-404 · No active event pass was found for this account. Please contact the event administrator.";
+  }else if(/timed out|Could not reach EventHub API|Failed to fetch/i.test(raw)){
+   userMessage="PASS-NET-01 · EventHub could not connect to the server. Please try again shortly.";
+  }else{
+   userMessage="PASS-ERR-01 · We couldn't load your event pass. Please contact event support and share this code.";
+   console.error("EventHub pass error:",raw);
+  }
+  box.textContent=userMessage;status(userMessage,"bad");
+ }finally{button.disabled=false;}
 }
 async function loadGuestEvent(){
  const box=$("eventDetails");box.textContent="Loading event details…";
