@@ -281,6 +281,53 @@ button.secondary{background:linear-gradient(120deg,#08734c,#07513b)!important;co
 #indiaFestivalArt .artBurst{animation-duration:1.45s!important;filter:drop-shadow(0 0 8px #fff04d)}
 @media(max-width:740px){#diwaliScene{opacity:.95!important}}
 
+
+/* EventHub UI polish: cleaner hierarchy, calmer surfaces, stronger touch targets */
+:root{--surface-elevated:rgba(28,12,52,.92);--focus-ring:#fff0a8}
+html{scroll-padding-top:16px}
+body{line-height:1.48}
+main{max-width:1000px}
+.section-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:14px}
+.section-heading>div{min-width:0}
+.section-heading h2,.section-heading h3{margin:5px 0 7px}
+.section-heading p{margin:0;max-width:68ch}
+.eyebrow{font-weight:750;letter-spacing:.16em;line-height:1.5}
+.card{position:relative;isolation:isolate}
+.card h3{letter-spacing:-.02em}
+.card p{line-height:1.55}
+.card .form-divider{height:1px;background:linear-gradient(90deg,transparent,#ffd36c55,transparent);margin:18px 0}
+button{min-height:48px;letter-spacing:.005em}
+button:hover:not(:disabled){filter:brightness(1.06);transform:translateY(-1px)}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid var(--focus-ring);outline-offset:3px}
+button.danger,.danger{background:linear-gradient(120deg,#ffb3bd,#ff6b86);color:#381022;border-color:#ffd3d9;box-shadow:0 6px 18px #ff4c7620}
+button.secondary:hover:not(:disabled){background:linear-gradient(135deg,rgba(156,65,177,.5),rgba(48,27,87,.85))}
+input,textarea,select{border-color:#d9b66d66;box-shadow:inset 0 1px 3px #0003}
+input::placeholder,textarea::placeholder{color:#c7b8d8;opacity:.82}
+label{font-weight:650;letter-spacing:.01em}
+.record-card,.record,.pending-item,.guest-record{border:1px solid #ffd36c3f;border-radius:15px;background:linear-gradient(145deg,#ffffff0a,#10051f55);padding:13px;margin:9px 0;min-width:0;overflow-wrap:anywhere}
+.record-meta{color:#d7c7e7;font-size:13px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}
+.grid{gap:12px}
+.tile{transition:transform .16s ease,border-color .16s ease}
+.tile:hover{border-color:#ffd36c99}
+#announcementHistory .record-card button{margin-top:8px}
+#announcementHistory .record-card strong{display:block;color:#ffe18a;margin-bottom:6px}
+#reader{border:1px solid #ffd36c66;box-shadow:0 10px 24px #0004}
+hr{border:0;border-top:1px solid #ffd36c44}
+table{max-width:100%;border-collapse:collapse}
+@media(max-width:600px){
+ .section-heading{flex-direction:column;gap:8px}
+ .section-heading>button{width:100%}
+ .card{margin:10px 0}
+ .grid{gap:8px}
+ button{border-radius:13px}
+}
+@media(min-width:741px){
+ main{padding-left:clamp(20px,4vw,42px);padding-right:clamp(20px,4vw,42px)}
+ .adminView{gap:14px}
+ .adminView>.card{min-width:0}
+}
+@media(prefers-reduced-motion:reduce){.tile,.tile:hover,button:hover:not(:disabled){transition:none;transform:none}}
+
 </style><style id="eventhub-role-upgrade">
 /* EventHub role redesign; retain the existing Deepotsav artwork and palette. */
 .section-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 13px}
