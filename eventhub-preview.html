@@ -474,14 +474,38 @@ async function loadEvents(){
    const title=document.createElement("strong");title.textContent=ev.name+" · "+ev.status;
    const meta=document.createElement("p");meta.className="small event-card-meta";meta.textContent=[ev.event_date,ev.event_time,ev.venue,ev.description].filter(Boolean).join(" · ");card.append(title,meta);
    if(ev.status!=="archived"){
-    const edit=document.createElement("button");edit.className="secondary";edit.textContent="✏️ Edit details";edit.onclick=async()=>{
-     const name=prompt("Event name:",ev.name);if(name===null)return;
-     const description=prompt("Event description:",ev.description||"");if(description===null)return;
-     const event_date=prompt("Event date (YYYY-MM-DD):",ev.event_date||"");if(event_date===null)return;
-     const event_time=prompt("Event time (e.g. 5:30 PM):",ev.event_time||"");if(event_time===null)return;
-     const venue=prompt("Venue:",ev.venue||"");if(venue===null)return;
-     try{const result=await post("/api/admin",{action:"update_event",event_id:ev.id,name:name.trim(),description,event_date,event_time,venue});status(result.message,"good");await loadEvents();}catch(e){status(e.message,"bad");}
-    };card.append(edit);
+    const edit=document.createElement("button");edit.className="secondary";edit.type="button";edit.textContent="✏️ Edit details";
+    const editPanel=document.createElement("div");editPanel.className="event-edit-panel hidden";editPanel.setAttribute("aria-label","Edit event details");
+    const fields={};
+    const addEditField=(key,labelText,value,type="text",placeholder="")=>{
+     const label=document.createElement("label");label.textContent=labelText;
+     const input=key==="description"?document.createElement("textarea"):document.createElement("input");
+     if(key!=="description")input.type=type;
+     if(key==="description")input.rows=3;
+     input.value=value||"";input.placeholder=placeholder;input.className="event-edit-input";
+     if(key==="name")input.maxLength=120;
+     if(key==="venue")input.maxLength=200;
+     label.append(input);editPanel.append(label);fields[key]=input;
+    };
+    addEditField("name","Event name",ev.name,"text","Event name");
+    addEditField("description","Description",ev.description||"");
+    addEditField("event_date","Date",ev.event_date||"","date");
+    addEditField("event_time","Time",ev.event_time||"","text","e.g. 5:30 PM");
+    addEditField("venue","Venue",ev.venue||"","text","Venue");
+    const editActions=document.createElement("div");editActions.className="row event-edit-actions";
+    const saveEdit=document.createElement("button");saveEdit.type="button";saveEdit.textContent="Save changes";
+    const cancelEdit=document.createElement("button");cancelEdit.type="button";cancelEdit.className="secondary";cancelEdit.textContent="Cancel";
+    editActions.append(saveEdit,cancelEdit);editPanel.append(editActions);
+    edit.onclick=()=>{const opening=editPanel.classList.contains("hidden");editPanel.classList.toggle("hidden");edit.setAttribute("aria-expanded",String(opening));edit.textContent=opening?"✏️ Close editor":"✏️ Edit details";};
+    cancelEdit.onclick=()=>{editPanel.classList.add("hidden");edit.setAttribute("aria-expanded","false");edit.textContent="✏️ Edit details";};
+    saveEdit.onclick=async()=>{
+     const name=fields.name.value.trim();if(!name){status("Enter an event name before saving.","bad");fields.name.focus();return;}
+     saveEdit.disabled=true;saveEdit.textContent="Saving…";
+     try{const result=await post("/api/admin",{action:"update_event",event_id:ev.id,name,description:fields.description.value.trim(),event_date:fields.event_date.value,event_time:fields.event_time.value.trim(),venue:fields.venue.value.trim()});status(result.message||"Event details saved.","good");await loadEvents();}
+     catch(e){status(e.message,"bad");}
+     finally{saveEdit.disabled=false;saveEdit.textContent="Save changes";}
+    };
+    card.append(edit,editPanel);
     const archive=document.createElement("button");archive.className="secondary";archive.textContent="Archive event";archive.onclick=async()=>{if(!confirm("Archive "+ev.name+"? Existing data will be retained."))return;try{await post("/api/admin",{action:"archive_event",event_id:ev.id});await loadEvents();status("Event archived.","good");}catch(e){status(e.message,"bad");}};card.append(archive);
    }
    $("eventsList").append(card);
