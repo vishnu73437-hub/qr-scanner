@@ -454,7 +454,7 @@ body.scan-mode #status{position:fixed!important;z-index:99992!important;top:6px!
 <label for="announcementMessage">Message / caption</label><textarea id="announcementMessage" rows="4" maxlength="3500" placeholder="Write your announcement…"></textarea>
 <label for="announcementFile">Attach image or file (optional, max 8 MB)</label><input id="announcementFile" type="file" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip">
 <div id="announcementFileInfo" class="small">No attachment selected. You can send text-only announcements too.</div>
-<button id="announcementPreview" type="button">Preview announcement</button><div id="announcementResult" class="small" aria-live="polite"></div>
+<button id="announcementPreview" type="button">Preview announcement</button><div id="announcementResult" class="small" aria-live="polite"></div><div class="form-divider"></div><div class="row"><h4 style="margin:0;flex:1">Announcement history</h4><button id="refreshAnnouncementHistory" class="secondary" type="button">↻ Refresh history</button></div><div id="announcementHistory" class="records-list" aria-live="polite"></div>
 </section>
 <section class="card admin-panel pending-approvals-panel">
 <div class="section-heading"><div><div class="eyebrow">02 · REGISTRATION DESK</div><h3>📝 Pending approvals</h3><p class="small">Keep the dashboard compact. Open this queue only when you need to review registrations.</p></div><button id="loadPending" class="secondary compact-button" type="button" aria-expanded="false" aria-controls="pendingListWrap">Show pending approvals</button></div>
@@ -929,6 +929,27 @@ $("announcementPreview")?.addEventListener("click",async()=>{
  finally{button.disabled=false;}
 });
 initAnnouncementPanel();
+
+async function loadAnnouncementHistory(){
+ const box=$("announcementHistory");if(!box)return;box.textContent="Loading announcement history…";
+ try{
+  const d=await post("/api/admin",{action:"announcement_history"});box.textContent="";
+  const items=d.announcements||[];
+  if(!items.length){box.textContent="No announcements in history.";return;}
+  items.forEach(a=>{
+   const card=document.createElement("div");card.className="record-card";
+   const title=document.createElement("strong");title.textContent="#"+a.id+" · "+(a.event_name||("Event "+a.event_id));
+   const meta=document.createElement("div");meta.className="record-meta";meta.textContent=[a.created_at||"",("Recorded recipients: "+(a.recipients??0)),("Failed: "+(a.failed??0)),a.message||""].filter(Boolean).join("\\n");
+   const del=document.createElement("button");del.type="button";del.className="danger";del.textContent="🗑️ Delete history entry";
+   del.onclick=async()=>{if(!confirm("Remove announcement #"+a.id+" from local history? This will NOT delete messages already delivered to recipients."))return;del.disabled=true;
+    try{const result=await post("/api/admin",{action:"announcement_delete",announcement_id:a.id});status(result.message||"History entry deleted.","good");await loadAnnouncementHistory();}
+    catch(e){status(e.message,"bad");del.disabled=false;}
+   };
+   card.append(title,meta,del);box.append(card);
+  });
+ }catch(e){box.textContent=e.message;}
+}
+$("refreshAnnouncementHistory")?.addEventListener("click",loadAnnouncementHistory);
 </script>
 
 </body></html>
