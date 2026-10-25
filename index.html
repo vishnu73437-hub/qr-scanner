@@ -672,19 +672,20 @@ const caveat=document.createElement("p");caveat.className="small";caveat.textCon
 panel.append(title,intro,eventLabel,eventSelect,audienceLabel,audience,msgLabel,message,count,previewBtn,preview,historyBtn,history,caveat);
 }});
 async function api(path,payload){return post(path,payload)}
+let lastCameraQr="";
 async function checkQr(value){
  if(busy)return;const scanned=String(value||"").trim();if(!scanned){status("Enter a guest pass code or scan its QR.","bad");return;}
  busy=true;currentQr=scanned;$("guestCard").classList.add("hidden");
  try{const d=await api("/api/guest",{qr:currentQr});if(!d.guest)throw new Error("The server returned no event pass details.");
-  currentGuest=d.guest;$("guestName").textContent=d.guest.name;$("guestInfo").textContent=["Pass type: "+(d.guest.passRole||"Guest"),"Residence: "+d.guest.residence,"Food: "+d.guest.food,"Pass: "+d.guest.passCode].join(" · ");
+  currentGuest=d.guest;lastCameraQr=scanned;$("guestName").textContent=d.guest.name;$("guestInfo").textContent=["Pass type: "+(d.guest.passRole||"Guest"),"Residence: "+d.guest.residence,"Food: "+d.guest.food,"Pass: "+d.guest.passCode].join(" · ");
   $("guestState").textContent="Entry: "+(d.guest.entryUsed?"Recorded":"Not recorded")+"\nFood: "+(d.guest.foodUsed?"Collected":"Not collected");
-  $("recordEntry").disabled=d.guest.entryUsed;$("recordFood").disabled=d.guest.foodUsed;$("guestCard").classList.remove("hidden");status("Valid "+(d.guest.passRole||"guest").toLowerCase()+" pass. Entry and food actions are available.","good");await stopCamera();
- }catch(e){currentQr="";currentGuest=null;status(e.message,"bad");}finally{busy=false;}
+  $("recordEntry").disabled=d.guest.entryUsed;$("recordFood").disabled=d.guest.foodUsed;$("guestCard").classList.remove("hidden");status("Valid "+(d.guest.passRole||"guest").toLowerCase()+" pass. Camera stays on — scan the next pass.","good");
+ }catch(e){currentQr="";currentGuest=null;lastCameraQr="";status(e.message,"bad");}finally{busy=false;}
 }
 async function record(action){if(!currentQr)return;try{const d=await api("/api/action",{qr:currentQr,action});currentGuest=d.guest;$("guestState").textContent=`Entry: ${d.guest.entryUsed?"Recorded":"Not recorded"}
 Food: ${d.guest.foodUsed?"Collected":"Not collected"}`;$("recordEntry").disabled=d.guest.entryUsed;$("recordFood").disabled=d.guest.foodUsed;if(d.counts)$("counts").textContent=`Meals served — Vegetarian: ${d.counts.vegetarianServed} | Non-vegetarian: ${d.counts.nonVegetarianServed}`;status(d.message,"good");}catch(e){status(e.message,"bad");}}
-async function startCamera(){if(!tg?.initData){status("Open from Telegram to authenticate.","bad");return;}try{$("reader").classList.remove("hidden");$("startScan").classList.add("hidden");$("stopScan").classList.remove("hidden");scanner=new Html5Qrcode("reader");await scanner.start({facingMode:"environment"},{fps:10,qrbox:{width:240,height:240}},text=>checkQr(text),()=>{});status("Camera active — scan a pass.","good");if($("scannerBadge"))$("scannerBadge").textContent="● CAMERA LIVE";}catch(e){status("Camera unavailable. Allow camera access or enter a pass code manually.","bad");}}
-async function stopCamera(){if(scanner){try{if(scanner.isScanning)await scanner.stop();await scanner.clear();}catch(e){}scanner=null;}$("reader").classList.add("hidden");$("startScan").classList.remove("hidden");$("stopScan").classList.add("hidden");if($("scannerBadge"))$("scannerBadge").textContent="● SCANNER READY";}
+async function startCamera(){if(!tg?.initData){status("Open from Telegram to authenticate.","bad");return;}try{$("reader").classList.remove("hidden");$("startScan").classList.add("hidden");$("stopScan").classList.remove("hidden");scanner=new Html5Qrcode("reader");lastCameraQr="";await scanner.start({facingMode:"environment"},{fps:10,qrbox:{width:260,height:260}},text=>{const decoded=String(text||"").trim();if(decoded&&decoded!==lastCameraQr&&!busy)checkQr(decoded);},()=>{});status("Camera active — scan passes one after another. The camera stays on after each scan.","good");if($("scannerBadge"))$("scannerBadge").textContent="● CAMERA LIVE";}catch(e){status("Camera unavailable. Allow camera access or enter a pass code manually.","bad");}}
+async function stopCamera(){lastCameraQr="";if(scanner){try{if(scanner.isScanning)await scanner.stop();await scanner.clear();}catch(e){}scanner=null;}$("reader").classList.add("hidden");$("startScan").classList.remove("hidden");$("stopScan").classList.add("hidden");if($("scannerBadge"))$("scannerBadge").textContent="● SCANNER READY";}
 $("startScan").onclick=startCamera;$("stopScan").onclick=stopCamera;$("checkManual").onclick=()=>checkQr($("manual").value);$("recordEntry").onclick=()=>record("entry");$("recordFood").onclick=()=>record("food");$("guestPass").onclick=loadMyPass;
 async function loadMyPass(){
  const button=$("guestPass"),box=$("myPassDisplay");
