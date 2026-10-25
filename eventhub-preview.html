@@ -183,6 +183,69 @@ button.secondary{
  #guestView .guestHero{background:radial-gradient(ellipse at 82% 90%,rgba(255,131,31,.48),transparent 40%),radial-gradient(ellipse at 15% 10%,rgba(255,32,123,.32),transparent 45%),linear-gradient(145deg,#251054,#4b1268 52%,#170d3b);border:2px solid #ffd75b}
 }
 
+
+/* Deepotsav mini-app visual upgrade: vivid illustrated festival atmosphere */
+body{
+ background-color:#10032f!important;
+ background-image:
+  radial-gradient(ellipse at 50% 8%,rgba(255,30,130,.38),transparent 34rem),
+  radial-gradient(ellipse at 92% 30%,rgba(255,110,0,.27),transparent 28rem),
+  radial-gradient(ellipse at 5% 66%,rgba(255,0,90,.23),transparent 30rem),
+  radial-gradient(ellipse at 50% 100%,rgba(255,177,0,.3),transparent 36rem),
+  linear-gradient(180deg,#18064b 0%,#280750 42%,#10052d 100%)!important;
+ background-attachment:fixed!important;
+}
+body:after{
+ content:"🪔 ✨ 🏮 ✨ 🪔";
+ position:fixed;z-index:0;pointer-events:none;top:0;left:0;right:0;
+ text-align:center;font-size:clamp(17px,4vw,28px);letter-spacing:clamp(7px,3vw,22px);
+ padding:5px 0 9px;
+ background:linear-gradient(180deg,rgba(255,105,0,.25),transparent);
+ filter:drop-shadow(0 0 9px #ff8c00);
+ opacity:.92;
+}
+body>main{position:relative;z-index:1}
+#diwaliAtmosphere{z-index:0!important;opacity:1}
+#guestView .guestHero{
+ background:
+  radial-gradient(ellipse at 80% 80%,rgba(255,119,0,.72),transparent 42%),
+  radial-gradient(ellipse at 72% 22%,rgba(255,0,140,.44),transparent 42%),
+  linear-gradient(130deg,#071a62 0%,#321071 45%,#5b0757 72%,#1c0c49 100%)!important;
+ border:2px solid #ffd74f!important;
+ box-shadow:0 0 9px #ffd84d,0 0 26px #ff5a16aa,0 18px 42px #030014aa,inset 0 1px #fff8!important;
+}
+#guestView .guestHero:after{
+ content:"✺  ✧  🪔  ✧  ✺"!important;
+ top:auto!important;bottom:9px!important;right:12px!important;
+ color:#ffe15c!important;font-size:22px!important;letter-spacing:8px!important;
+ text-shadow:0 0 12px #ff8500!important;opacity:.95!important;
+}
+#guestView .card{
+ background:
+  radial-gradient(ellipse at 100% 0%,rgba(255,36,127,.22),transparent 45%),
+  linear-gradient(145deg,rgba(67,7,78,.97),rgba(22,7,53,.98))!important;
+ border:2px solid #ffcf55!important;
+ box-shadow:0 0 8px #ffd84d,0 0 22px #ff6a1a66,0 14px 34px #03001499,inset 0 1px #ffffff20!important;
+}
+#guestView .notice{
+ background:linear-gradient(115deg,#00664b,#00825a 60%,#064c48)!important;
+ border:2px solid #ffdb52!important;color:#fffbe7!important;
+ box-shadow:0 0 14px #ffb52d77,inset 0 1px #fff5!important;
+}
+#guestView #guestPass{
+ background:linear-gradient(105deg,#fff58b 0%,#ffc33e 52%,#ff8529 100%)!important;
+ border:2px solid #fff17c!important;color:#210b32!important;
+ box-shadow:0 0 18px #ff9c28aa,inset 0 1px #fff!important;
+}
+#guestView .poster{
+ background:radial-gradient(circle at 50% 30%,#ffdf5b,#ff5b22 30%,#9b116c 60%,#21105a)!important;
+ border:1px solid #ffdf65!important;box-shadow:0 0 20px #ff7b25aa!important;
+}
+@media(max-width:740px){
+ body:after{font-size:17px;letter-spacing:7px}
+ #guestView .guestHero{min-height:320px}
+}
+
 </style></head>
 <body><main><header class="brand"><div style="font-size:30px">🪔</div><h1>DEEPOSTAV</h1><div style="font-family:Georgia,serif;font-size:clamp(15px,4vw,22px);color:#fff1d4">The Journey Through India</div><div class="small" style="margin-top:9px">7 NOVEMBER 2026 · KSMU HOSTEL 5</div></header><div id="status" class="status">Authenticating through Telegram…</div>
 <section id="guestView" class="hidden">
