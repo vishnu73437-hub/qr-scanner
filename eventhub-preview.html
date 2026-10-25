@@ -350,7 +350,7 @@ button.tool-tile{display:flex;flex-direction:column;align-items:flex-start;text-
 @media(max-width:640px){.role-hero{align-items:flex-start;flex-direction:column}.role-hero-side{align-items:flex-start}.ops-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.admin-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.events-list{grid-template-columns:1fr}.manual-row{flex-direction:column}.manual-row button{width:100%}.scanner-controls{grid-template-columns:1fr}}
 @media(max-width:440px){.record-actions-admin{grid-template-columns:1fr}.filter-row{flex-direction:column;align-items:stretch}.filter-row button{width:100%}}
 @media(max-width:380px){.quick-grid,.admin-tools{grid-template-columns:1fr}.ops-kpis{grid-template-columns:1fr}.ops-kpi{display:grid;grid-template-columns:58px 1fr;column-gap:8px;align-items:center}.ops-kpi>span{grid-row:1/span 2}.ops-kpi strong{margin:0}.ops-kpi small{grid-column:2}.record-actions{grid-template-columns:1fr}}
-</style></head>
+.admin-account-line{padding:9px 0;border-bottom:1px solid #ffffff16;overflow-wrap:anywhere}.admin-account-line:last-child{border-bottom:0}</style></head>
 <body><div id="diwaliScene" aria-hidden="true"><svg viewBox="0 0 900 1500" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
 <defs>
 <linearGradient id="dsSky" x2="0" y2="1"><stop stop-color="#070b54"/><stop offset=".4" stop-color="#5b075d"/><stop offset="1" stop-color="#16052e"/></linearGradient>
@@ -403,7 +403,8 @@ button.tool-tile{display:flex;flex-direction:column;align-items:flex-start;text-
 <section class="card admin-panel"><div class="section-heading"><div><div class="eyebrow">02 · REGISTRATION DESK</div><h3>📝 Pending approvals</h3></div><button id="loadPending" class="secondary compact-button" type="button">↻ Refresh list</button></div><p class="small">Approve or reject registrations directly from EventHub. Approval generates a QR pass and attempts delivery to the guest in Telegram.</p><div id="pendingList" class="records-list" aria-live="polite">Loading pending registrations…</div></section>
 <section class="card admin-panel"><div class="section-heading"><div><div class="eyebrow">03 · GUEST ACCESS</div><h3>🎟️ Guest & QR pass manager</h3></div><span class="panel-index">03</span></div><p class="small">Search by guest name, phone, pass code or Telegram ID. Reissue invalidates the old QR; revocation blocks use; reset actions require admin confirmation.</p><div class="manual-row"><input id="guestSearch" placeholder="Name, phone, H5 pass code or Telegram ID" autocomplete="off"><button id="searchGuests" type="button">Search</button></div><div class="row filter-row"><div><label for="guestStatus">Pass status</label><select id="guestStatus"><option value="all">All statuses</option><option value="approved">Active / approved</option><option value="revoked">Revoked</option></select></div><button id="loadRecentGuests" class="secondary" type="button">Show recent guests</button></div><div id="guestResults" class="records-list" aria-live="polite"></div></section>
 <section class="card admin-panel"><div class="section-heading"><div><div class="eyebrow">04 · PEOPLE & PERMISSIONS</div><h3>👥 Volunteer access</h3></div><span class="panel-index">04</span></div><p class="small">Grant or remove scanner access by Telegram numeric ID. Removing volunteer access also invalidates their existing staff QR badge.</p><label for="volId">Telegram numeric ID</label><div class="manual-row"><input id="volId" inputmode="numeric" placeholder="e.g. 123456789"><button id="addVol" type="button">＋ Add</button></div><div class="row"><button id="removeVol" class="secondary" type="button">Remove access</button><button id="listVols" class="secondary" type="button">List volunteers</button></div><div id="volList" class="volunteer-list small" aria-live="polite"></div></section>
-<section class="card admin-panel"><div class="section-heading"><div><div class="eyebrow">05 · EVENT TOOLS</div><h3>🧰 Operations tools</h3></div><span class="panel-index">05</span></div><div class="grid admin-tools">
+<section class="card admin-panel"><div class="section-heading"><div><div class="eyebrow">05 · PRIVILEGED ACCESS</div><h3>🔐 Admin access</h3></div><span class="panel-index">05</span></div><p class="small">Grant admin rights only to trusted organizers. Your configured owner/recovery admin ID is protected from removal here.</p><label for="adminId">Telegram numeric ID</label><div class="manual-row"><input id="adminId" inputmode="numeric" placeholder="e.g. 123456789"><button id="addAdmin" type="button">＋ Add admin</button></div><div class="row"><button id="removeAdmin" class="secondary" type="button">Remove admin</button><button id="listAdmins" class="secondary" type="button">List admins</button></div><div id="adminList" class="volunteer-list small" aria-live="polite"></div></section>
+<section class="card admin-panel"><div class="section-heading"><div><div class="eyebrow">06 · EVENT TOOLS</div><h3>🧰 Operations tools</h3></div><span class="panel-index">06</span></div><div class="grid admin-tools">
 <button class="tile tool-tile" type="button" data-admin="checkpoints"><span class="tool-icon">📍</span><strong>Checkpoints</strong><span>Create and list entry/food points</span></button>
 <button class="tile tool-tile" type="button" data-admin="audit"><span class="tool-icon">🛡️</span><strong>Audit log</strong><span>Review recent admin and scan actions</span></button>
 <button class="tile tool-tile" type="button" data-admin="sheets"><span class="tool-icon">📊</span><strong>Google Sheets</strong><span>Sync guest records</span></button>
@@ -437,7 +438,7 @@ async function boot(){
   if(!["admin","volunteer","guest"].includes(d.role))throw new Error("The server replied, but did not return a valid user role.");
   showRole(d.role);
   status("Authenticated · "+d.role.toUpperCase(),"good");
-  if(d.role==="admin"){await refreshStats();await loadEvents();await loadPendingRegistrations();}
+  if(d.role==="admin"){await refreshStats();await loadEvents();await loadPendingRegistrations();await loadAdmins();}
   else if(d.role==="guest"){status("Authenticated as GUEST. Use the bot to register or receive your QR pass.","good");await loadGuestEvent();}
  }catch(e){
   console.error("EventHub boot/authentication error:",e);
@@ -517,6 +518,23 @@ async function searchGuests(){
   });
  }catch(e){box.textContent=e.message;status(e.message,"bad");}
 }
+async function loadAdmins(){
+ const box=$("adminList");if(!box)return;box.textContent="Loading admin accounts…";
+ try{const d=await post("/api/admin",{action:"admins"});box.textContent="";
+  if(!d.admins.length){box.textContent="No admin accounts found.";return;}
+  const configured=new Set((d.configured_admin_ids||[]).map(Number));
+  d.admins.forEach(a=>{const line=document.createElement("div");line.className="admin-account-line";line.textContent=a.telegram_id+" · added "+(a.added_at||"date unavailable")+(configured.has(Number(a.telegram_id))?" · OWNER/RECOVERY (protected)":"");box.append(line);});
+ }catch(e){box.textContent=e.message;status(e.message,"bad");}
+}
+async function adminAction(action){
+ const telegram_id=Number($("adminId").value);
+ if(!Number.isSafeInteger(telegram_id)||telegram_id<=0){status("Enter a valid numeric Telegram ID.","bad");return;}
+ if(action==="add_admin"&&!confirm("Grant full admin access to Telegram ID "+telegram_id+"? Admins can manage passes, volunteers, event settings and announcements."))return;
+ if(action==="remove_admin"&&!confirm("Remove admin access for Telegram ID "+telegram_id+"? This cannot be undone here for configured owner/recovery IDs."))return;
+ try{const d=await post("/api/admin",{action,telegram_id});status(d.message||"Admin access updated.", "good");$("adminId").value="";await loadAdmins();}
+ catch(e){status(e.message,"bad");await loadAdmins();}
+}
+$("addAdmin").onclick=()=>adminAction("add_admin");$("removeAdmin").onclick=()=>adminAction("remove_admin");$("listAdmins").onclick=loadAdmins;
 $("loadPending").onclick=loadPendingRegistrations;$("searchGuests").onclick=searchGuests;
 $("loadRecentGuests").onclick=()=>{$("guestSearch").value="";$("guestStatus").value="all";searchGuests();};
 $("guestSearch").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();searchGuests();}});
