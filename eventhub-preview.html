@@ -627,7 +627,7 @@ async function loadMyPass(){
  }catch(e){box.textContent=e.message;status(e.message,"bad");}
  finally{button.disabled=false;}
 }
-async function loadGuestEvent(){const box=$("eventDetails");box.textContent="Loading event details…";try{const d=await post("/api/event_details");const ev=d.event;const dateText=ev.event_date?new Date(ev.event_date+"T12:00:00").toLocaleDateString(undefined,{year:"numeric",month:"long",day:"numeric"}):"";box.textContent=[ev.name,ev.description,dateText?"Date: "+dateText:"",d.time?"Time: "+d.time:"",ev.venue?"Venue: "+ev.venue:""].filter(Boolean).join("\n");status("Event details loaded.","good");}catch(e){box.textContent="Could not load event details: "+e.message;status(e.message,"bad");}}$("guestEvent").onclick=loadGuestEvent;
+$("guestEvent").onclick=loadGuestEvent;
 $("guestSupport").onclick=()=>{const url="https://t.me/DRvediyappanvishnu";if(tg?.openTelegramLink)tg.openTelegramLink(url);else window.open(url,"_blank","noopener,noreferrer");};
 $("loadMyGuestStylePass").onclick=loadMyGuestStylePass;
 async function loadMyGuestStylePass(){
