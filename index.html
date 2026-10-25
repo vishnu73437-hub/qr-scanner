@@ -926,12 +926,17 @@ async function loadAnnouncementHistory(){
    const card=document.createElement("div");card.className="record-card";
    const title=document.createElement("strong");title.textContent="#"+a.id+" · "+(a.event_name||("Event "+a.event_id));
    const meta=document.createElement("div");meta.className="record-meta";meta.textContent=[a.created_at||"",("Recorded recipients: "+(a.recipients??0)),("Failed: "+(a.failed??0)),a.message||""].filter(Boolean).join("\\n");
-   const del=document.createElement("button");del.type="button";del.className="danger";del.textContent="🗑️ Delete history entry";
+   const unsend=document.createElement("button");unsend.type="button";unsend.className="danger";unsend.textContent="↩️ Unsend delivered message";
+   unsend.onclick=async()=>{if(!confirm("Try to delete announcement #"+a.id+" from recipients' Telegram chats? Telegram only allows deletion within its time limit, and older messages may remain."))return;unsend.disabled=true;
+    try{const result=await post("/api/admin",{action:"announcement_unsend",announcement_id:a.id},300000);status(result.message||"Unsend attempt finished.","good");await loadAnnouncementHistory();}
+    catch(e){status(e.message,"bad");unsend.disabled=false;}
+   };
+   const del=document.createElement("button");del.type="button";del.className="secondary";del.textContent="🗑️ Delete history entry";
    del.onclick=async()=>{if(!confirm("Remove announcement #"+a.id+" from local history? This will NOT delete messages already delivered to recipients."))return;del.disabled=true;
     try{const result=await post("/api/admin",{action:"announcement_delete",announcement_id:a.id});status(result.message||"History entry deleted.","good");await loadAnnouncementHistory();}
     catch(e){status(e.message,"bad");del.disabled=false;}
    };
-   card.append(title,meta,del);box.append(card);
+   card.append(title,meta,unsend,del);box.append(card);
   });
  }catch(e){box.textContent=e.message;}
 }
