@@ -447,6 +447,30 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .guest-pagination button:last-child{justify-self:stretch}
 .guest-pagination span{text-align:center;white-space:nowrap}
 
+
+/* Compact broadcast composer and expandable, paginated history */
+.broadcast-compose-options{border:1px solid #ffd36c44;border-radius:15px;background:linear-gradient(145deg,#ffffff08,#10051f45);overflow:hidden;margin:12px 0}
+.broadcast-compose-options>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;list-style:none;padding:14px;min-height:54px;font-weight:750;color:#fff0bc}
+.broadcast-compose-options>summary::-webkit-details-marker,.announcement-history-summary::-webkit-details-marker{display:none}
+.broadcast-compose-options>summary:after{content:"＋";font-size:20px;color:#ffd36c}
+.broadcast-compose-options[open]>summary:after{content:"−"}
+.broadcast-compose-options>summary .small{text-align:right;font-weight:500}
+.broadcast-compose-body{padding:12px 14px;border-top:1px solid #ffd36c30}
+.announcement-page-summary{margin:8px 0 10px}
+.announcement-history-card{padding:0!important;overflow:hidden}
+.announcement-history-summary{display:flex;flex-direction:column;align-items:flex-start;gap:5px;list-style:none;cursor:pointer;padding:13px;min-height:58px}
+.announcement-history-summary:after{content:"＋";align-self:flex-end;color:#ffe18a;font-size:17px;margin-top:-25px}
+.announcement-history-card[open]>.announcement-history-summary:after{content:"−"}
+.announcement-history-title{font-weight:750;color:#fff0bc;padding-right:22px;overflow-wrap:anywhere}
+.announcement-history-counts{font-size:12px;color:#d7c7e7}
+.announcement-history-card>.record-meta{margin:0 13px 12px}
+.announcement-history-actions{display:flex;flex-wrap:wrap;gap:8px;padding:0 13px 13px}
+.announcement-history-actions button{flex:1 1 180px;margin:0}
+.announcement-pagination{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:8px;margin:12px 0}
+.announcement-pagination button{margin:0;padding:10px 12px}
+.announcement-pagination span{text-align:center;white-space:nowrap}
+@media(max-width:600px){.broadcast-compose-options>summary{flex-wrap:wrap;padding:12px}.broadcast-compose-options>summary .small{width:100%;text-align:left}.broadcast-compose-body{padding:10px}.announcement-history-summary{padding:12px}.announcement-history-actions{padding:0 10px 10px}.announcement-pagination button{padding:9px 8px}}
+
 </style><style id="eventhub-role-upgrade">
 /* EventHub role redesign; retain the existing Deepotsav artwork and palette. */
 .section-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 13px}
@@ -615,12 +639,17 @@ body.scan-mode #status{position:fixed!important;z-index:99992!important;top:6px!
 <section class="card admin-panel"><div class="section-heading"><div><div class="eyebrow">01 · EVENT SETTINGS</div><h3>📅 Event workspaces</h3></div><span class="panel-index">01</span></div><p class="small">Edit name, description, date, time and venue here. Changes update the guest Event Details screen; new workspaces remain drafts until an event-specific registration workflow is configured.</p><div id="eventsList" class="events-list">Loading events…</div><div class="form-divider"></div><h4>Create an event workspace</h4><label for="eventName">Event name</label><input id="eventName" placeholder="e.g. Medical Conference 2027" maxlength="120"><label for="eventDesc">Description</label><textarea id="eventDesc" rows="2" placeholder="Purpose, theme and important details"></textarea><div class="row form-row"><div><label for="eventDate">Date</label><input id="eventDate" type="date"></div><div><label for="eventTime">Time</label><input id="eventTime" placeholder="e.g. 5:30 PM" maxlength="40"></div></div><label for="eventVenue">Venue</label><input id="eventVenue" placeholder="Venue" maxlength="200"><button id="createEvent" type="button">＋ Create event workspace</button></section>
 <section class="card admin-panel" id="announcementPanel">
 <div class="section-heading"><div><div class="eyebrow">📢 BROADCAST</div><h3>Image & file announcements</h3><p class="small">Send a text, festival poster, image, PDF, or document to your selected audience.</p></div></div>
+<details class="broadcast-compose-options">
+<summary><span>✍️ Compose announcement</span><span class="small">Audience, message and attachment</span></summary>
+<div class="broadcast-compose-body">
 <label for="announcementEvent">Event</label><select id="announcementEvent"><option value="">Loading events…</option></select>
 <label for="announcementAudience">Recipients</label><select id="announcementAudience"><option value="all_started">All users who have started the bot</option><option value="registered_guests">Approved registered guests</option></select>
 <label for="announcementMessage">Message / caption</label><textarea id="announcementMessage" rows="4" maxlength="3500" placeholder="Write your announcement…"></textarea>
 <label for="announcementFile">Attach image or file (optional, max 8 MB)</label><input id="announcementFile" type="file" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip">
 <div id="announcementFileInfo" class="small">No attachment selected. You can send text-only announcements too.</div>
-<button id="announcementPreview" type="button">Preview announcement</button><div id="announcementResult" class="small" aria-live="polite"></div><div class="form-divider"></div><div class="row"><h4 style="margin:0;flex:1">Announcement history</h4><button id="refreshAnnouncementHistory" class="secondary" type="button">↻ Refresh history</button></div><div id="announcementHistory" class="records-list" aria-live="polite"></div>
+<button id="announcementPreview" type="button">Preview announcement</button><div id="announcementResult" class="small" aria-live="polite"></div>
+</div>
+</details><div class="form-divider"></div><div class="row"><h4 style="margin:0;flex:1">Announcement history</h4><button id="refreshAnnouncementHistory" class="secondary" type="button">↻ Refresh history</button></div><div id="announcementHistory" class="records-list" aria-live="polite"></div>
 </section>
 <section class="card admin-panel pending-approvals-panel">
 <div class="section-heading"><div><div class="eyebrow">02 · REGISTRATION DESK</div><h3>📝 Pending approvals</h3><p class="small">Keep the dashboard compact. Open this queue only when you need to review registrations.</p></div><button id="loadPending" class="secondary compact-button" type="button" aria-expanded="false" aria-controls="pendingListWrap">Show pending approvals</button></div>
@@ -1105,29 +1134,39 @@ $("announcementPreview")?.addEventListener("click",async()=>{
 initAnnouncementPanel();
 loadAnnouncementHistory();
 
+let announcementHistoryItems=[],announcementHistoryPage=0;
+const ANNOUNCEMENTS_PER_PAGE=8;
+function renderAnnouncementHistory(){
+ const box=$("announcementHistory");box.textContent="";
+ if(!announcementHistoryItems.length){box.textContent="No announcements in history.";return;}
+ const totalPages=Math.ceil(announcementHistoryItems.length/ANNOUNCEMENTS_PER_PAGE);
+ const summary=document.createElement("div");summary.className="small announcement-page-summary";summary.textContent="Showing "+(announcementHistoryPage*ANNOUNCEMENTS_PER_PAGE+1)+"–"+Math.min((announcementHistoryPage+1)*ANNOUNCEMENTS_PER_PAGE,announcementHistoryItems.length)+" of "+announcementHistoryItems.length+" announcements";box.append(summary);
+ announcementHistoryItems.slice(announcementHistoryPage*ANNOUNCEMENTS_PER_PAGE,(announcementHistoryPage+1)*ANNOUNCEMENTS_PER_PAGE).forEach(a=>{
+  const card=document.createElement("details");card.className="record-card announcement-history-card";
+  const head=document.createElement("summary");head.className="announcement-history-summary";
+  const title=document.createElement("span");title.className="announcement-history-title";title.textContent="#"+a.id+" · "+(a.event_name||("Event "+a.event_id));
+  const counts=document.createElement("span");counts.className="announcement-history-counts";counts.textContent=(a.recipients??0)+" recipients · "+(a.failed??0)+" failed";
+  head.append(title,counts);card.append(head);
+  const meta=document.createElement("div");meta.className="record-meta";meta.textContent=[a.created_at||"",("Recorded recipients: "+(a.recipients??0)),("Failed: "+(a.failed??0)),a.message||""].filter(Boolean).join("\\n");card.append(meta);
+  const actions=document.createElement("div");actions.className="announcement-history-actions";
+  const unsend=document.createElement("button");unsend.type="button";unsend.className="danger";unsend.textContent="↩️ Unsend delivered messages";
+  unsend.onclick=async()=>{if(!confirm("Try to delete announcement #"+a.id+" from recipients' Telegram chats? Telegram's deletion time limit applies, so some messages may remain."))return;unsend.disabled=true;
+   try{const result=await post("/api/admin",{action:"announcement_unsend",announcement_id:a.id},300000);status(result.message||"Unsend attempt finished.","good");await loadAnnouncementHistory();}
+   catch(e){status(e.message,"bad");unsend.disabled=false;}
+  };
+  const del=document.createElement("button");del.type="button";del.className="secondary";del.textContent="🗑️ Delete history entry";
+  del.onclick=async()=>{if(!confirm("Remove announcement #"+a.id+" from local history? This will NOT delete messages already delivered to recipients."))return;del.disabled=true;
+   try{const result=await post("/api/admin",{action:"announcement_delete",announcement_id:a.id});status(result.message||"History entry deleted.","good");await loadAnnouncementHistory();}
+   catch(e){status(e.message,"bad");del.disabled=false;}
+  };
+  actions.append(unsend,del);card.append(actions);box.append(card);
+ });
+ if(totalPages>1){const pager=document.createElement("div");pager.className="announcement-pagination";const prev=document.createElement("button");prev.type="button";prev.className="secondary";prev.textContent="← Previous";prev.disabled=announcementHistoryPage===0;prev.onclick=()=>{announcementHistoryPage--;renderAnnouncementHistory();};const page=document.createElement("span");page.className="small";page.textContent="Page "+(announcementHistoryPage+1)+" of "+totalPages;const next=document.createElement("button");next.type="button";next.className="secondary";next.textContent="Next →";next.disabled=announcementHistoryPage>=totalPages-1;next.onclick=()=>{announcementHistoryPage++;renderAnnouncementHistory();};pager.append(prev,page,next);box.append(pager);}
+}
 async function loadAnnouncementHistory(){
  const box=$("announcementHistory");if(!box)return;box.textContent="Loading announcement history…";
- try{
-  const d=await post("/api/admin",{action:"announcement_history"});box.textContent="";
-  const items=d.announcements||[];
-  if(!items.length){box.textContent="No announcements in history.";return;}
-  items.forEach(a=>{
-   const card=document.createElement("div");card.className="record-card";
-   const title=document.createElement("strong");title.textContent="#"+a.id+" · "+(a.event_name||("Event "+a.event_id));
-   const meta=document.createElement("div");meta.className="record-meta";meta.textContent=[a.created_at||"",("Recorded recipients: "+(a.recipients??0)),("Failed: "+(a.failed??0)),a.message||""].filter(Boolean).join("\\n");
-   const unsend=document.createElement("button");unsend.type="button";unsend.className="danger";unsend.textContent="↩️ Unsend delivered message";
-   unsend.onclick=async()=>{if(!confirm("Try to delete announcement #"+a.id+" from recipients' Telegram chats? Telegram only allows deletion within its time limit, and older messages may remain."))return;unsend.disabled=true;
-    try{const result=await post("/api/admin",{action:"announcement_unsend",announcement_id:a.id},300000);status(result.message||"Unsend attempt finished.","good");await loadAnnouncementHistory();}
-    catch(e){status(e.message,"bad");unsend.disabled=false;}
-   };
-   const del=document.createElement("button");del.type="button";del.className="secondary";del.textContent="🗑️ Delete history entry";
-   del.onclick=async()=>{if(!confirm("Remove announcement #"+a.id+" from local history? This will NOT delete messages already delivered to recipients."))return;del.disabled=true;
-    try{const result=await post("/api/admin",{action:"announcement_delete",announcement_id:a.id});status(result.message||"History entry deleted.","good");await loadAnnouncementHistory();}
-    catch(e){status(e.message,"bad");del.disabled=false;}
-   };
-   card.append(title,meta,unsend,del);box.append(card);
-  });
- }catch(e){box.textContent=e.message;}
+ try{const d=await post("/api/admin",{action:"announcement_history"});announcementHistoryItems=d.announcements||[];announcementHistoryPage=0;renderAnnouncementHistory();}
+ catch(e){box.textContent=e.message;status(e.message,"bad");}
 }
 $("refreshAnnouncementHistory")?.addEventListener("click",loadAnnouncementHistory);
 </script>
