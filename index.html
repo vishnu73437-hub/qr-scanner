@@ -707,7 +707,7 @@ $("loadMyGuestStylePass").onclick=loadMyGuestStylePass;
 async function loadMyGuestStylePass(){
  const button=$("loadMyGuestStylePass"),box=$("staffPassDisplay");box.classList.remove("hidden");box.textContent="Loading your event pass…";button.disabled=true;
  try{
-  const d=await post("/api/my_pass",{food_preference:$("staffFoodPreference").value});
+  const d=await post("/api/my_pass");
   if(!d.pass||!d.pass.image)throw new Error("The server did not return an event pass image.");
   const p=d.pass;box.textContent="";
   const heading=document.createElement("h3");heading.textContent="🎟️ Your "+(p.passRole||"staff")+" pass";
