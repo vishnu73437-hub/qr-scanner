@@ -413,6 +413,25 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .guest-results .empty-state{padding:16px;border:1px dashed #ffd36c55;border-radius:14px;color:#d7c7e7;text-align:center;line-height:1.55}
 @media(max-width:600px){.guest-manager-tools{padding:11px}.guest-search-row{grid-template-columns:minmax(0,1fr)}.guest-search-row button{width:100%;margin-top:0}.guest-filter-grid{grid-template-columns:minmax(0,1fr)}.guest-filter-grid button{width:100%;margin-top:0}.guest-results .record-actions-admin{grid-template-columns:repeat(2,minmax(0,1fr))}.guest-results .record-actions-admin button{font-size:13px;padding:12px 7px}}
 
+
+/* Long guest lists: compact rows, expandable details and client-side pagination */
+.guest-compact-card{padding:0!important;overflow:hidden}
+.guest-compact-title{display:flex;align-items:center;gap:10px;justify-content:space-between;padding:14px;cursor:pointer;list-style:none;min-height:54px}
+.guest-compact-title::-webkit-details-marker{display:none}
+.guest-compact-title:after{content:"＋";color:#ffe18a;font-size:18px;flex:0 0 auto}
+.guest-compact-card[open]>.guest-compact-title:after{content:"−"}
+.guest-compact-name{font-weight:750;color:#fff7e8;min-width:0;overflow-wrap:anywhere}
+.guest-status-pill{font-size:10px;letter-spacing:.04em;border-radius:999px;padding:5px 8px;white-space:nowrap;flex:0 0 auto}
+.guest-status-pill.active{background:#14533c;color:#d7fff0;border:1px solid #52d6a077}
+.guest-status-pill.inactive{background:#672039;color:#ffe0e6;border:1px solid #ff748b77}
+.guest-compact-card>.record-meta{margin:0 12px 10px}
+.guest-compact-card>.record-actions-admin{margin:0 12px 12px}
+.guest-page-summary{margin:6px 0 10px}
+.guest-pagination{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:8px;margin:12px 0}
+.guest-pagination button{margin:0;padding:10px 12px}
+.guest-pagination button:last-child{justify-self:stretch}
+.guest-pagination span{text-align:center;white-space:nowrap}
+
 </style><style id="eventhub-role-upgrade">
 /* EventHub role redesign; retain the existing Deepotsav artwork and palette. */
 .section-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 13px}
@@ -773,28 +792,40 @@ async function decideRegistration(requestId,decision){
  try{const d=await post("/api/admin",{action:"registration_decision",request_id:requestId,decision});status(d.message+(d.delivered===false?" Use /mypass in the guest's bot chat if delivery failed.":""),d.delivered===false?"bad":"good");await loadPendingRegistrations();await refreshStats();await searchGuests();}
  catch(e){status(e.message,"bad");}
 }
+let guestSearchResults=[],guestPage=0;
+const GUESTS_PER_PAGE=10;
+function renderGuestPage(){
+ const box=$("guestResults");box.textContent="";
+ if(!guestSearchResults.length){box.innerHTML='<div class="empty-state">No matching guest records. Try another search, or load recent guests.</div>';return;}
+ const totalPages=Math.ceil(guestSearchResults.length/GUESTS_PER_PAGE);
+ const summary=document.createElement("div");summary.className="guest-page-summary small";summary.textContent="Showing "+(guestPage*GUESTS_PER_PAGE+1)+"–"+Math.min((guestPage+1)*GUESTS_PER_PAGE,guestSearchResults.length)+" of "+guestSearchResults.length+" guests";box.append(summary);
+ guestSearchResults.slice(guestPage*GUESTS_PER_PAGE,(guestPage+1)*GUESTS_PER_PAGE).forEach(g=>{
+  const card=document.createElement("details");card.className="record-card guest-compact-card";
+  const title=document.createElement("summary");title.className="guest-compact-title";
+  const name=document.createElement("span");name.className="guest-compact-name";name.textContent=g.full_name||"Unnamed guest";
+  const badge=document.createElement("span");badge.className="guest-status-pill "+(g.status==="approved"?"active": "inactive");badge.textContent=(g.status||"unknown").toUpperCase();
+  title.append(name,badge);card.append(title);
+  const meta=document.createElement("div");meta.className="record-meta";const residence=g.residence_type==="Hostel"?("Hostel "+(g.hostel_number||"")+(g.room_number?" · Room "+g.room_number:"")):"Apartment";
+  meta.textContent=["Pass: "+(g.pass_code||"—"),"Phone: "+(g.phone||"Not recorded"),"Telegram ID: "+g.telegram_id,"Residence: "+residence,"Food preference: "+(g.food_preference||"Not recorded"),"Entry: "+(g.entry_used?"Recorded":"Not recorded"),"Food: "+(g.food_used?"Collected":"Not collected"),"Created: "+(g.created_at||"")].join("\n");
+  const actions=document.createElement("div");actions.className="record-actions-admin";
+  const addAction=(label,operation,target,danger=false)=>{
+   const b=document.createElement("button");b.type="button";b.className=danger?"danger":"";b.textContent=label;
+   b.onclick=async()=>{const question=operation==="reissue_pass"?"Issue a new QR and invalidate the old pass?":operation==="revoke_pass"?"Revoke this pass immediately?":operation==="reactivate_pass"?"Reactivate this revoked pass with a new QR?":"Reset "+target+" status for this guest?";
+    if(!confirm(question+"\n\n"+g.full_name+" · "+g.pass_code))return;
+    try{const res=await post("/api/admin",{action:"guest_action",guest_id:g.id,operation,target});status(res.message+(res.delivered===false?" Ask the guest to use /mypass if the new QR did not arrive.":""),res.delivered===false?"bad":"good");await searchGuests();await refreshStats();}
+    catch(e){status(e.message,"bad");}
+   };actions.append(b);
+  };
+  if(g.status==="approved"){addAction("↻ Reissue QR","reissue_pass","");addAction("Reset entry","reset_status","entry");addAction("Reset food","reset_status","food");addAction("Revoke pass","revoke_pass","",true);}
+  else{addAction("Reactivate + new QR","reactivate_pass","");}
+  card.append(meta,actions);box.append(card);
+ });
+ if(totalPages>1){const pager=document.createElement("div");pager.className="guest-pagination";const prev=document.createElement("button");prev.type="button";prev.className="secondary";prev.textContent="← Previous";prev.disabled=guestPage===0;prev.onclick=()=>{guestPage--;renderGuestPage();};const page=document.createElement("span");page.className="small";page.textContent="Page "+(guestPage+1)+" of "+totalPages;const next=document.createElement("button");next.type="button";next.className="secondary";next.textContent="Next →";next.disabled=guestPage>=totalPages-1;next.onclick=()=>{guestPage++;renderGuestPage();};pager.append(prev,page,next);box.append(pager);}
+}
 async function searchGuests(){
  const box=$("guestResults");if(!box)return;box.textContent="Searching guest records…";
- try{const d=await post("/api/admin",{action:"guest_search",query:$("guestSearch").value.trim(),status:$("guestStatus").value});box.textContent="";
-  if(!d.guests.length){box.textContent="No matching guest records. Try another name, phone, pass code or Telegram ID.";return;}
-  d.guests.forEach(g=>{
-   const card=document.createElement("div");card.className="record-card";const title=document.createElement("strong");title.textContent=g.full_name+" · "+g.status.toUpperCase();
-   const residence=g.residence_type==="Hostel"?("Hostel "+(g.hostel_number||"")+(g.room_number?" · Room "+g.room_number:"")):"Apartment";
-   const meta=document.createElement("div");meta.className="record-meta";meta.textContent=["Pass: "+g.pass_code,"Phone: "+(g.phone||"Not recorded"),"Telegram ID: "+g.telegram_id,"Residence: "+residence,"Food: "+g.food_preference,"Entry: "+(g.entry_used?"Recorded":"Not recorded"),"Food: "+(g.food_used?"Collected":"Not collected"),"Created: "+(g.created_at||"")].join("\n");
-   const actions=document.createElement("div");actions.className="record-actions-admin";
-   const addAction=(label,operation,target,danger=false)=>{
-    const b=document.createElement("button");b.type="button";b.className=danger?"danger":"";b.textContent=label;
-    b.onclick=async()=>{const question=operation==="reissue_pass"?"Issue a new QR and invalidate the old pass?":operation==="revoke_pass"?"Revoke this pass immediately?":operation==="reactivate_pass"?"Reactivate this revoked pass with a new QR?":"Reset "+target+" status for this guest?";
-     if(!confirm(question+"\n\n"+g.full_name+" · "+g.pass_code))return;
-     try{const res=await post("/api/admin",{action:"guest_action",guest_id:g.id,operation,target});status(res.message+(res.delivered===false?" Ask the guest to use /mypass if the new QR did not arrive.":""),res.delivered===false?"bad":"good");await searchGuests();await refreshStats();}
-     catch(e){status(e.message,"bad");}
-    };actions.append(b);
-   };
-   if(g.status==="approved"){addAction("↻ Reissue QR","reissue_pass","");addAction("Reset entry","reset_status","entry");addAction("Reset food","reset_status","food");addAction("Revoke pass","revoke_pass","",true);}
-   else{addAction("Reactivate + new QR","reactivate_pass","");}
-   card.append(title,meta,actions);box.append(card);
-  });
- }catch(e){box.textContent=e.message;status(e.message,"bad");}
+ try{const d=await post("/api/admin",{action:"guest_search",query:$("guestSearch").value.trim(),status:$("guestStatus").value});guestSearchResults=d.guests||[];guestPage=0;renderGuestPage();}
+ catch(e){box.textContent=e.message;status(e.message,"bad");}
 }
 async function loadAdmins(){
  const box=$("adminList");if(!box)return;box.textContent="Loading admin accounts…";
