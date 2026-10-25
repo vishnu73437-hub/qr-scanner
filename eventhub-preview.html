@@ -253,6 +253,16 @@ body>main{position:relative;z-index:1}
 #diwaliAtmosphere{z-index:0!important;opacity:1!important}
 @media(max-width:740px){#diwaliScene{opacity:.72}}
 
+
+#indiaFestivalArt{display:block;position:relative;width:100%;margin:10px 0 16px;border:2px solid #ffd34d;border-radius:24px;overflow:hidden;background:#170743;box-shadow:0 0 10px #ffdf62,0 0 28px #ff3b9a88}
+#indiaFestivalArt svg{display:block;width:100%;height:auto;min-height:150px}
+#indiaFestivalArt .festivalCaption{position:absolute;left:0;right:0;bottom:7px;text-align:center;font-size:clamp(9px,2.5vw,14px);font-weight:800;letter-spacing:.2em;color:#fff3a0;text-shadow:0 0 8px #ff7b20}
+#indiaFestivalArt .artBurst{transform-box:fill-box;transform-origin:center;animation:festivalFirework 1.9s ease-out infinite}
+#indiaFestivalArt .burstTwo{animation-delay:.6s}
+#indiaFestivalArt .burstThree{animation-delay:1.15s}
+@keyframes festivalFirework{0%{opacity:.25;transform:scale(.35)}45%{opacity:1}100%{opacity:.25;transform:scale(1.12)}}
+@media(prefers-reduced-motion:reduce){#indiaFestivalArt .artBurst{animation:none}}
+
 </style></head>
 <body><div id="diwaliScene" aria-hidden="true"><svg viewBox="0 0 900 1500" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
 <defs>
@@ -280,6 +290,41 @@ body>main{position:relative;z-index:1}
 <g fill="#ff6b12"><circle cx="80" cy="1190" r="10"/><circle cx="110" cy="1215" r="8"/><circle cx="765" cy="1180" r="10"/><circle cx="720" cy="1210" r="8"/><circle cx="240" cy="1410" r="11"/><circle cx="665" cy="1410" r="11"/></g>
 </svg></div><main><header class="brand"><div style="font-size:30px">🪔</div><h1>DEEPOSTAV</h1><div style="font-family:Georgia,serif;font-size:clamp(15px,4vw,22px);color:#fff1d4">The Journey Through India</div><div class="small" style="margin-top:9px">7 NOVEMBER 2026 · KSMU HOSTEL 5</div></header><div id="status" class="status">Authenticating through Telegram…</div>
 <section id="guestView" class="hidden">
+<section id="indiaFestivalArt" aria-label="Diwali festival illustration">
+<svg viewBox="0 0 900 300" role="img" aria-label="Taj Mahal, decorated elephant, glowing diyas and fireworks" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="artSky" x2="0" y2="1"><stop stop-color="#070b55"/><stop offset=".62" stop-color="#64106c"/><stop offset="1" stop-color="#f04b70"/></linearGradient><linearGradient id="artMarble" x2="0" y2="1"><stop stop-color="#fff8d5"/><stop offset="1" stop-color="#eab9ff"/></linearGradient><linearGradient id="artGold" x2="0" y2="1"><stop stop-color="#fffbb0"/><stop offset=".5" stop-color="#ffb526"/><stop offset="1" stop-color="#ff531e"/></linearGradient><filter id="artGlow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<g id="artFirework" fill="none" stroke-linecap="round"><circle r="7" stroke="#fff7a0" stroke-width="2"/><circle r="22" stroke="#ff43d0" stroke-width="2" stroke-dasharray="2 5"/><circle r="38" stroke="#37f4ff" stroke-width="2" stroke-dasharray="2 7"/><path d="M0-46V-55M0 46V55M-46 0H-55M46 0H55M-33-33l-7-7M33 33l7 7M33-33l7-7M-33 33l-7 7" stroke="#ffdf54" stroke-width="3"/></g>
+<g id="artLamp"><path d="M-25 0Q0 17 25 0Q18 20 0 20Q-18 20-25 0Z" fill="#b51e4b" stroke="#ffd45a" stroke-width="2.5"/><path d="M0 0C-10-10-2-17 1-30C13-17 9-8 0 0Z" fill="url(#artGold)" filter="url(#artGlow)"/><ellipse cy="0" rx="33" ry="10" fill="#ff9b20" opacity=".25"/></g>
+</defs>
+<rect width="900" height="300" rx="24" fill="url(#artSky)"/>
+<g class="artBurst" transform="translate(170 70)"><use href="#artFirework"/></g><g class="artBurst burstTwo" transform="translate(735 62) scale(.8)"><use href="#artFirework"/></g><g class="artBurst burstThree" transform="translate(485 44) scale(.58)"><use href="#artFirework"/></g>
+<!-- Taj Mahal with four minarets -->
+<g fill="url(#artMarble)" stroke="#ffe7a0" stroke-width="2" filter="url(#artGlow)">
+<path d="M250 228V146Q250 119 276 119Q302 119 302 146V228Z"/><path d="M598 228V146Q598 119 624 119Q650 119 650 146V228Z"/>
+<path d="M300 226V162Q300 113 354 99Q386 74 450 70Q514 74 546 99Q600 113 600 162V226Z"/>
+<path d="M365 225V155Q365 105 450 104Q535 105 535 155V225Z" fill="#bfe8ff"/><path d="M402 225V168Q402 134 450 130Q498 134 498 168V225Z" fill="#402071"/>
+<path d="M430 228V180Q430 157 450 150Q470 157 470 180V228Z" fill="#2b155d"/>
+<path d="M430 100Q450 57 470 100Z"/><path d="M442 64L450 36L458 64Z" fill="#ffdc63"/>
+<path d="M260 119L276 87L292 119Z"/><path d="M608 119L624 87L640 119Z"/>
+<path d="M340 108L354 80L368 108Z"/><path d="M532 108L546 80L560 108Z"/>
+<path d="M225 228H675V243H225Z" fill="#f8cfff"/>
+</g>
+<!-- Decorated Indian elephant -->
+<g transform="translate(88 190)" stroke-linejoin="round">
+<path d="M-38 5Q-48-31-18-40Q18-55 43-28L52 4Q62 16 53 38L38 39L32 10L18 10L14 39H0L-3 10L-20 10L-24 39H-38L-40 13Z" fill="#65b9c5" stroke="#fff0a0" stroke-width="3"/>
+<path d="M-34-22Q-50-10-44 9Q-41 23-31 17L-29 0" fill="#65b9c5" stroke="#fff0a0" stroke-width="3"/>
+<path d="M-18-40Q-10-55 2-39L-4-22Z" fill="#ff8fc7" stroke="#fff0a0" stroke-width="2"/>
+<circle cx="22" cy="-26" r="4" fill="#170e42"/><path d="M34-12L43 0L34 0Z" fill="#fff8d5"/>
+<path d="M-26-12Q0 4 36-12L42 5Q5 24-29 5Z" fill="#ff3ca6" stroke="#ffdb4d" stroke-width="3"/>
+<path d="M-20-6L-12 5L-4-5L4 7L12-5L20 4L28-6" fill="none" stroke="#ffe86a" stroke-width="3"/>
+<circle cx="-4" cy="-4" r="3" fill="#fff7a0"/><circle cx="12" cy="-2" r="3" fill="#fff7a0"/>
+</g>
+<!-- Diyas and marigold petals foreground -->
+<g transform="translate(175 260) scale(.65)"><use href="#artLamp"/></g><g transform="translate(450 266) scale(.8)"><use href="#artLamp"/></g><g transform="translate(725 260) scale(.65)"><use href="#artLamp"/></g>
+<g fill="#ff9b1b"><circle cx="30" cy="260" r="7"/><circle cx="47" cy="270" r="5"/><circle cx="845" cy="265" r="7"/><circle cx="865" cy="274" r="5"/></g>
+</svg>
+<div class="festivalCaption">TAJ MAHAL ✦ INDIA ✦ DEEPOSTAV</div>
+</section>
 <div class="guestLayout">
 <div class="guestMain">
 <section class="guestHero"><div class="eyebrow">DEEPOSTAV 2026</div><h2>A journey<br>through India.</h2><p>Celebrate light, culture and community. Your event pass and festival essentials, all in one place.</p><span class="pill">● Your EventHub</span></section>
