@@ -328,6 +328,73 @@ table{max-width:100%;border-collapse:collapse}
 }
 @media(prefers-reduced-motion:reduce){.tile,.tile:hover,button:hover:not(:disabled){transition:none;transform:none}}
 
+
+/* Responsive pass: mobile phones, iPadOS, Android and desktop Telegram WebView */
+:root{--tap-min:48px}
+html{scroll-padding-top:18px;scrollbar-gutter:stable}
+body{overflow-wrap:anywhere;-webkit-tap-highlight-color:transparent}
+main{width:100%;max-width:1080px;margin-inline:auto}
+button,input,select,textarea{font-size:16px}
+button{min-height:var(--tap-min);touch-action:manipulation;-webkit-appearance:none}
+input,select,textarea{min-height:var(--tap-min);font-size:16px}
+img,video,canvas,svg{max-width:100%}
+.card,.brand,.tile,.role-hero,.record-card,.record{min-width:0}
+.card{scroll-margin-top:14px}
+.section-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.section-heading>div{min-width:0;flex:1}
+.section-heading .row{flex:0 1 auto;flex-wrap:wrap}
+.section-heading .row button{width:auto;flex:1 1 120px}
+.admin-shell,.volunteer-shell{min-width:0}
+.admin-panel{scroll-margin-top:12px}
+.admin-panel>p,.role-hero p{max-width:75ch}
+.ops-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,135px),1fr));gap:10px}
+.ops-kpi{min-width:0;overflow-wrap:anywhere}
+.record-card,.record,.pending-item,.guest-record{overflow-wrap:anywhere;word-break:normal}
+.record-meta{overflow-wrap:anywhere}
+#announcementHistory button,.records-list button{white-space:normal}
+#reader,#reader video,#reader canvas{max-width:100%!important}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #fff0a8;outline-offset:3px}
+@media(max-width:600px){
+ main{padding:8px 12px calc(22px + env(safe-area-inset-bottom))}
+ .brand,.card{padding:14px;margin:9px 0;border-radius:17px}
+ .section-heading{flex-direction:column;align-items:stretch}
+ .section-heading>.row,.section-heading .row{width:100%;flex-direction:row;flex-wrap:wrap}
+ .section-heading .row button{flex:1 1 130px;width:auto}
+ .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .row{flex-wrap:wrap}
+ .row>*{min-width:0}
+ .row button{flex:1 1 135px}
+ .ops-kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .ops-kpi{padding:11px}
+ .role-hero{padding:18px!important;border-radius:18px}
+ .role-hero-side{align-items:flex-start}
+ input,select,textarea{margin-bottom:14px}
+ button{padding:13px 14px}
+}
+@media(min-width:601px) and (max-width:900px){
+ main{max-width:900px;padding-left:18px;padding-right:18px}
+ .admin-shell .admin-panel{padding:17px}
+ .ops-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .guestLayout{grid-template-columns:minmax(0,1.1fr) minmax(250px,.9fr);gap:12px}
+}
+@media(min-width:901px){
+ .admin-shell{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start}
+ .admin-shell>.role-hero,.admin-shell>.kpi-card{grid-column:1/-1}
+ .admin-shell>.card{margin:0}
+ .volunteer-shell{max-width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+ .volunteer-shell>.role-hero,.volunteer-shell>.ops-kpis{grid-column:1/-1}
+ .volunteer-shell>.card{margin:0}
+}
+@media(orientation:landscape) and (max-height:520px){
+ main{padding-top:8px}
+ .brand{padding-block:14px}
+ .role-hero{padding:16px!important}
+}
+@supports(padding:max(0px)){
+ main{padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right));padding-bottom:max(22px,env(safe-area-inset-bottom))}
+}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{transition:none!important;animation:none!important}}
+
 </style><style id="eventhub-role-upgrade">
 /* EventHub role redesign; retain the existing Deepotsav artwork and palette. */
 .section-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 13px}
