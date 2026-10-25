@@ -1383,7 +1383,11 @@ $("announcementPreview")?.addEventListener("click",async()=>{
    }
   };
  }catch(e){out.textContent=e.message;}
- finally{if(!["announcementEvent","announcementAudience","announcementMessage","announcementFile"].some(id=>$(id).disabled))button.disabled=false;}
+ finally{
+  const fieldsLocked=["announcementEvent","announcementAudience","announcementMessage","announcementFile"].some(id=>$(id).disabled);
+  const selectedFile=$("announcementFile").files?.[0];
+  if(!fieldsLocked)button.disabled=!!(selectedFile&&selectedFile.size>8*1024*1024);
+ }
 });
 let announcementHistoryItems=[],announcementHistoryPage=0;
 const ANNOUNCEMENTS_PER_PAGE=8;
