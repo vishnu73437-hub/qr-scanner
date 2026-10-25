@@ -341,7 +341,7 @@ button.tool-tile{display:flex;flex-direction:column;align-items:flex-start;text-
 @media(max-width:380px){.quick-grid,.admin-tools{grid-template-columns:1fr}.ops-kpis{grid-template-columns:1fr}.ops-kpi{display:grid;grid-template-columns:58px 1fr;column-gap:8px;align-items:center}.ops-kpi>span{grid-row:1/span 2}.ops-kpi strong{margin:0}.ops-kpi small{grid-column:2}.record-actions{grid-template-columns:1fr}}
 </style><style id="eventhub-admin-controls">
 .guest-support-card{border-color:#52d6a0a0!important;background:linear-gradient(145deg,#10392f,#21113c)!important}.guest-support-card button{width:100%}
-.staff-badge-workspace{border-color:#52d6a08a!important;background:linear-gradient(145deg,#10392f,#21113c)!important}
+
 .staff-pass-display{text-align:center;margin-top:14px;padding:12px;border:1px solid #52d6a055;border-radius:16px;background:#050b1b66}.staff-pass-display img{display:block;width:100%;max-width:380px;height:auto;background:white;border-radius:10px;margin:8px auto 12px}
 .staff-verified-card{border-color:#52d6a0a0!important;background:linear-gradient(145deg,#10392f,#21113c)!important}
 .records-list{display:grid;gap:10px;margin-top:12px}.record-card{padding:14px;border:1px solid #ffd45b55;border-radius:15px;background:linear-gradient(145deg,#281747,#160e2b);min-width:0}.record-card strong{display:block;color:#ffe17b;overflow-wrap:anywhere}
@@ -350,7 +350,7 @@ button.tool-tile{display:flex;flex-direction:column;align-items:flex-start;text-
 @media(max-width:640px){.role-hero{align-items:flex-start;flex-direction:column}.role-hero-side{align-items:flex-start}.ops-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.admin-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.events-list{grid-template-columns:1fr}.manual-row{flex-direction:column}.manual-row button{width:100%}.scanner-controls{grid-template-columns:1fr}}
 @media(max-width:440px){.record-actions-admin{grid-template-columns:1fr}.filter-row{flex-direction:column;align-items:stretch}.filter-row button{width:100%}}
 @media(max-width:380px){.quick-grid,.admin-tools{grid-template-columns:1fr}.ops-kpis{grid-template-columns:1fr}.ops-kpi{display:grid;grid-template-columns:58px 1fr;column-gap:8px;align-items:center}.ops-kpi>span{grid-row:1/span 2}.ops-kpi strong{margin:0}.ops-kpi small{grid-column:2}.record-actions{grid-template-columns:1fr}}
-.admin-account-line{padding:9px 0;border-bottom:1px solid #ffffff16;overflow-wrap:anywhere}.admin-account-line:last-child{border-bottom:0}</style></head>
+.admin-account-line{padding:9px 0;border-bottom:1px solid #ffffff16;overflow-wrap:anywhere}.admin-account-line:last-child{border-bottom:0}.staff-pass-section{border-color:#52d6a0a0!important;background:linear-gradient(145deg,#10392f,#21113c)!important}.staff-pass-section select{margin-bottom:10px}</style></head>
 <body><div id="diwaliScene" aria-hidden="true"><svg viewBox="0 0 900 1500" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
 <defs>
 <linearGradient id="dsSky" x2="0" y2="1"><stop stop-color="#070b54"/><stop offset=".4" stop-color="#5b075d"/><stop offset="1" stop-color="#16052e"/></linearGradient>
@@ -388,13 +388,21 @@ button.tool-tile{display:flex;flex-direction:column;align-items:flex-start;text-
 <section class="card guest-support-card"><div class="section-heading"><div><div class="eyebrow">HERE TO HELP</div><h3>💬 Need event support?</h3></div><span class="live-pill">SUPPORT</span></div><p class="small">Questions about registration, your QR pass or the festival? Contact the organizer directly on Telegram.</p><button id="guestSupport" type="button">💬 Contact Telegram Support</button></section>
 <div class="notice">🔐 Your pass is connected to the Telegram bot. Registration and approval remain managed securely through the bot.</div>
 </div></div></section>
+<section id="staffPassSection" class="hidden card staff-pass-section">
+<div class="section-heading"><div><div class="eyebrow">YOUR EVENT ACCESS</div><h3>🎟️ My event pass</h3></div><span class="secure-tag">🔒 PERSONAL QR</span></div>
+<p class="small">Admins and volunteers use the same guest-style QR pass for entry and food collection. If you already have an approved guest pass, that existing pass is used. First-time staff pass issuance asks for your food preference.</p>
+<label for="staffFoodPreference">Food preference (only used when creating your first pass)</label>
+<select id="staffFoodPreference"><option value="">Choose preference if creating a new pass</option><option value="Vegetarian">Vegetarian</option><option value="Non-vegetarian">Non-vegetarian</option></select>
+<button id="loadMyGuestStylePass" type="button">🎟️ Show my event pass</button>
+<div id="staffPassDisplay" class="hidden staff-pass-display" aria-live="polite"></div>
+</section>
 <section id="volunteerView" class="hidden role-shell volunteer-shell">
 <section class="role-hero volunteer-hero"><div class="role-hero-copy"><div class="eyebrow">EVENTHUB · OPERATIONS</div><h2>Check-in desk</h2><p>Verify guest passes, record entry and food collection, and display your personal staff QR badge.</p></div><div class="role-hero-side"><span class="role-chip">🛡️ VOLUNTEER ACCESS</span><span id="scannerBadge" class="scanner-badge">● SCANNER READY</span></div></section>
 <div class="ops-kpis volunteer-kpis"><div class="ops-kpi"><span>01</span><strong>Verify</strong><small>Scan a guest or staff QR</small></div><div class="ops-kpi"><span>02</span><strong>Check in</strong><small>Record entry once</small></div><div class="ops-kpi"><span>03</span><strong>Serve</strong><small>Record food once</small></div></div>
-<section class="card staff-badge-workspace"><div class="section-heading"><div><div class="eyebrow">YOUR STAFF ID</div><h3>🪪 My QR badge</h3></div><span class="secure-tag">🔒 Staff only</span></div><p class="small">Show your personal staff badge for identity verification. It is separate from guest passes and cannot be used to record guest entry or food.</p><button id="loadStaffPass" type="button">🎟️ Show my staff QR badge</button><div id="staffPassDisplay" class="hidden staff-pass-display" aria-live="polite"></div></section>
+
 <section class="card scanner-workspace"><div class="section-heading"><div><div class="eyebrow">PASS VERIFICATION</div><h3>📷 QR scanner</h3></div><span class="secure-tag">🔒 Authenticated</span></div><p class="small">Scan with the camera or enter a pass code/QR token manually. Staff badges are identified separately and never count as guest entry.</p><div class="scanner-controls"><button id="startScan" type="button">📷 Start camera scanner</button><button id="stopScan" class="secondary hidden" type="button">Stop camera</button></div><div id="reader" class="hidden"></div><div class="manual-entry"><label for="manual">Manual guest pass code / QR token</label><div class="manual-row"><input id="manual" placeholder="H5-XXXXXXXX or QR token" autocomplete="off" autocapitalize="off" spellcheck="false"><button id="checkManual" type="button">Check pass</button></div></div></section>
 <section id="guestCard" class="card verified-pass hidden"><div class="section-heading"><div><div class="eyebrow">GUEST RECORD</div><h3 id="guestName">Verified guest</h3></div><span class="secure-tag">✓ VALID PASS</span></div><div id="guestInfo" class="guest-info-grid"></div><div id="guestState" class="status" aria-live="polite"></div><div class="record-actions"><button id="recordEntry" type="button">✓ Record entry</button><button id="recordFood" type="button">🍽️ Record food</button></div><div id="counts" class="small"></div></section>
-<section id="staffCard" class="card staff-verified-card hidden" aria-live="polite"><div class="section-heading"><div><div class="eyebrow">STAFF IDENTITY</div><h3 id="staffScanName">Verified staff</h3></div><span class="secure-tag">✓ ACTIVE STAFF</span></div><div id="staffScanInfo" class="guest-info-grid"></div><div id="staffScanStatus" class="status good">Verified staff badge. This is not a guest pass.</div></section>
+
 <div class="notice volunteer-footnote">⚠️ Check the guest’s details before choosing an action. Entry and food collection are separate, auditable actions and cannot be repeated for the same pass.</div>
 </section><section id="adminView" class="hidden role-shell admin-shell">
 <section class="role-hero admin-hero"><div class="role-hero-copy"><div class="eyebrow">EVENTHUB · COMMAND CENTER</div><h2>Admin workspace</h2><p>Manage event details, registration approvals, guest QR passes, volunteers, reporting and announcements from this dashboard.</p></div><div class="role-hero-side"><span class="role-chip admin-chip">👑 ADMIN ONLY</span><span class="scanner-badge">● CONTROL PANEL</span></div></section>
@@ -428,7 +436,7 @@ async function post(path,payload={},timeoutMs=15000){
  if(!r.ok||!d.ok)throw new Error("HTTP "+r.status+": "+(d.error||"Request failed"));
  return d;
 }
-function showRole(r){role=r;$("guestView").classList.toggle("hidden",r!=="guest");$("volunteerView").classList.toggle("hidden",!['volunteer','admin'].includes(r));$("adminView").classList.toggle("hidden",r!=="admin");}
+function showRole(r){role=r;$("guestView").classList.toggle("hidden",r!=="guest");$("staffPassSection").classList.toggle("hidden",!["volunteer","admin"].includes(r));$("volunteerView").classList.toggle("hidden",!["volunteer","admin"].includes(r));$("adminView").classList.toggle("hidden",r!=="admin");}
 async function boot(){
  status("Checking Telegram authentication…");
  if(!tg){status("Telegram WebApp was not detected. Open Event App from the bot menu.","bad");return;}
@@ -592,12 +600,11 @@ panel.append(title,intro,eventLabel,eventSelect,audienceLabel,audience,msgLabel,
 async function api(path,payload){return post(path,payload)}
 async function checkQr(value){
  if(busy)return;const scanned=String(value||"").trim();if(!scanned){status("Enter a guest pass code or scan its QR.","bad");return;}
- busy=true;currentQr=scanned;$("guestCard").classList.add("hidden");$("staffCard").classList.add("hidden");
- try{const d=await api("/api/guest",{qr:currentQr});
-  if(d.kind==="staff"&&d.staff){currentQr="";currentGuest=null;$("staffScanName").textContent=d.staff.name||"Event staff";$("staffScanInfo").textContent="Role: "+d.staff.role+"\nTelegram ID: "+d.staff.telegramId;$("staffScanStatus").textContent="Active staff badge verified. This is an identity badge, not a guest entry or food pass.";$("staffCard").classList.remove("hidden");status("Staff badge verified — no guest action was recorded.","good");await stopCamera();return;}
-  if(!d.guest)throw new Error("The server returned no guest pass details.");
-  currentGuest=d.guest;$("guestName").textContent=d.guest.name;$("guestInfo").textContent=["Residence: "+d.guest.residence,"Food: "+d.guest.food,"Pass: "+d.guest.passCode].join(" · ");
-  $("guestState").textContent="Entry: "+(d.guest.entryUsed?"Recorded":"Not recorded")+"\nFood: "+(d.guest.foodUsed?"Collected":"Not collected");$("recordEntry").disabled=d.guest.entryUsed;$("recordFood").disabled=d.guest.foodUsed;$("guestCard").classList.remove("hidden");status("Valid approved guest pass.","good");await stopCamera();
+ busy=true;currentQr=scanned;$("guestCard").classList.add("hidden");
+ try{const d=await api("/api/guest",{qr:currentQr});if(!d.guest)throw new Error("The server returned no event pass details.");
+  currentGuest=d.guest;$("guestName").textContent=d.guest.name;$("guestInfo").textContent=["Pass type: "+(d.guest.passRole||"Guest"),"Residence: "+d.guest.residence,"Food: "+d.guest.food,"Pass: "+d.guest.passCode].join(" · ");
+  $("guestState").textContent="Entry: "+(d.guest.entryUsed?"Recorded":"Not recorded")+"\nFood: "+(d.guest.foodUsed?"Collected":"Not collected");
+  $("recordEntry").disabled=d.guest.entryUsed;$("recordFood").disabled=d.guest.foodUsed;$("guestCard").classList.remove("hidden");status("Valid "+(d.guest.passRole||"guest").toLowerCase()+" pass. Entry and food actions are available.","good");await stopCamera();
  }catch(e){currentQr="";currentGuest=null;status(e.message,"bad");}finally{busy=false;}
 }
 async function record(action){if(!currentQr)return;try{const d=await api("/api/action",{qr:currentQr,action});currentGuest=d.guest;$("guestState").textContent=`Entry: ${d.guest.entryUsed?"Recorded":"Not recorded"}
@@ -622,15 +629,20 @@ async function loadMyPass(){
 }
 async function loadGuestEvent(){const box=$("eventDetails");box.textContent="Loading event details…";try{const d=await post("/api/event_details");const ev=d.event;const dateText=ev.event_date?new Date(ev.event_date+"T12:00:00").toLocaleDateString(undefined,{year:"numeric",month:"long",day:"numeric"}):"";box.textContent=[ev.name,ev.description,dateText?"Date: "+dateText:"",d.time?"Time: "+d.time:"",ev.venue?"Venue: "+ev.venue:""].filter(Boolean).join("\n");status("Event details loaded.","good");}catch(e){box.textContent="Could not load event details: "+e.message;status(e.message,"bad");}}$("guestEvent").onclick=loadGuestEvent;
 $("guestSupport").onclick=()=>{const url="https://t.me/DRvediyappanvishnu";if(tg?.openTelegramLink)tg.openTelegramLink(url);else window.open(url,"_blank","noopener,noreferrer");};
-$("loadStaffPass").onclick=loadStaffPass;
-async function loadStaffPass(){
- const button=$("loadStaffPass"),box=$("staffPassDisplay");box.classList.remove("hidden");box.textContent="Generating your secure staff badge…";button.disabled=true;
- try{const d=await post("/api/my_staff_pass");const p=d.staff_pass;if(!p?.image)throw new Error("The server did not return a staff QR badge.");
-  box.textContent="";const title=document.createElement("h3");title.textContent="🪪 Your "+p.role+" QR badge";
-  const img=document.createElement("img");img.alt="Personal authorized EventHub staff QR badge";img.src="data:image/png;base64,"+p.image;
-  const details=document.createElement("p");details.className="small";details.style.whiteSpace="pre-line";details.textContent="Name: "+p.name+"\nRole: "+p.role+"\nTelegram ID: "+p.telegramId+"\nBadge code: "+p.staffCode+"\nKeep this badge private.";
-  const download=document.createElement("button");download.textContent="⬇️ Save staff QR badge";download.onclick=()=>{const a=document.createElement("a");a.href=img.src;a.download="EventHub-Staff-"+p.staffCode+".png";document.body.append(a);a.click();a.remove();};
-  box.append(title,img,details,download);status("Your personal staff badge is ready.","good");
+$("loadMyGuestStylePass").onclick=loadMyGuestStylePass;
+async function loadMyGuestStylePass(){
+ const button=$("loadMyGuestStylePass"),box=$("staffPassDisplay");box.classList.remove("hidden");box.textContent="Loading your event pass…";button.disabled=true;
+ try{
+  const d=await post("/api/my_pass",{food_preference:$("staffFoodPreference").value});
+  if(!d.pass||!d.pass.image)throw new Error("The server did not return an event pass image.");
+  const p=d.pass;box.textContent="";
+  const heading=document.createElement("h3");heading.textContent="🎟️ Your "+(p.passRole||"staff")+" pass";
+  const img=document.createElement("img");img.alt="Personal standard EventHub QR pass for entry and food";img.src="data:image/png;base64,"+p.image;
+  const info=document.createElement("p");info.className="small";info.style.whiteSpace="pre-line";info.textContent="Name: "+p.name+"\nRole: "+(p.passRole||"Staff")+"\nPass code: "+p.passCode+"\nResidence: "+p.residence+(p.roomNumber?"\nRoom: "+p.roomNumber:"")+"\nFood: "+p.food+"\nEntry: "+(p.entryUsed?"Recorded":"Not recorded")+"\nFood collection: "+(p.foodUsed?"Recorded":"Not collected")+"\nThis is your standard guest-style QR. Use it for your own entry and food collection.";
+  const download=document.createElement("button");download.type="button";download.textContent="⬇️ Save event pass";download.onclick=()=>{const a=document.createElement("a");a.href=img.src;a.download="EventHub-"+String(p.passRole||"Staff")+"-"+p.passCode+".png";document.body.append(a);a.click();a.remove();};
+  box.append(heading,img,info,download);
+  if(p.createdForStaff)status("Your standard staff pass was created. The same QR works for entry and food collection.","good");
+  else status("Your existing approved pass is ready. Its saved food preference is unchanged.","good");
  }catch(e){box.textContent=e.message;status(e.message,"bad");}finally{button.disabled=false;}
 }
 async function loadGuestEvent(){
