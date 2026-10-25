@@ -451,6 +451,8 @@ body.scan-mode #status{position:fixed!important;z-index:99992!important;top:6px!
 <div class="section-heading"><div><div class="eyebrow">02 · REGISTRATION DESK</div><h3>📝 Pending approvals</h3><p class="small">Keep the dashboard compact. Open this queue only when you need to review registrations.</p></div><button id="loadPending" class="secondary compact-button" type="button" aria-expanded="false" aria-controls="pendingListWrap">Show pending approvals</button></div>
 <div id="pendingListWrap" class="hidden">
 <div class="pending-list-actions"><span id="pendingCount" class="small">Queue not loaded yet</span><div class="row"><button id="refreshPending" class="secondary compact-button" type="button">↻ Refresh</button><button id="hidePending" class="secondary compact-button" type="button">Hide queue</button></div></div>
+<label for="pendingSearch">Search pending requests</label><input id="pendingSearch" type="search" placeholder="Search name, phone, Telegram ID, residence or request number" autocomplete="off" aria-label="Search pending registration requests">
+<div id="pendingSearchSummary" class="small" aria-live="polite"></div>
 <div id="pendingList" class="records-list" aria-live="polite"></div>
 </div>
 </section>
@@ -588,6 +590,14 @@ $("loadPending").onclick=async()=>{
  wrap.classList.remove("hidden");button.setAttribute("aria-expanded","true");button.textContent="Hide pending approvals";
  await loadPendingRegistrations();
 };
+const pendingSearch=$("pendingSearch");
+function filterPendingRegistrations(){
+ const query=(pendingSearch?.value||"").trim().toLocaleLowerCase();
+ const cards=[...$("pendingList").querySelectorAll(".record-card")];let visible=0;
+ cards.forEach(card=>{const match=!query||card.textContent.toLocaleLowerCase().includes(query);card.classList.toggle("hidden",!match);if(match)visible++;});
+ const summary=$("pendingSearchSummary");if(summary)summary.textContent=query?("Showing "+visible+" of "+cards.length+" pending requests"):(cards.length?("Showing all "+cards.length+" pending requests"):"");
+}
+pendingSearch?.addEventListener("input",filterPendingRegistrations);
 $("refreshPending").onclick=loadPendingRegistrations;
 $("hidePending").onclick=()=>{$("pendingListWrap").classList.add("hidden");$("loadPending").setAttribute("aria-expanded","false");$("loadPending").textContent="Show pending approvals";};
 async function loadPendingRegistrations(){
@@ -606,6 +616,7 @@ async function loadPendingRegistrations(){
    const reject=document.createElement("button");reject.className="danger";reject.textContent="Reject request";reject.onclick=()=>decideRegistration(r.id,"reject");
    actions.append(approve,reject);card.append(title,meta,actions);box.append(card);
   });
+  filterPendingRegistrations();
  }catch(e){box.textContent=e.message;if(count)count.textContent="Queue could not load";status(e.message,"bad");}
 }
 async function decideRegistration(requestId,decision){
