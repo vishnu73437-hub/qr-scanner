@@ -929,6 +929,7 @@ $("announcementPreview")?.addEventListener("click",async()=>{
  finally{button.disabled=false;}
 });
 initAnnouncementPanel();
+loadAnnouncementHistory();
 
 async function loadAnnouncementHistory(){
  const box=$("announcementHistory");if(!box)return;box.textContent="Loading announcement history…";
