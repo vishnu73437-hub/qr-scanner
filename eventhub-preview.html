@@ -449,6 +449,23 @@ async function post(path,payload={},timeoutMs=15000){
  return d;
 }
 function showRole(r){role=r;$("guestView").classList.toggle("hidden",r!=="guest");$("staffPassSection").classList.toggle("hidden",!["volunteer","admin"].includes(r));$("volunteerView").classList.toggle("hidden",!["volunteer","admin"].includes(r));$("adminView").classList.toggle("hidden",r!=="admin");}
+async function refreshCurrentRole(){
+ if(!tg?.initData)return;
+ try{
+  const d=await post("/api/role");
+  if(!["admin","volunteer","guest"].includes(d.role))throw new Error("Invalid role response");
+  const previous=role;
+  showRole(d.role);
+  if(previous==="admin"&&d.role!=="admin"){
+   stopScan();
+   status("Admin access has been revoked. The admin dashboard is now locked.","bad");
+  }
+ }catch(e){
+  if(e.message.includes("HTTP 401")){
+   showRole("guest");stopScan();status("Telegram session expired. Reopen EventHub from the bot.","bad");
+  }
+ }
+}
 async function boot(){
  status("Checking Telegram authentication…");
  if(!tg){status("Telegram WebApp was not detected. Open Event App from the bot menu.","bad");return;}
@@ -465,6 +482,9 @@ async function boot(){
   status(e.message||"Authentication failed. Close and reopen the app from the bot menu.","bad");
  }
 }
+window.addEventListener("focus",()=>{if(tg?.initData)refreshCurrentRole();});
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&tg?.initData)refreshCurrentRole();});
+setInterval(()=>{if(!document.hidden&&tg?.initData)refreshCurrentRole();},15000);
 async function refreshStats(){try{const d=await post("/api/admin",{action:"stats"});$("statGuests").textContent=d.stats.approvedGuests;$("statEntry").textContent=d.stats.checkedIn;$("statMeals").textContent=d.stats.mealsServed;$("statVols").textContent=d.stats.volunteers;}catch(e){status(e.message,"bad");}}
 async function runAdminDiagnostics(){
  const button=$("runAdminDiagnostics"),out=$("adminDiagnostics");button.disabled=true;button.textContent="Testing…";out.textContent="Checking read-only dashboard actions…";
