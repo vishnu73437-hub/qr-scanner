@@ -720,7 +720,41 @@ async function checkQr(value){
 }
 async function record(action){if(!currentQr)return;try{const d=await api("/api/action",{qr:currentQr,action});currentGuest=d.guest;$("guestState").textContent=`Entry: ${d.guest.entryUsed?"Recorded":"Not recorded"}
 Food: ${d.guest.foodUsed?"Collected":"Not collected"}`;$("recordEntry").disabled=d.guest.entryUsed;$("recordFood").disabled=d.guest.foodUsed;if(d.counts)$("counts").textContent=`Meals served — Vegetarian: ${d.counts.vegetarianServed} | Non-vegetarian: ${d.counts.nonVegetarianServed}`;status(d.message,"good");}catch(e){status(e.message,"bad");}}
-async function startCamera(){if(!tg?.initData){status("Open from Telegram to authenticate.","bad");return;}try{$("reader").classList.remove("hidden");$("startScan").classList.add("hidden");$("stopScan").classList.remove("hidden");scanner=new Html5Qrcode("reader");lastCameraQr="";await scanner.start({facingMode:"environment"},{fps:10,qrbox:{width:260,height:260}},text=>{const decoded=String(text||"").trim();if(decoded&&decoded!==lastCameraQr&&!busy)checkQr(decoded);},()=>{});status("Camera active — scan passes one after another. The camera stays on after each scan.","good");if($("scannerBadge"))$("scannerBadge").textContent="● CAMERA LIVE";}catch(e){status("Camera unavailable. Allow camera access or enter a pass code manually.","bad");}}
+async function startCamera(){
+ if(!tg?.initData){status("Open EventHub from the Telegram bot to authenticate.","bad");return;}
+ if(!window.isSecureContext){status("Camera needs a secure connection. Open the HTTPS EventHub link inside Telegram.","bad");return;}
+ if(!navigator.mediaDevices?.getUserMedia){status("This browser does not expose camera access. Update Telegram/iPadOS or open EventHub in Safari, then allow Camera access.","bad");return;}
+ $("reader").classList.remove("hidden");$("startScan").classList.add("hidden");$("stopScan").classList.remove("hidden");
+ lastCameraQr="";let lastError=null;
+ try{
+  if(typeof Html5Qrcode==="undefined")throw new Error("QR scanner library did not load. Check your internet connection and reopen EventHub.");
+  scanner=new Html5Qrcode("reader",{verbose:false});
+  const config={fps:10,qrbox:(w,h)=>{const side=Math.max(180,Math.min(280,w-24,h-24));return {width:side,height:side};},aspectRatio:1.0,videoConstraints:{facingMode:{ideal:"environment"}}};
+  const onDecoded=text=>{const decoded=String(text||"").trim();if(decoded&&decoded!==lastCameraQr&&!busy){lastCameraQr=decoded;checkQr(decoded);}};
+  try{await scanner.start({facingMode:"environment"},config,onDecoded,()=>{});}
+  catch(firstError){
+   lastError=firstError;
+   // iPadOS/Safari sometimes needs a concrete camera device ID instead of facingMode.
+   const cameras=await Html5Qrcode.getCameras();
+   if(!cameras||!cameras.length)throw firstError;
+   const backCamera=cameras.find(c=>/back|rear|environment|world/i.test(c.label||""))||cameras[cameras.length-1];
+   await scanner.start(backCamera.id,{...config,videoConstraints:{deviceId:{exact:backCamera.id}}},onDecoded,()=>{});
+  }
+  const video=$("reader").querySelector("video");
+  if(video){video.setAttribute("playsinline","true");video.setAttribute("webkit-playsinline","true");video.muted=true;video.autoplay=true;video.style.width="100%";video.style.objectFit="cover";}
+  status("Camera active. Keep this page open and point the iPad camera at a QR pass. If prompted, tap Allow Camera.","good");
+  if($("scannerBadge"))$("scannerBadge").textContent="● CAMERA LIVE";
+ }catch(e){
+  const message=String(e?.message||e||lastError||"Unknown camera error");
+  if(scanner){try{if(scanner.isScanning)await scanner.stop();await scanner.clear();}catch(_){}scanner=null;}
+  $("reader").classList.add("hidden");$("startScan").classList.remove("hidden");$("stopScan").classList.add("hidden");
+  let help="Camera could not start. On iPad, allow Camera for Telegram/Safari in Settings, close other apps using the camera, then try again.";
+  if(/permission|denied|notallowed/i.test(message))help="Camera permission was denied. On iPad, enable Camera access for Telegram or Safari in Settings, then reopen EventHub.";
+  else if(/notfound|no camera|device not found/i.test(message))help="No available camera was found. Close other camera apps and retry.";
+  else if(/secure|https/i.test(message))help="Camera requires HTTPS. Reopen the official HTTPS EventHub link inside Telegram.";
+  status(help+" ("+message.slice(0,150)+")","bad");
+ }
+}
 async function stopCamera(){lastCameraQr="";if(scanner){try{if(scanner.isScanning)await scanner.stop();await scanner.clear();}catch(e){}scanner=null;}$("reader").classList.add("hidden");$("startScan").classList.remove("hidden");$("stopScan").classList.add("hidden");if($("scannerBadge"))$("scannerBadge").textContent="● SCANNER READY";}
 function setDedicatedScanner(open){document.body.classList.toggle("scan-mode",open);$("scanModeToggle").classList.toggle("hidden",open);$("scanModeExit").classList.toggle("hidden",!open);if(open&&(!scanner||!scanner.isScanning))startCamera();}
 $("scanModeToggle").onclick=()=>setDedicatedScanner(true);$("scanModeExit").onclick=()=>setDedicatedScanner(false);
