@@ -350,7 +350,13 @@ button.tool-tile{display:flex;flex-direction:column;align-items:flex-start;text-
 @media(max-width:640px){.role-hero{align-items:flex-start;flex-direction:column}.role-hero-side{align-items:flex-start}.ops-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.admin-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.events-list{grid-template-columns:1fr}.manual-row{flex-direction:column}.manual-row button{width:100%}.scanner-controls{grid-template-columns:1fr}}
 @media(max-width:440px){.record-actions-admin{grid-template-columns:1fr}.filter-row{flex-direction:column;align-items:stretch}.filter-row button{width:100%}}
 @media(max-width:380px){.quick-grid,.admin-tools{grid-template-columns:1fr}.ops-kpis{grid-template-columns:1fr}.ops-kpi{display:grid;grid-template-columns:58px 1fr;column-gap:8px;align-items:center}.ops-kpi>span{grid-row:1/span 2}.ops-kpi strong{margin:0}.ops-kpi small{grid-column:2}.record-actions{grid-template-columns:1fr}}
-.admin-account-line{padding:9px 0;border-bottom:1px solid #ffffff16;overflow-wrap:anywhere}.admin-account-line:last-child{border-bottom:0}.staff-pass-section{border-color:#52d6a0a0!important;background:linear-gradient(145deg,#10392f,#21113c)!important}.staff-pass-section select{margin-bottom:10px}</style></head>
+.admin-account-line{padding:9px 0;border-bottom:1px solid #ffffff16;overflow-wrap:anywhere}.admin-account-line:last-child{border-bottom:0}.staff-pass-section{border-color:#52d6a0a0!important;background:linear-gradient(145deg,#10392f,#21113c)!important}.staff-pass-section select{margin-bottom:10px}
+.pending-approvals-panel .section-heading{align-items:center}
+.pending-approvals-panel .section-heading p{margin:6px 0 0;max-width:440px}
+.pending-list-actions{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0 2px;border-top:1px solid #ffd45b33}
+.pending-list-actions .row{display:flex;gap:7px;margin:0;flex-wrap:wrap}
+.pending-list-actions button{margin:0}
+</style></head>
 <body><div id="diwaliScene" aria-hidden="true"><svg viewBox="0 0 900 1500" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
 <defs>
 <linearGradient id="dsSky" x2="0" y2="1"><stop stop-color="#070b54"/><stop offset=".4" stop-color="#5b075d"/><stop offset="1" stop-color="#16052e"/></linearGradient>
@@ -408,7 +414,13 @@ button.tool-tile{display:flex;flex-direction:column;align-items:flex-start;text-
 <section class="role-hero admin-hero"><div class="role-hero-copy"><div class="eyebrow">EVENTHUB · COMMAND CENTER</div><h2>Admin workspace</h2><p>Manage event details, registration approvals, guest QR passes, volunteers, reporting and announcements from this dashboard.</p></div><div class="role-hero-side"><span class="role-chip admin-chip">👑 ADMIN ONLY</span><span class="scanner-badge">● CONTROL PANEL</span></div></section>
 <section class="card kpi-card"><div class="section-heading"><div><div class="eyebrow">LIVE OVERVIEW</div><h3>Event operations</h3></div><button id="refreshStats" class="secondary compact-button" type="button">↻ Refresh</button></div><div class="ops-kpis admin-kpis"><div class="ops-kpi"><span>GUESTS</span><strong id="statGuests">—</strong><small>Approved passes</small></div><div class="ops-kpi"><span>ENTRY</span><strong id="statEntry">—</strong><small>Checked in</small></div><div class="ops-kpi"><span>FOOD</span><strong id="statMeals">—</strong><small>Meals served</small></div><div class="ops-kpi"><span>TEAM</span><strong id="statVols">—</strong><small>Volunteers</small></div></div></section>
 <section class="card admin-panel"><div class="section-heading"><div><div class="eyebrow">01 · EVENT SETTINGS</div><h3>📅 Event workspaces</h3></div><span class="panel-index">01</span></div><p class="small">Edit name, description, date, time and venue here. Changes update the guest Event Details screen; new workspaces remain drafts until an event-specific registration workflow is configured.</p><div id="eventsList" class="events-list">Loading events…</div><div class="form-divider"></div><h4>Create an event workspace</h4><label for="eventName">Event name</label><input id="eventName" placeholder="e.g. Medical Conference 2027" maxlength="120"><label for="eventDesc">Description</label><textarea id="eventDesc" rows="2" placeholder="Purpose, theme and important details"></textarea><div class="row form-row"><div><label for="eventDate">Date</label><input id="eventDate" type="date"></div><div><label for="eventTime">Time</label><input id="eventTime" placeholder="e.g. 5:30 PM" maxlength="40"></div></div><label for="eventVenue">Venue</label><input id="eventVenue" placeholder="Venue" maxlength="200"><button id="createEvent" type="button">＋ Create event workspace</button></section>
-<section class="card admin-panel"><div class="section-heading"><div><div class="eyebrow">02 · REGISTRATION DESK</div><h3>📝 Pending approvals</h3></div><button id="loadPending" class="secondary compact-button" type="button">↻ Refresh list</button></div><p class="small">Approve or reject registrations directly from EventHub. Approval generates a QR pass and attempts delivery to the guest in Telegram.</p><div id="pendingList" class="records-list" aria-live="polite">Loading pending registrations…</div></section>
+<section class="card admin-panel pending-approvals-panel">
+<div class="section-heading"><div><div class="eyebrow">02 · REGISTRATION DESK</div><h3>📝 Pending approvals</h3><p class="small">Keep the dashboard compact. Open this queue only when you need to review registrations.</p></div><button id="loadPending" class="secondary compact-button" type="button" aria-expanded="false">Show pending approvals</button></div>
+<div id="pendingListWrap" class="hidden">
+<div class="pending-list-actions"><span id="pendingCount" class="small">Queue not loaded yet</span><div class="row"><button id="refreshPending" class="secondary compact-button" type="button">↻ Refresh</button><button id="hidePending" class="secondary compact-button" type="button">Hide queue</button></div></div>
+<div id="pendingList" class="records-list" aria-live="polite"></div>
+</div>
+</section>
 <section class="card admin-panel"><div class="section-heading"><div><div class="eyebrow">03 · GUEST ACCESS</div><h3>🎟️ Guest & QR pass manager</h3></div><span class="panel-index">03</span></div><p class="small">Search by guest name, phone, pass code or Telegram ID. Reissue invalidates the old QR; revocation blocks use; reset actions require admin confirmation.</p><div class="manual-row"><input id="guestSearch" placeholder="Name, phone, H5 pass code or Telegram ID" autocomplete="off"><button id="searchGuests" type="button">Search</button></div><div class="row filter-row"><div><label for="guestStatus">Pass status</label><select id="guestStatus"><option value="all">All statuses</option><option value="approved">Active / approved</option><option value="revoked">Revoked</option></select></div><button id="loadRecentGuests" class="secondary" type="button">Show recent guests</button></div><div id="guestResults" class="records-list" aria-live="polite"></div></section>
 <section class="card admin-panel"><div class="section-heading"><div><div class="eyebrow">04 · PEOPLE & PERMISSIONS</div><h3>👥 Volunteer access</h3></div><span class="panel-index">04</span></div><p class="small">Grant or remove scanner access by Telegram numeric ID. Removing volunteer access also invalidates their existing staff QR badge.</p><label for="volId">Telegram numeric ID</label><div class="manual-row"><input id="volId" inputmode="numeric" placeholder="e.g. 123456789"><button id="addVol" type="button">＋ Add</button></div><div class="row"><button id="removeVol" class="secondary" type="button">Remove access</button><button id="listVols" class="secondary" type="button">List volunteers</button></div><div id="volList" class="volunteer-list small" aria-live="polite"></div></section>
 <section class="card admin-panel"><div class="section-heading"><div><div class="eyebrow">05 · PRIVILEGED ACCESS</div><h3>🔐 Admin access</h3></div><span class="panel-index">05</span></div><p class="small">Grant admin rights only to trusted organizers. Your configured owner/recovery admin ID is protected from removal here.</p><label for="adminId">Telegram numeric ID</label><div class="manual-row"><input id="adminId" inputmode="numeric" placeholder="e.g. 123456789"><button id="addAdmin" type="button">＋ Add admin</button></div><div class="row"><button id="removeAdmin" class="secondary" type="button">Remove admin</button><button id="listAdmins" class="secondary" type="button">List admins</button></div><div id="adminList" class="volunteer-list small" aria-live="polite"></div></section>
@@ -446,7 +458,7 @@ async function boot(){
   if(!["admin","volunteer","guest"].includes(d.role))throw new Error("The server replied, but did not return a valid user role.");
   showRole(d.role);
   status("Authenticated · "+d.role.toUpperCase(),"good");
-  if(d.role==="admin"){await refreshStats();await loadEvents();await loadPendingRegistrations();await loadAdmins();}
+  if(d.role==="admin"){await refreshStats();await loadEvents();await loadAdmins();}
   else if(d.role==="guest"){status("Authenticated as GUEST. Use the bot to register or receive your QR pass.","good");await loadGuestEvent();}
  }catch(e){
   console.error("EventHub boot/authentication error:",e);
@@ -483,11 +495,23 @@ $("createEvent").onclick=async()=>{try{
 $("refreshStats").onclick=refreshStats;$("addVol").onclick=()=>volAction("add_volunteer");$("removeVol").onclick=()=>volAction("remove_volunteer");$("listVols").onclick=loadVolunteers;
 async function loadVolunteers(){const box=$("volList");box.textContent="Loading volunteers…";try{const d=await post("/api/admin",{action:"volunteers"});box.textContent=d.volunteers.length?d.volunteers.map(v=>v.telegram_id+" · added "+(v.added_at||"date unavailable")).join("\n"):"No volunteers configured.";}catch(e){box.textContent=e.message;status(e.message,"bad");}}
 async function volAction(action){try{const telegram_id=Number($("volId").value);if(!Number.isSafeInteger(telegram_id)||telegram_id<=0)throw Error("Enter a valid numeric Telegram ID.");if(action==="remove_volunteer"&&!confirm("Remove volunteer access for Telegram ID "+telegram_id+"? Scanner access will be removed immediately."))return;const d=await post("/api/admin",{action,telegram_id});status(d.message+(action==="remove_volunteer"?" Volunteer access removed.":""),"good");$("volId").value="";await refreshStats();await loadVolunteers();}catch(e){status(e.message,"bad");}}
+$("loadPending").onclick=async()=>{
+ const wrap=$("pendingListWrap"),button=$("loadPending");
+ const opening=wrap.classList.contains("hidden");
+ if(!opening){wrap.classList.add("hidden");button.setAttribute("aria-expanded","false");button.textContent="Show pending approvals";return;}
+ wrap.classList.remove("hidden");button.setAttribute("aria-expanded","true");button.textContent="Hide pending approvals";
+ await loadPendingRegistrations();
+};
+$("refreshPending").onclick=loadPendingRegistrations;
+$("hidePending").onclick=()=>{$("pendingListWrap").classList.add("hidden");$("loadPending").setAttribute("aria-expanded","false");$("loadPending").textContent="Show pending approvals";};
 async function loadPendingRegistrations(){
- const box=$("pendingList");if(!box)return;box.textContent="Loading pending registrations…";
+ const box=$("pendingList"),count=$("pendingCount");if(!box)return;box.textContent="Loading pending registrations…";if(count)count.textContent="Loading queue…";
  try{const d=await post("/api/admin",{action:"pending_registrations"});box.textContent="";
-  if(!d.registrations.length){box.textContent="No pending registrations.";return;}
-  d.registrations.forEach(r=>{
+  const requests=Array.isArray(d.registrations)?d.registrations:[];
+  if(count)count.textContent=requests.length+" pending "+(requests.length===1?"request":"requests");
+  $("loadPending").textContent=requests.length?"Hide approvals · "+requests.length:"Hide approvals";
+  if(!requests.length){box.textContent="No pending registrations. You can close this section and continue using the dashboard.";return;}
+  requests.forEach(r=>{
    const card=document.createElement("div");card.className="record-card";const title=document.createElement("strong");title.textContent=r.full_name+" · Request #"+r.id;
    const residence=r.residence_type==="Hostel"?("Hostel "+(r.hostel_number||"")+(r.room_number?" · Room "+r.room_number:"")):"Apartment";
    const meta=document.createElement("div");meta.className="record-meta";meta.textContent=["Telegram ID: "+r.telegram_id,"Phone: "+(r.phone||"Not provided"),"Residence: "+residence,"Food: "+r.food_preference,"Submitted: "+(r.created_at||"")].join("\n");
@@ -496,7 +520,7 @@ async function loadPendingRegistrations(){
    const reject=document.createElement("button");reject.className="danger";reject.textContent="Reject request";reject.onclick=()=>decideRegistration(r.id,"reject");
    actions.append(approve,reject);card.append(title,meta,actions);box.append(card);
   });
- }catch(e){box.textContent=e.message;status(e.message,"bad");}
+ }catch(e){box.textContent=e.message;if(count)count.textContent="Queue could not load";status(e.message,"bad");}
 }
 async function decideRegistration(requestId,decision){
  if(!confirm("Confirm "+(decision==="approve"?"approval and QR delivery for":"rejection of")+" registration request #"+requestId+"?"))return;
