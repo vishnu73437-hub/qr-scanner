@@ -1,118 +1,749 @@
 <!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="color-scheme" content="dark">
-<title>KSMU H5 Diwali Scanner</title>
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-<style>
-:root{--purple:#32104d;--purple2:#4a1a69;--gold:#d9b15f;--cream:#fff6df;--green:#3bc477;--red:#ff6b6b}
-*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#552477,var(--purple) 55%,#180b27);color:var(--cream);font-family:system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh}
-main{max-width:520px;margin:auto;padding:20px 16px 36px}.brand{text-align:center;border:1px solid var(--gold);border-radius:20px;padding:20px 14px;margin-bottom:16px;box-shadow:0 8px 32px #0004}
-.lamp{font-size:32px}.brand h1{font-size:22px;line-height:1.2;color:#f3d58b;margin:8px 0}.brand p{margin:0;font-size:12px;letter-spacing:2px}
-.card{background:#ffffff0c;border:1px solid #d9b15f66;border-radius:18px;padding:16px;margin:12px 0}
-button{border:0;border-radius:12px;padding:14px 16px;font-weight:750;font-size:15px;cursor:pointer;width:100%;margin:6px 0;background:var(--gold);color:#241033}
-button.secondary{background:#ffffff12;color:var(--cream);border:1px solid #d9b15f88}button:disabled{opacity:.45}
-#reader{width:100%;overflow:hidden;border-radius:14px;background:#12091b}#reader video{border-radius:14px}
-.small{font-size:12px;opacity:.8;line-height:1.5}.status{padding:12px;border-radius:12px;margin:10px 0;white-space:pre-wrap;overflow-wrap:anywhere}.good{background:#1b603d;color:#eafff1}.bad{background:#752b37;color:#fff0f0}.neutral{background:#ffffff12}
-.hidden{display:none!important}.guestname{font-size:21px;font-weight:800;color:#f3d58b}.pill{display:inline-block;padding:5px 9px;border-radius:999px;background:#ffffff17;margin:3px;font-size:12px}
-</style>
-</head>
-<body>
-<main>
-  <header class="brand"><div class="lamp">🪔</div><h1>KSMU H5 DIWALI 2026</h1><p>A JOURNEY THROUGH INDIA</p><p style="margin-top:12px;color:#f3d58b">VOLUNTEER QR SCANNER</p></header>
-  <section class="card">
-    <div id="status" class="status neutral">Open this Mini App from your Telegram bot. Volunteer/admin access is checked by the server.</div>
-    <button id="startScan">📷 Start QR Scanner</button>
-    <button id="stopScan" class="secondary hidden">Stop camera</button>
-    <div id="reader" class="hidden"></div>
-    <p class="small">Allow camera access when asked. If camera scanning is unavailable, you can enter the pass code or QR token manually below.</p>
-    <label for="manual" class="small">Manual pass code / QR token</label>
-    <input id="manual" autocomplete="off" placeholder="H5-XXXXXXXX" style="width:100%;padding:13px;border-radius:10px;border:1px solid #d9b15f88;background:#170b22;color:white;margin-top:6px">
-    <button id="checkManual" class="secondary">Check pass</button>
-  </section>
-  <section id="guestCard" class="card hidden">
-    <div class="guestname" id="guestName"></div>
-    <div id="guestInfo"></div>
-    <div id="guestState" class="status neutral"></div>
-    <button id="recordEntry">✅ Record Event Entry</button>
-    <button id="recordFood">🍽️ Record Food Collection</button>
-    <div id="counts" class="small"></div>
-  </section>
-  <p class="small">Only scan event passes. Each entry and food collection can be recorded once. The QR is checked by the server; the screen alone never approves a pass.</p>
-</main>
-<script>
-const tg=window.Telegram?.WebApp;
-tg?.ready(); tg?.expand();
-const API_BASE = "https://unwjym.bot-keep.xyz";
-let currentQr="", currentGuest=null, scanner=null, busy=false;
-const $=id=>document.getElementById(id);
-function showStatus(message,kind="neutral"){ $("status").textContent=message; $("status").className="status "+kind; }
-async function api(path,payload){
-  const r=await fetch(API_BASE+path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({...payload,initData:tg?.initData||""})});
-  const data=await r.json().catch(()=>({ok:false,error:"Invalid server response"}));
-  if(!r.ok||!data.ok) throw new Error(data.error||"Request failed");
-  return data;
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="color-scheme" content="dark"><title>Deepotsav EventHub</title><script src="https://telegram.org/js/telegram-web-app.js"></script><script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<style>:root{color-scheme:dark;--bg:#100720;--panel:#21103d;--panel2:#2e1551;--gold:#f5cf78;--cream:#fff7e8;--muted:#d4c5e7;--red:#ff748b;--green:#52d6a0;--line:#f5cf7855;--pink:#ec63c6;--blue:#7665ff}
+*{box-sizing:border-box}html{min-height:100%;-webkit-text-size-adjust:100%;text-size-adjust:100%;scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse at 50% -15%,#572274 0%,#24103e 35%,var(--bg) 78%);color:var(--cream);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh;min-height:100dvh;overflow-x:hidden}main{width:min(100%,820px);margin:0 auto;padding:clamp(10px,3vw,24px) clamp(10px,3.5vw,20px) calc(28px + env(safe-area-inset-bottom))}.brand,.card{border:1px solid var(--line);background:linear-gradient(145deg,#ffffff0d,#ffffff04);border-radius:clamp(15px,3vw,23px);padding:clamp(13px,3.5vw,22px);margin:12px 0;box-shadow:0 12px 32px #05000d30;min-width:0}.brand{position:relative;overflow:hidden;text-align:center;background:radial-gradient(ellipse at 50% 0%,#782b82aa,transparent 68%),linear-gradient(145deg,#2c1050,#160a2d);padding:clamp(18px,5vw,32px) 12px;border-color:#f5cf7877}.brand:after{content:"✦  ✧  🪔  ✧  ✦";display:block;color:var(--gold);letter-spacing:.22em;font-size:clamp(12px,3vw,18px);margin-top:12px}.brand h1{font-family:Georgia,"Times New Roman",serif;font-size:clamp(23px,6vw,38px);line-height:1.08;letter-spacing:.045em;color:var(--gold);text-shadow:0 2px 20px #ff9b3d45;margin:8px 0}.brand .small{font-size:clamp(11px,2.8vw,14px);letter-spacing:.12em;text-transform:uppercase}.small{font-size:clamp(12px,2.8vw,14px);color:var(--muted);line-height:1.55;overflow-wrap:anywhere}h2,h3,h4{line-height:1.2;margin-top:4px;overflow-wrap:anywhere}h2{font-size:clamp(20px,4.5vw,27px)}h3{font-size:clamp(17px,4vw,21px)}.status{padding:12px 14px;border-radius:13px;margin:10px 0;white-space:pre-wrap;overflow-wrap:anywhere;background:#ffffff0d;border:1px solid #ffffff12;line-height:1.45}.good{background:#14533c;border-color:#52d6a055}.bad{background:#672039;border-color:#ff748b66}button,input,textarea,select{font:inherit;max-width:100%;min-width:0}button{border:1px solid transparent;border-radius:14px;padding:14px 15px;min-height:46px;font-weight:750;cursor:pointer;background:linear-gradient(135deg,#ffe6a3,var(--gold));color:#241238;width:100%;margin:5px 0;box-shadow:0 5px 16px #0002;touch-action:manipulation;transition:transform .15s,filter .15s}button:active{transform:scale(.985)}button:disabled{opacity:.48;cursor:not-allowed}button.secondary{background:#ffffff08;color:var(--cream);border:1px solid #f5cf7866;box-shadow:none}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(7px,2vw,12px)}.tile{background:linear-gradient(145deg,#351858,#201039);border:1px solid #d6a8ff30;border-radius:15px;padding:clamp(10px,2.7vw,16px);text-align:left;color:var(--cream);overflow-wrap:anywhere}.tile strong{display:block;margin:5px 0;font-size:clamp(14px,3vw,17px)}.tile span{font-size:clamp(11px,2.6vw,13px);color:var(--muted)}input,textarea,select{display:block;width:100%;padding:13px;border-radius:12px;border:1px solid #f5cf7855;background:#170a2a;color:var(--cream);margin:6px 0 12px;min-height:46px}textarea{resize:vertical}input:focus,textarea:focus,select:focus,button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}label{display:block;font-size:13px;color:var(--muted);margin-top:4px}.hidden{display:none!important}.pill{display:inline-block;padding:5px 10px;border-radius:999px;background:#ffffff14;margin:3px;font-size:12px}#reader{width:100%;max-width:100%;overflow:hidden;border-radius:14px;background:#08040e}#reader video,#reader canvas{display:block;max-width:100%!important;border-radius:12px}.guestname{font-size:clamp(19px,5vw,26px);font-weight:800;color:var(--gold);overflow-wrap:anywhere}.row{display:flex;gap:8px;align-items:stretch}.row>*{flex:1;min-width:0}.card .card{margin:10px 0;padding:12px}.card img{max-width:100%;height:auto}.status+section{min-width:0}pre{white-space:pre-wrap;overflow-wrap:anywhere;max-width:100%}
+@media(max-width:420px){main{padding:9px 9px calc(22px + env(safe-area-inset-bottom))}.brand,.card{padding:13px;border-radius:16px}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.tile{padding:10px}.row{gap:6px}.row button{padding:12px 8px;font-size:14px}.brand h1{letter-spacing:.015em}.card .grid .tile{min-height:75px}}
+@media(max-width:340px){.grid{grid-template-columns:1fr}.row{flex-direction:column;gap:0}.brand .small{letter-spacing:.04em}}
+@media(min-width:700px){main{padding-top:24px}.brand{padding:28px}.adminView{display:grid}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+/* Design alignment with the original Deepostav concept preview */
+.eyebrow{font-size:11px;letter-spacing:2px;color:var(--muted);text-transform:uppercase}
+.guestLayout{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(260px,.7fr);gap:16px}
+.guestMain,.guestSide{min-width:0}
+.guestHero{border:1px solid #9a7547;border-radius:22px;padding:clamp(20px,4vw,32px);margin:12px 0 15px;background:linear-gradient(120deg,#173e36,#19142d 78%);position:relative;overflow:hidden;box-shadow:0 16px 38px #0004}
+.guestHero:after{content:"✦  ✧  ✦";position:absolute;right:16px;top:14px;color:#e7b65e;font-size:25px;opacity:.6}
+.guestHero h2{font-family:Georgia,"Times New Roman",serif;font-size:clamp(28px,5vw,44px);line-height:1.1;color:var(--gold);margin:12px 0}
+.guestHero p{color:#e7deed;max-width:540px}
+.gold{color:var(--gold)}
+.event{display:flex;gap:13px;align-items:center;margin:14px 0}
+.poster{width:84px;min-width:84px;height:110px;border-radius:12px;background:linear-gradient(150deg,#3a1757,#c24c47 55%,#f5c35f);display:grid;place-items:center;font-size:36px}
+.notice{border:1px solid #237b66;background:#10352e;border-radius:14px;padding:13px;color:#d7fff4;margin:12px 0}
+#guestView .card{background:linear-gradient(150deg,rgba(35,27,57,.97),rgba(17,18,37,.97));border-color:#57446f;border-radius:22px}
+#guestView .tile{background:#19152c;border-color:#57446f;border-radius:16px;padding:15px}
+#guestView .tile strong{display:block;margin:6px 0}
+#guestView .tile span{display:block;font-size:12px;color:var(--muted)}
+@media(max-width:740px){.guestLayout{grid-template-columns:1fr}.guestHero{padding:20px}.event{align-items:center}}
+
+/* Rich, festive background treatment across all EventHub roles */
+body{
+ background-color:#100720;
+ background-image:
+   radial-gradient(ellipse at 8% 8%,rgba(222,88,110,.22),transparent 28rem),
+   radial-gradient(ellipse at 94% 20%,rgba(247,185,75,.18),transparent 27rem),
+   radial-gradient(ellipse at 48% 78%,rgba(73,157,132,.17),transparent 32rem),
+   radial-gradient(ellipse at 50% 0%,#572274 0%,#24103e 35%,#100720 78%);
+ background-attachment:fixed;
 }
+body:before{
+ content:"";
+ position:fixed;
+ inset:0;
+ pointer-events:none;
+ z-index:-1;
+ opacity:.35;
+ background-image:
+  radial-gradient(circle at 7% 18%,#f5cf78 0 1px,transparent 2px),
+  radial-gradient(circle at 87% 12%,#f5cf78 0 1px,transparent 2px),
+  radial-gradient(circle at 22% 65%,#ec63c6 0 1px,transparent 2px),
+  radial-gradient(circle at 78% 72%,#f5cf78 0 1px,transparent 2px),
+  radial-gradient(circle at 50% 42%,#fff7e8 0 1px,transparent 2px);
+ background-size:180px 180px,220px 220px,260px 260px,200px 200px,300px 300px;
+}
+.brand{
+ background:
+  radial-gradient(ellipse at 50% 0%,rgba(240,166,67,.23),transparent 45%),
+  linear-gradient(120deg,rgba(91,31,87,.96),rgba(27,13,51,.97) 58%,rgba(17,53,47,.93));
+ border-color:#f5cf7899;
+ box-shadow:0 16px 42px #05000d55,inset 0 1px #fff2;
+}
+.brand:before{
+ content:"";
+ position:absolute;inset:8px;border:1px solid #f5cf7833;border-radius:15px;pointer-events:none;
+}
+.card{
+ background:linear-gradient(145deg,rgba(45,25,69,.88),rgba(20,12,38,.92));
+ backdrop-filter:blur(10px);
+ border-color:#f5cf7840;
+ box-shadow:0 14px 38px #05000d40,inset 0 1px #ffffff08;
+}
+#guestView .card{
+ background:linear-gradient(145deg,rgba(36,27,56,.92),rgba(17,18,37,.94));
+ border-color:#8e6d9e88;
+}
+.guestHero{
+ background:
+  radial-gradient(ellipse at 100% 0%,rgba(240,177,77,.2),transparent 38%),
+  radial-gradient(ellipse at 0% 100%,rgba(51,157,126,.22),transparent 45%),
+  linear-gradient(125deg,#173e36,#25143d 55%,#3a174c);
+ border-color:#e8bc6d;
+}
+.tile{box-shadow:inset 0 1px #ffffff0a,0 8px 22px #05000d25}
+.poster{box-shadow:0 8px 22px #0004;border:1px solid #f5cf7855}
+
+
+/* Vibrant, high-energy Diwali night palette */
+body{
+ background-color:#100526;
+ background-image:
+  radial-gradient(ellipse at 8% 10%,rgba(255,47,112,.34),transparent 30rem),
+  radial-gradient(ellipse at 92% 12%,rgba(255,176,0,.3),transparent 28rem),
+  radial-gradient(ellipse at 82% 62%,rgba(0,222,190,.2),transparent 32rem),
+  radial-gradient(ellipse at 16% 78%,rgba(115,57,255,.28),transparent 30rem),
+  radial-gradient(ellipse at 50% 0%,#4a176e 0%,#24103e 38%,#100526 80%);
+ background-attachment:fixed;
+}
+body:before{
+ opacity:.7;
+ background-image:
+  radial-gradient(circle at 7% 18%,#ffd86a 0 1.5px,transparent 2.7px),
+  radial-gradient(circle at 87% 12%,#ff4fa3 0 1.5px,transparent 2.7px),
+  radial-gradient(circle at 22% 65%,#ffad42 0 1.5px,transparent 2.7px),
+  radial-gradient(circle at 78% 72%,#62ffe0 0 1.5px,transparent 2.7px),
+  radial-gradient(circle at 50% 42%,#fff7a8 0 1.5px,transparent 2.7px);
+ background-size:150px 150px,190px 190px,230px 230px,170px 170px,250px 250px;
+}
+.brand{
+ background:
+  radial-gradient(ellipse at 50% 0%,rgba(255,196,38,.35),transparent 48%),
+  linear-gradient(120deg,rgba(145,25,106,.98),rgba(44,15,87,.98) 52%,rgba(5,91,76,.96));
+ border-color:#ffd76b;
+ box-shadow:0 0 0 1px #ffcf5a24,0 18px 55px #ff3e8a20,inset 0 1px #fff4;
+}
+.brand h1{text-shadow:0 0 12px #ffc85b66,0 2px 26px #ff4d9944}
+.brand:after{color:#ffe58a;text-shadow:0 0 16px #ffbd38aa}
+.card{
+ background:linear-gradient(145deg,rgba(54,23,91,.94),rgba(23,10,52,.96));
+ border-color:rgba(255,205,87,.45);
+ box-shadow:0 16px 42px #07001866,inset 0 1px #ffffff12;
+}
+#guestView .card{
+ background:linear-gradient(145deg,rgba(54,25,89,.96),rgba(21,15,54,.97));
+ border-color:rgba(255,208,97,.52);
+}
+.guestHero{
+ background:
+  radial-gradient(ellipse at 90% 4%,rgba(255,190,46,.38),transparent 38%),
+  radial-gradient(ellipse at 4% 100%,rgba(0,255,191,.25),transparent 45%),
+  linear-gradient(125deg,#075b4c 0%,#3b176e 48%,#8d155d 100%);
+ border-color:#ffd76b;
+ box-shadow:0 18px 48px #0005,0 0 30px #e637a51c;
+}
+.guestHero h2{color:#ffe17b;text-shadow:0 0 22px #ffb42d30}
+.tile{
+ background:linear-gradient(145deg,rgba(101,34,128,.55),rgba(28,17,65,.96));
+ border-color:#ffcf5a55;
+}
+#guestView .tile{
+ background:linear-gradient(145deg,rgba(102,32,126,.55),rgba(25,17,59,.97));
+ border-color:#ffcf5a66;
+}
+.poster{
+ background:linear-gradient(145deg,#ff4f91,#ff9c32 52%,#ffd45b);
+ box-shadow:0 8px 25px #ff6c432e;
+}
+button{
+ background:linear-gradient(120deg,#fff0a1 0%,#ffc83f 42%,#ff9c38 100%);
+ box-shadow:0 6px 20px #ff9c382c,inset 0 1px #fff9;
+}
+button.secondary{
+ background:linear-gradient(135deg,rgba(129,45,151,.42),rgba(38,23,75,.7));
+ border-color:#ffd36c99;
+}
+.notice{background:linear-gradient(120deg,#064e43,#103a4d);border-color:#3ce5ba;color:#e1fff5}
+
+
+
+/* Screenshot-matched mobile guest design: jewel-toned Diwali night, gold frames, emerald notice */
+@media(max-width:740px){
+  main{width:100%;padding:8px 14px calc(24px + env(safe-area-inset-bottom))}
+  #status{border:2px solid #ffd75b;background:linear-gradient(110deg,#075f49,#08724f 65%,#064c43);color:#fff8dc;border-radius:22px;padding:17px 18px;box-shadow:0 0 18px #ffb52d66,inset 0 1px #ffffff35;font-size:clamp(14px,3.8vw,18px)}
+  #guestView .guestLayout{display:flex;flex-direction:column;gap:0}
+  #guestView .guestMain,#guestView .guestSide{display:contents}
+  #guestView .guestHero{order:1;min-height:320px;padding:28px 24px 24px;border:2px solid #ffd75b;border-radius:30px;background:radial-gradient(ellipse at 80% 90%,rgba(255,131,31,.65),transparent 43%),radial-gradient(ellipse at 15% 10%,rgba(255,32,123,.5),transparent 45%),linear-gradient(145deg,#251054 0%,#4b1268 52%,#170d3b 100%);box-shadow:0 0 22px #ff9b2d66,0 14px 35px #080014aa,inset 0 1px #fff8;margin:14px 0 16px}
+  #guestView .guestHero:before{content:"✺  ✧  🪔  ✧  ✺";position:absolute;right:12px;bottom:12px;font-size:23px;letter-spacing:8px;color:#ffd75b;opacity:.9;text-shadow:0 0 12px #ff9a20}
+  #guestView .guestHero:after{content:"";position:absolute;inset:8px;border:1px solid #ffd75b55;border-radius:23px;pointer-events:none}
+  #guestView .guestHero .eyebrow{font-size:12px;letter-spacing:4px;color:#fff0b2}
+  #guestView .guestHero h2{font-size:clamp(34px,8.4vw,48px);line-height:1.02;color:#ffe17b;text-shadow:0 3px 20px #ff8d2455;margin:22px 0}
+  #guestView .guestHero p{font-size:clamp(16px,4.1vw,20px);line-height:1.48;color:#fff6f3;max-width:94%}
+  #guestView .guestHero .pill{background:#ffffff1c;border:1px solid #fff4;color:#fff;font-size:14px;padding:8px 13px}
+  #guestView .guestMain>.card{order:2}
+  #guestView .guestSide>.card:first-of-type{order:4}
+  #guestView .guestSide>.card:nth-of-type(2){order:5}
+  #guestView .notice{order:6}
+  #guestView .card{background:linear-gradient(145deg,rgba(65,15,87,.97),rgba(31,9,57,.98))!important;border:2px solid #ffcf55!important;border-radius:30px!important;box-shadow:0 0 20px #ff9b2d55,0 12px 28px #05000d88,inset 0 1px #ffffff20!important;padding:23px 22px;margin:12px 0}
+  #guestView .guestMain>.card h2{font-size:clamp(22px,5.7vw,29px);color:#fff8f3}
+  #guestView .guestMain>.card p{font-size:clamp(15px,3.8vw,18px);line-height:1.6}
+  #guestView #guestPass{min-height:64px;border:2px solid #ffcf55;border-radius:23px;background:linear-gradient(110deg,#ffe88a,#ffb52f 58%,#ff8e27);color:#29103c;font-size:clamp(20px,5vw,25px);box-shadow:0 0 20px #ffb52d55,inset 0 1px #fff9}
+  #guestView .guestSide>.card{order:4}
+  #guestView .guestSide>.card:nth-of-type(2){order:5}
+  #guestView .notice{border:2px solid #ffd75b;background:linear-gradient(110deg,#075f49,#08724f);border-radius:20px;color:#fff8dc}
+  #guestView .poster{display:none}
+}
+@media(min-width:741px){
+ #guestView .guestHero{background:radial-gradient(ellipse at 82% 90%,rgba(255,131,31,.48),transparent 40%),radial-gradient(ellipse at 15% 10%,rgba(255,32,123,.32),transparent 45%),linear-gradient(145deg,#251054,#4b1268 52%,#170d3b);border:2px solid #ffd75b}
+}
+
+
+/* Deepotsav mini-app visual upgrade: vivid illustrated festival atmosphere */
+body{
+ background-color:#10032f!important;
+ background-image:
+  radial-gradient(ellipse at 50% 8%,rgba(255,30,130,.38),transparent 34rem),
+  radial-gradient(ellipse at 92% 30%,rgba(255,110,0,.27),transparent 28rem),
+  radial-gradient(ellipse at 5% 66%,rgba(255,0,90,.23),transparent 30rem),
+  radial-gradient(ellipse at 50% 100%,rgba(255,177,0,.3),transparent 36rem),
+  linear-gradient(180deg,#18064b 0%,#280750 42%,#10052d 100%)!important;
+ background-attachment:fixed!important;
+}
+body:after{
+ content:"🪔 ✨ 🏮 ✨ 🪔";
+ position:fixed;z-index:0;pointer-events:none;top:0;left:0;right:0;
+ text-align:center;font-size:clamp(17px,4vw,28px);letter-spacing:clamp(7px,3vw,22px);
+ padding:5px 0 9px;
+ background:linear-gradient(180deg,rgba(255,105,0,.25),transparent);
+ filter:drop-shadow(0 0 9px #ff8c00);
+ opacity:.92;
+}
+body>main{position:relative;z-index:1}
+#diwaliAtmosphere{z-index:0!important;opacity:1}
+#guestView .guestHero{
+ background:
+  radial-gradient(ellipse at 80% 80%,rgba(255,119,0,.72),transparent 42%),
+  radial-gradient(ellipse at 72% 22%,rgba(255,0,140,.44),transparent 42%),
+  linear-gradient(130deg,#071a62 0%,#321071 45%,#5b0757 72%,#1c0c49 100%)!important;
+ border:2px solid #ffd74f!important;
+ box-shadow:0 0 9px #ffd84d,0 0 26px #ff5a16aa,0 18px 42px #030014aa,inset 0 1px #fff8!important;
+}
+#guestView .guestHero:after{
+ content:"✺  ✧  🪔  ✧  ✺"!important;
+ top:auto!important;bottom:9px!important;right:12px!important;
+ color:#ffe15c!important;font-size:22px!important;letter-spacing:8px!important;
+ text-shadow:0 0 12px #ff8500!important;opacity:.95!important;
+}
+#guestView .card{
+ background:
+  radial-gradient(ellipse at 100% 0%,rgba(255,36,127,.22),transparent 45%),
+  linear-gradient(145deg,rgba(67,7,78,.97),rgba(22,7,53,.98))!important;
+ border:2px solid #ffcf55!important;
+ box-shadow:0 0 8px #ffd84d,0 0 22px #ff6a1a66,0 14px 34px #03001499,inset 0 1px #ffffff20!important;
+}
+#guestView .notice{
+ background:linear-gradient(115deg,#00664b,#00825a 60%,#064c48)!important;
+ border:2px solid #ffdb52!important;color:#fffbe7!important;
+ box-shadow:0 0 14px #ffb52d77,inset 0 1px #fff5!important;
+}
+#guestView #guestPass{
+ background:linear-gradient(105deg,#fff58b 0%,#ffc33e 52%,#ff8529 100%)!important;
+ border:2px solid #fff17c!important;color:#210b32!important;
+ box-shadow:0 0 18px #ff9c28aa,inset 0 1px #fff!important;
+}
+#guestView .poster{
+ background:radial-gradient(circle at 50% 30%,#ffdf5b,#ff5b22 30%,#9b116c 60%,#21105a)!important;
+ border:1px solid #ffdf65!important;box-shadow:0 0 20px #ff7b25aa!important;
+}
+@media(max-width:740px){
+ body:after{font-size:17px;letter-spacing:7px}
+ #guestView .guestHero{min-height:320px}
+}
+
+
+#diwaliScene{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;opacity:.62}
+#diwaliScene svg{display:block;width:100%;height:100%}
+body>main{position:relative;z-index:1}
+#diwaliAtmosphere{z-index:0!important;opacity:1!important}
+@media(max-width:740px){#diwaliScene{opacity:.72}}
+
+
+#indiaFestivalArt{display:block;position:relative;width:100%;margin:10px 0 16px;border:2px solid #ffd34d;border-radius:24px;overflow:hidden;background:#170743;box-shadow:0 0 10px #ffdf62,0 0 28px #ff3b9a88}
+#indiaFestivalArt svg{display:block;width:100%;height:auto;min-height:150px}
+#indiaFestivalArt .festivalCaption{position:absolute;left:0;right:0;bottom:7px;text-align:center;font-size:clamp(9px,2.5vw,14px);font-weight:800;letter-spacing:.2em;color:#fff3a0;text-shadow:0 0 8px #ff7b20}
+#indiaFestivalArt .artBurst{transform-box:fill-box;transform-origin:center;animation:festivalFirework 1.9s ease-out infinite}
+#indiaFestivalArt .burstTwo{animation-delay:.6s}
+#indiaFestivalArt .burstThree{animation-delay:1.15s}
+@keyframes festivalFirework{0%{opacity:.25;transform:scale(.35)}45%{opacity:1}100%{opacity:.25;transform:scale(1.12)}}
+@media(prefers-reduced-motion:reduce){#indiaFestivalArt .artBurst{animation:none}}
+
+
+/* Diwali palette refresh: replace purple-dominant surfaces with saffron, vermilion, emerald and gold */
+:root{--bg:#160b08;--panel:#3a160d;--panel2:#4c2410;--gold:#ffd45b;--cream:#fff8e8;--muted:#ffe0b5;--line:#ffbd4c66;--pink:#ff6945;--blue:#168c70}
+body{background-color:#1a0c06!important;background-image:radial-gradient(ellipse at 8% 8%,rgba(255,79,20,.35),transparent 30rem),radial-gradient(ellipse at 92% 16%,rgba(255,191,38,.28),transparent 28rem),radial-gradient(ellipse at 50% 80%,rgba(0,130,78,.24),transparent 32rem),linear-gradient(180deg,#35100a,#160b08 75%)!important}
+.brand{background:radial-gradient(ellipse at 50% 0%,rgba(255,201,52,.32),transparent 48%),linear-gradient(120deg,#8e250c,#5d1c08 54%,#075b3e)!important;border-color:#ffd45b!important;box-shadow:0 0 18px #ff9a20aa,inset 0 1px #fff5!important}
+.guestHero,#guestView .guestHero{background:radial-gradient(ellipse at 90% 5%,rgba(255,191,45,.42),transparent 38%),radial-gradient(ellipse at 0% 100%,rgba(0,204,111,.24),transparent 45%),linear-gradient(125deg,#075b3e 0%,#9a2c0b 52%,#5a1609 100%)!important;border-color:#ffd45b!important;box-shadow:0 0 24px #ff8b20aa,0 18px 48px #0006!important}
+.card,#guestView .card{background:radial-gradient(ellipse at 100% 0%,rgba(255,89,24,.2),transparent 48%),linear-gradient(145deg,rgba(77,30,12,.97),rgba(31,15,7,.98))!important;border-color:#ffcc55!important;box-shadow:0 0 14px #ff8a2055,0 14px 36px #0007,inset 0 1px #fff2!important}
+.tile,#guestView .tile{background:linear-gradient(145deg,rgba(7,100,65,.72),rgba(70,29,12,.97))!important;border-color:#ffca4c88!important}
+.notice,#guestView .notice,.status.good{background:linear-gradient(110deg,#00633e,#087d4e)!important;border-color:#ffd45b!important;color:#fff9df!important;box-shadow:0 0 15px #ffb52d66!important}
+button{background:linear-gradient(110deg,#fff29b,#ffc12d 50%,#ff7626)!important;color:#351108!important;border-color:#ffe77b!important;box-shadow:0 0 18px #ff9c28aa,inset 0 1px #fff9!important}
+button.secondary{background:linear-gradient(120deg,#08734c,#07513b)!important;color:#fff5d8!important;border-color:#ffcf5a!important}
+#indiaFestivalArt{border-color:#ffd45b!important;box-shadow:0 0 12px #ffda5b,0 0 28px #ff6a1a99!important}
+#indiaFestivalArt .festivalCaption{color:#fff4a0!important}
+#diwaliScene{opacity:.9!important}
+@keyframes festivalFirework{0%{opacity:.12;transform:scale(.2)}35%{opacity:1}75%{opacity:.85}100%{opacity:.1;transform:scale(1.35)}}
+#indiaFestivalArt .artBurst{animation-duration:1.45s!important;filter:drop-shadow(0 0 8px #fff04d)}
+@media(max-width:740px){#diwaliScene{opacity:.95!important}}
+
+</style><style id="eventhub-role-upgrade">
+/* EventHub role redesign; retain the existing Deepotsav artwork and palette. */
+.section-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 13px}
+.section-heading h3{margin:5px 0 0}
+.live-pill,.secure-tag,.role-chip,.scanner-badge,.panel-index{display:inline-flex;align-items:center;justify-content:center;border:1px solid #ffd45b88;border-radius:999px;padding:7px 10px;color:#fff0b1;background:#ffffff0c;font-size:10px;font-weight:850;letter-spacing:.08em;white-space:nowrap}
+.live-pill{color:#85ffbf;border-color:#52d6a055;background:#0d613f77}
+.quick-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+button.quick-action{display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:6px;text-align:left;padding:15px;min-height:135px;margin:0;border:1px solid #ffcf5a77;border-radius:18px;background:linear-gradient(145deg,rgba(102,32,126,.72),rgba(25,17,59,.98))!important;color:#fff7e8!important;box-shadow:inset 0 1px #ffffff18,0 7px 20px #09001955!important}
+button.quick-action strong,button.tool-tile strong{display:block;margin:3px 0;color:#ffe17b;font-size:15px}
+button.quick-action span:not(.quick-icon),button.tool-tile span:not(.tool-icon){display:block;color:#eadbf5;font-size:12px;line-height:1.4;font-weight:500}
+.quick-icon,.tool-icon{font-size:24px;line-height:1.1}
+.quick-action:focus-visible,.tool-tile:focus-visible,button:focus-visible{outline:3px solid #6fffe0;outline-offset:3px}
+.role-shell{display:flex;flex-direction:column;gap:14px}
+.role-shell>.card,.role-shell .card{margin:0}
+.role-hero{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:clamp(18px,4vw,30px);border:1px solid #ffd45b;border-radius:24px;overflow:hidden;background:radial-gradient(ellipse at 80% 0%,rgba(255,175,41,.35),transparent 45%),radial-gradient(ellipse at 0% 100%,rgba(0,225,158,.18),transparent 45%),linear-gradient(125deg,#075b49,#34205f 58%,#65184f);box-shadow:0 14px 38px #05000d55}
+.role-hero h2{font-family:Georgia,"Times New Roman",serif;font-size:clamp(26px,5vw,38px);color:#ffe17b;margin:9px 0 8px}
+.role-hero p{max-width:600px;margin:0;color:#fff0e7;line-height:1.6;font-size:14px}
+.role-hero-side{display:flex;flex-direction:column;align-items:flex-end;gap:9px}
+.admin-chip{background:linear-gradient(120deg,#96365c,#512078);color:#fff4c4}
+.scanner-badge{background:#0a563d;color:#9dffd1;border-color:#52d6a088;letter-spacing:.04em}
+.ops-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.ops-kpi{min-width:0;border:1px solid #ffd45b50;border-radius:16px;padding:13px;background:linear-gradient(145deg,#2a1850,#170d31)}
+.ops-kpi>span{display:block;color:#ffd875;font-size:10px;font-weight:900;letter-spacing:.1em}
+.ops-kpi strong{display:block;font-size:clamp(18px,4vw,25px);margin:7px 0 3px;color:#fff5d7;overflow-wrap:anywhere}
+.ops-kpi small{display:block;color:#cbbbdc;font-size:11px;line-height:1.4}
+.volunteer-kpis .ops-kpi{border-color:#43cfa35c;background:linear-gradient(145deg,#103c39,#20113c)}
+.scanner-workspace{border-color:#62d9b28a!important}
+.scanner-controls{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.scanner-controls button{margin:0}
+.manual-entry{margin-top:12px;padding-top:14px;border-top:1px solid #ffffff1d}
+.manual-row{display:flex;align-items:stretch;gap:8px}
+.manual-row input{flex:1;min-width:0}
+.manual-row button{width:auto;min-width:105px;margin:0;white-space:nowrap}
+#reader{width:100%;max-width:540px;margin:15px auto;overflow:hidden;border:1px solid #52d6a088;border-radius:16px}
+#reader video{border-radius:12px}
+.verified-pass{border:1px solid #52d6a0a0!important;background:linear-gradient(145deg,#10392f,#1d123b)!important}
+.guest-info-grid{color:#f7e9d0;line-height:1.6;overflow-wrap:anywhere;margin:8px 0}
+.record-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.record-actions button{margin:0}
+.volunteer-footnote{margin:0!important}
+.admin-kpis{grid-template-columns:repeat(4,minmax(0,1fr))}
+.admin-kpis .ops-kpi{background:linear-gradient(145deg,#3a1b54,#1b1033)}
+.compact-button{width:auto;margin:0;min-height:40px;padding:9px 13px}
+.admin-panel{border-color:#ffd45b70!important}
+.panel-index{min-width:34px;color:#ffe17b;border-color:#ffd45b50}
+.events-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.events-list .card{background:#190f30!important;border:1px solid #ffffff20!important;padding:13px!important}
+.form-divider{height:1px;background:#ffd45b44;margin:20px 0 16px}
+.form-row{align-items:flex-start}
+.form-row>div{flex:1;min-width:0}
+.admin-tools{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+button.tool-tile{display:flex;flex-direction:column;align-items:flex-start;text-align:left;min-height:125px;margin:0;padding:14px;background:linear-gradient(145deg,#34205a,#17102f)!important;border:1px solid #ffd45b70!important;color:#fff5db!important}
+.tool-panel{margin-top:12px;overflow-wrap:anywhere}
+.tool-panel:empty{display:none}
+.volunteer-list{white-space:pre-line;padding:10px;border-radius:12px;background:#ffffff08;margin-top:10px}
+#guestCard .section-heading h3{overflow-wrap:anywhere}
+@media(max-width:640px){.role-hero{align-items:flex-start;flex-direction:column}.role-hero-side{align-items:flex-start}.ops-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.admin-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.events-list{grid-template-columns:1fr}.manual-row{flex-direction:column}.manual-row button{width:100%}.scanner-controls{grid-template-columns:1fr}}
+@media(max-width:380px){.quick-grid,.admin-tools{grid-template-columns:1fr}.ops-kpis{grid-template-columns:1fr}.ops-kpi{display:grid;grid-template-columns:58px 1fr;column-gap:8px;align-items:center}.ops-kpi>span{grid-row:1/span 2}.ops-kpi strong{margin:0}.ops-kpi small{grid-column:2}.record-actions{grid-template-columns:1fr}}
+</style><style id="eventhub-admin-controls">
+.guest-support-card{border-color:#52d6a0a0!important;background:linear-gradient(145deg,#10392f,#21113c)!important}.guest-support-card button{width:100%}
+
+.staff-pass-display{text-align:center;margin-top:14px;padding:12px;border:1px solid #52d6a055;border-radius:16px;background:#050b1b66}.staff-pass-display img{display:block;width:100%;max-width:380px;height:auto;background:white;border-radius:10px;margin:8px auto 12px}
+.staff-verified-card{border-color:#52d6a0a0!important;background:linear-gradient(145deg,#10392f,#21113c)!important}
+.records-list{display:grid;gap:10px;margin-top:12px}.record-card{padding:14px;border:1px solid #ffd45b55;border-radius:15px;background:linear-gradient(145deg,#281747,#160e2b);min-width:0}.record-card strong{display:block;color:#ffe17b;overflow-wrap:anywhere}
+.record-meta{white-space:pre-line;color:#e9dbf5;font-size:12px;line-height:1.55;margin:7px 0 10px;overflow-wrap:anywhere}.record-actions-admin{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.record-actions-admin button{padding:10px;min-height:40px;margin:0;font-size:12px}.record-actions-admin button.danger{background:linear-gradient(110deg,#ffb1c0,#ff637e)!important;border-color:#ffd3db!important;color:#4d0a20!important}
+.filter-row{align-items:flex-end;gap:10px}.filter-row>div{flex:1;min-width:0}.filter-row>button{width:auto;min-width:120px}.events-list .event-card-meta{white-space:pre-line}
+@media(max-width:640px){.role-hero{align-items:flex-start;flex-direction:column}.role-hero-side{align-items:flex-start}.ops-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.admin-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.events-list{grid-template-columns:1fr}.manual-row{flex-direction:column}.manual-row button{width:100%}.scanner-controls{grid-template-columns:1fr}}
+@media(max-width:440px){.record-actions-admin{grid-template-columns:1fr}.filter-row{flex-direction:column;align-items:stretch}.filter-row button{width:100%}}
+@media(max-width:380px){.quick-grid,.admin-tools{grid-template-columns:1fr}.ops-kpis{grid-template-columns:1fr}.ops-kpi{display:grid;grid-template-columns:58px 1fr;column-gap:8px;align-items:center}.ops-kpi>span{grid-row:1/span 2}.ops-kpi strong{margin:0}.ops-kpi small{grid-column:2}.record-actions{grid-template-columns:1fr}}
+.admin-account-line{padding:9px 0;border-bottom:1px solid #ffffff16;overflow-wrap:anywhere}.admin-account-line:last-child{border-bottom:0}.staff-pass-section{border-color:#52d6a0a0!important;background:linear-gradient(145deg,#10392f,#21113c)!important}.staff-pass-section select{margin-bottom:10px}
+.pending-approvals-panel .section-heading{align-items:center}
+.pending-approvals-panel .section-heading p{margin:6px 0 0;max-width:440px}
+.pending-list-actions{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0 2px;border-top:1px solid #ffd45b33}
+.pending-list-actions .row{display:flex;gap:7px;margin:0;flex-wrap:wrap}
+.pending-list-actions button{margin:0}
+</style></head>
+<body><div id="diwaliScene" aria-hidden="true"><svg viewBox="0 0 900 1500" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<linearGradient id="dsSky" x2="0" y2="1"><stop stop-color="#070b54"/><stop offset=".4" stop-color="#5b075d"/><stop offset="1" stop-color="#16052e"/></linearGradient>
+<linearGradient id="dsGold" x2="0" y2="1"><stop stop-color="#fffca0"/><stop offset=".5" stop-color="#ffb62b"/><stop offset="1" stop-color="#ff4b17"/></linearGradient>
+<radialGradient id="dsGlow"><stop stop-color="#ffca43" stop-opacity=".8"/><stop offset="1" stop-color="#ff3b91" stop-opacity="0"/></radialGradient>
+<g id="dsBurst" fill="none" stroke-linecap="round"><circle r="12" stroke="#fff5a0" stroke-width="3"/><circle r="35" stroke="#ff43c8" stroke-width="3" stroke-dasharray="2 8"/><circle r="58" stroke="#ffc02f" stroke-width="3" stroke-dasharray="3 10"/><circle r="78" stroke="#28edff" stroke-width="2" stroke-dasharray="2 14"/><path d="M0-92V-105M0 92V105M-92 0H-105M92 0H105M-65-65l-10-10M65 65l10 10M65-65l10-10M-65 65l-10 10" stroke="#fff5a0" stroke-width="3"/></g>
+<g id="dsLantern"><path d="M-21-24L-12-42H12L21-24L14 16L0 29L-14 16Z" fill="url(#dsGold)" stroke="#ffda57" stroke-width="3"/><path d="M-14-18H14M-12 0H12M0-42V28" stroke="#ff5a21" stroke-width="3"/><path d="M0 29v16" stroke="#ffd45b" stroke-width="2"/></g>
+<g id="dsDiya"><ellipse cx="0" cy="2" rx="42" ry="13" fill="url(#dsGlow)"/><path d="M-31 0Q0 22 31 0Q22 24 0 25Q-22 24-31 0Z" fill="#a81b40" stroke="#ffce49" stroke-width="3"/><path d="M-20 4Q0 13 20 4" fill="none" stroke="#fff0a0" stroke-width="2"/><path d="M0 2C-13-12-2-21 1-38C17-20 12-8 0 2Z" fill="url(#dsGold)"/></g>
+</defs>
+<rect width="900" height="1500" fill="url(#dsSky)"/>
+<g fill="#fff9bc"><circle cx="80" cy="88" r="3"/><circle cx="270" cy="160" r="2"/><circle cx="600" cy="65" r="2"/><circle cx="810" cy="230" r="3"/><circle cx="460" cy="210" r="2"/><circle cx="150" cy="300" r="2"/><circle cx="720" cy="310" r="2"/></g>
+<g transform="translate(185 190)"><use href="#dsBurst"/></g><g transform="translate(690 140) scale(.83)"><use href="#dsBurst"/></g><g transform="translate(475 300) scale(.52)"><use href="#dsBurst"/></g>
+<path d="M0 0Q150 110 300 18T600 18T900 0" fill="none" stroke="#ff9b20" stroke-width="5"/>
+<g fill="#ff7c0b" stroke="#ffce40" stroke-width="2"><circle cx="20" cy="28" r="12"/><circle cx="45" cy="49" r="11"/><circle cx="70" cy="65" r="12"/><circle cx="90" cy="80" r="10"/><circle cx="880" cy="28" r="12"/><circle cx="855" cy="49" r="11"/><circle cx="830" cy="65" r="12"/><circle cx="810" cy="80" r="10"/></g>
+<g transform="translate(105 180)"><use href="#dsLantern"/></g><g transform="translate(785 180)"><use href="#dsLantern"/></g><g transform="translate(430 115) scale(.8)"><use href="#dsLantern"/></g>
+<!-- Temple silhouettes with illuminated arches -->
+<g fill="#180941" stroke="#ff9e2b" stroke-width="5"><path d="M0 650V430H65V365L100 315L135 365V430H185V395L220 340L255 395V650Z"/><path d="M640 650V425H700V355L735 305L770 355V425H820V385L855 330L890 385V650Z"/><path d="M0 650H900V690H0Z" fill="#ff4d99" fill-opacity=".22"/></g>
+<g fill="#ff9b26" fill-opacity=".3"><path d="M28 650V515Q55 465 82 515V650Z"/><path d="M105 650V515Q132 465 159 515V650Z"/><path d="M680 650V500Q707 450 734 500V650Z"/><path d="M760 650V500Q787 450 814 500V650Z"/><path d="M830 650V500Q857 450 884 500V650Z"/></g>
+<rect x="0" y="680" width="900" height="440" fill="#e12a9a" opacity=".1"/>
+<g stroke-linecap="round" opacity=".9"><path d="M25 715H290M530 740H875M110 800H390M500 845H850M15 910H250M610 955H890M260 1010H560M70 1070H420" stroke="#ffb82f" stroke-width="4"/><path d="M320 730H470M420 775H620M170 865H400M520 930H690M360 980H500M90 1040H260" stroke="#ff38b5" stroke-width="3"/></g>
+<!-- Bright rangoli -->
+<g transform="translate(450 1320)" fill="none" stroke-width="8"><circle r="130" stroke="#ff40c8"/><circle r="108" stroke="#ffdc36" stroke-dasharray="4 9"/><circle r="82" stroke="#29f5dc" stroke-dasharray="6 8"/><circle r="56" stroke="#ff8525"/><path d="M0-140Q35-70 0-18Q-35-70 0-140ZM140 0Q70 35 18 0Q70-35 140 0ZM0 140Q-35 70 0 18Q35 70 0 140ZM-140 0Q-70-35-18 0Q-70 35-140 0Z" stroke="#ff9d24"/><path d="M-95-95Q-35-110 0-40Q35-110 95-95Q110-35 40 0Q110 35 95 95Q35 110 0 40Q-35 110-95 95Q-110 35-40 0Q-110-35-95-95Z" stroke="#ff3a9f"/></g>
+<g transform="translate(125 1300) scale(1.2)"><use href="#dsDiya"/></g><g transform="translate(775 1300) scale(1.2)"><use href="#dsDiya"/></g><g transform="translate(450 1400) scale(1.3)"><use href="#dsDiya"/></g>
+<g fill="#ff6b12"><circle cx="80" cy="1190" r="10"/><circle cx="110" cy="1215" r="8"/><circle cx="765" cy="1180" r="10"/><circle cx="720" cy="1210" r="8"/><circle cx="240" cy="1410" r="11"/><circle cx="665" cy="1410" r="11"/></g>
+</svg></div><main><header class="brand"><div style="font-size:30px">🪔</div><h1 id="headerEventName">DEEPOSTAV</h1><div id="headerEventTitle" style="font-family:Georgia,serif;font-size:clamp(15px,4vw,22px);color:#fff1d4">The Journey Through India</div><div id="headerEventMeta" class="small" style="margin-top:9px">7 NOVEMBER 2026 · KSMU HOSTEL 5</div></header><div id="status" class="status">Authenticating through Telegram…</div>
+<section id="guestView" class="hidden">
+
+<div class="guestLayout">
+<div class="guestMain">
+<section class="guestHero"><div class="eyebrow">DEEPOSTAV 2026</div><h2>A journey<br>through India.</h2><p>Celebrate light, culture and community. Your event pass and festival essentials, all in one place.</p><span class="pill">● Your EventHub</span></section>
+<section class="card"><h2>🎟 Your event pass</h2><p class="small">Open your active QR pass for entry and food collection. Keep your QR private.</p><button id="guestPass" type="button">🎟️ My Pass</button><div id="myPassDisplay" class="hidden" style="margin-top:12px"></div></section>
+</div>
+<div class="guestSide">
+<section class="card"><h3 class="gold">Your event, at a glance</h3><div class="event"><div class="poster">🪔</div><div><b>DEEPOSTAV 2026</b><div class="small">7 November 2026</div><div class="small">KSMU Hostel 5</div><div class="small">The Journey Through India</div></div></div><button class="secondary" id="guestEvent" type="button">📅 Event details</button><div id="eventDetails" class="small" style="white-space:pre-line;margin-top:8px"></div></section>
+<section class="card guest-support-card"><div class="section-heading"><div><div class="eyebrow">HERE TO HELP</div><h3>💬 Need event support?</h3></div><span class="live-pill">SUPPORT</span></div><p class="small">Questions about registration, your QR pass or the festival? Contact the organizer directly on Telegram.</p><button id="guestSupport" type="button">💬 Contact Telegram Support</button></section>
+<div class="notice">🔐 Your pass is connected to the Telegram bot. Registration and approval remain managed securely through the bot.</div>
+</div></div></section>
+<section id="staffPassSection" class="hidden card staff-pass-section">
+<div class="section-heading"><div><div class="eyebrow">YOUR EVENT ACCESS</div><h3>🎟️ My event pass</h3></div><span class="secure-tag">🔒 PERSONAL QR</span></div>
+<p class="small">Admins and volunteers use the same guest-style QR pass for entry and food collection. If you already have an approved guest pass, that existing pass is used. First-time staff pass issuance asks for your food preference.</p>
+<label for="staffFoodPreference">Food preference (only used when creating your first pass)</label>
+<select id="staffFoodPreference"><option value="">Choose preference if creating a new pass</option><option value="Vegetarian">Vegetarian</option><option value="Non-vegetarian">Non-vegetarian</option></select>
+<button id="loadMyGuestStylePass" type="button">🎟️ Show my event pass</button>
+<div id="staffPassDisplay" class="hidden staff-pass-display" aria-live="polite"></div>
+</section>
+<section id="volunteerView" class="hidden role-shell volunteer-shell">
+<section class="role-hero volunteer-hero"><div class="role-hero-copy"><div class="eyebrow">EVENTHUB · OPERATIONS</div><h2>Check-in desk</h2><p>Verify guest passes, record entry and food collection, and display your personal staff QR badge.</p></div><div class="role-hero-side"><span class="role-chip">🛡️ VOLUNTEER ACCESS</span><span id="scannerBadge" class="scanner-badge">● SCANNER READY</span></div></section>
+<div class="ops-kpis volunteer-kpis"><div class="ops-kpi"><span>01</span><strong>Verify</strong><small>Scan a guest or staff QR</small></div><div class="ops-kpi"><span>02</span><strong>Check in</strong><small>Record entry once</small></div><div class="ops-kpi"><span>03</span><strong>Serve</strong><small>Record food once</small></div></div>
+
+<section class="card scanner-workspace"><div class="section-heading"><div><div class="eyebrow">PASS VERIFICATION</div><h3>📷 QR scanner</h3></div><span class="secure-tag">🔒 Authenticated</span></div><p class="small">Scan with the camera or enter a pass code/QR token manually. Staff badges are identified separately and never count as guest entry.</p><div class="scanner-controls"><button id="startScan" type="button">📷 Start camera scanner</button><button id="stopScan" class="secondary hidden" type="button">Stop camera</button></div><div id="reader" class="hidden"></div><div class="manual-entry"><label for="manual">Manual guest pass code / QR token</label><div class="manual-row"><input id="manual" placeholder="H5-XXXXXXXX or QR token" autocomplete="off" autocapitalize="off" spellcheck="false"><button id="checkManual" type="button">Check pass</button></div></div></section>
+<section id="guestCard" class="card verified-pass hidden"><div class="section-heading"><div><div class="eyebrow">GUEST RECORD</div><h3 id="guestName">Verified guest</h3></div><span class="secure-tag">✓ VALID PASS</span></div><div id="guestInfo" class="guest-info-grid"></div><div id="guestState" class="status" aria-live="polite"></div><div class="record-actions"><button id="recordEntry" type="button">✓ Record entry</button><button id="recordFood" type="button">🍽️ Record food</button></div><div id="counts" class="small"></div></section>
+
+<div class="notice volunteer-footnote">⚠️ Check the guest’s details before choosing an action. Entry and food collection are separate, auditable actions and cannot be repeated for the same pass.</div>
+</section><section id="adminView" class="hidden role-shell admin-shell">
+<section class="role-hero admin-hero"><div class="role-hero-copy"><div class="eyebrow">EVENTHUB · COMMAND CENTER</div><h2>Admin workspace</h2><p>Manage event details, registration approvals, guest QR passes, volunteers, reporting and announcements from this dashboard.</p></div><div class="role-hero-side"><span class="role-chip admin-chip">👑 ADMIN ONLY</span><span class="scanner-badge">● CONTROL PANEL</span></div></section>
+<section class="card kpi-card"><div class="section-heading"><div><div class="eyebrow">LIVE OVERVIEW</div><h3>Event operations</h3></div><button id="refreshStats" class="secondary compact-button" type="button">↻ Refresh</button></div><div class="ops-kpis admin-kpis"><div class="ops-kpi"><span>GUESTS</span><strong id="statGuests">—</strong><small>Approved passes</small></div><div class="ops-kpi"><span>ENTRY</span><strong id="statEntry">—</strong><small>Checked in</small></div><div class="ops-kpi"><span>FOOD</span><strong id="statMeals">—</strong><small>Meals served</small></div><div class="ops-kpi"><span>TEAM</span><strong id="statVols">—</strong><small>Volunteers</small></div></div></section>
+<section class="card admin-panel"><div class="section-heading"><div><div class="eyebrow">01 · EVENT SETTINGS</div><h3>📅 Event workspaces</h3></div><span class="panel-index">01</span></div><p class="small">Edit name, description, date, time and venue here. Changes update the guest Event Details screen; new workspaces remain drafts until an event-specific registration workflow is configured.</p><div id="eventsList" class="events-list">Loading events…</div><div class="form-divider"></div><h4>Create an event workspace</h4><label for="eventName">Event name</label><input id="eventName" placeholder="e.g. Medical Conference 2027" maxlength="120"><label for="eventDesc">Description</label><textarea id="eventDesc" rows="2" placeholder="Purpose, theme and important details"></textarea><div class="row form-row"><div><label for="eventDate">Date</label><input id="eventDate" type="date"></div><div><label for="eventTime">Time</label><input id="eventTime" placeholder="e.g. 5:30 PM" maxlength="40"></div></div><label for="eventVenue">Venue</label><input id="eventVenue" placeholder="Venue" maxlength="200"><button id="createEvent" type="button">＋ Create event workspace</button></section>
+<section class="card admin-panel pending-approvals-panel">
+<div class="section-heading"><div><div class="eyebrow">02 · REGISTRATION DESK</div><h3>📝 Pending approvals</h3><p class="small">Keep the dashboard compact. Open this queue only when you need to review registrations.</p></div><button id="loadPending" class="secondary compact-button" type="button" aria-expanded="false" aria-controls="pendingListWrap">Show pending approvals</button></div>
+<div id="pendingListWrap" class="hidden">
+<div class="pending-list-actions"><span id="pendingCount" class="small">Queue not loaded yet</span><div class="row"><button id="refreshPending" class="secondary compact-button" type="button">↻ Refresh</button><button id="hidePending" class="secondary compact-button" type="button">Hide queue</button></div></div>
+<div id="pendingList" class="records-list" aria-live="polite"></div>
+</div>
+</section>
+<section class="card admin-panel"><div class="section-heading"><div><div class="eyebrow">03 · GUEST ACCESS</div><h3>🎟️ Guest & QR pass manager</h3></div><span class="panel-index">03</span></div><p class="small">Search by guest name, phone, pass code or Telegram ID. Reissue invalidates the old QR; revocation blocks use; reset actions require admin confirmation.</p><label for="guestSearch">Search guest records</label><div class="manual-row"><input id="guestSearch" placeholder="Name, phone, pass code or Telegram ID" autocomplete="off"><button id="searchGuests" type="button">Search</button></div><div class="row filter-row"><div><label for="guestStatus">Pass status</label><select id="guestStatus"><option value="all">All statuses</option><option value="approved">Active / approved</option><option value="revoked">Revoked</option></select></div><button id="loadRecentGuests" class="secondary" type="button">Show recent guests</button></div><div id="guestResults" class="records-list" aria-live="polite"></div></section>
+<section class="card admin-panel"><div class="section-heading"><div><div class="eyebrow">04 · PEOPLE & PERMISSIONS</div><h3>👥 Volunteer access</h3></div><span class="panel-index">04</span></div><p class="small">Grant or remove scanner access by Telegram numeric ID. Removing volunteer access also invalidates their existing staff QR badge.</p><label for="volId">Telegram numeric ID</label><div class="manual-row"><input id="volId" inputmode="numeric" placeholder="e.g. 123456789"><button id="addVol" type="button">＋ Add</button></div><div class="row"><button id="removeVol" class="secondary" type="button">Remove access</button><button id="listVols" class="secondary" type="button">List volunteers</button></div><div id="volList" class="volunteer-list small" aria-live="polite"></div></section>
+<section class="card admin-panel"><div class="section-heading"><div><div class="eyebrow">05 · PRIVILEGED ACCESS</div><h3>🔐 Admin access</h3></div><span class="panel-index">05</span></div><p class="small">Grant admin rights only to trusted organizers. Your configured owner/recovery admin ID is protected from removal here.</p><label for="adminId">Telegram numeric ID</label><div class="manual-row"><input id="adminId" inputmode="numeric" placeholder="e.g. 123456789"><button id="addAdmin" type="button">＋ Add admin</button></div><div class="row"><button id="removeAdmin" class="secondary" type="button">Remove admin</button><button id="listAdmins" class="secondary" type="button">List admins</button></div><div id="adminList" class="volunteer-list small" aria-live="polite"></div></section>
+<section class="card admin-panel"><div class="section-heading"><div><div class="eyebrow">06 · EVENT TOOLS</div><h3>🧰 Operations tools</h3></div><span class="panel-index">06</span></div><div class="grid admin-tools">
+<button class="tile tool-tile" type="button" data-admin="checkpoints"><span class="tool-icon">📍</span><strong>Checkpoints</strong><span>Create and list entry/food points</span></button>
+<button class="tile tool-tile" type="button" data-admin="audit"><span class="tool-icon">🛡️</span><strong>Audit log</strong><span>Review recent admin and scan actions</span></button>
+<button class="tile tool-tile" type="button" data-admin="sheets"><span class="tool-icon">📊</span><strong>Google Sheets</strong><span>Sync guest records</span></button>
+<button class="tile tool-tile" type="button" data-admin="cleanup"><span class="tool-icon">🧹</span><strong>Event cleanup</strong><span>Review backup and deletion options</span></button>
+<button class="tile tool-tile" type="button" data-admin="announce"><span class="tool-icon">📣</span><strong>Announcements</strong><span>Preview recipients before sending</span></button>
+</div><div id="toolPanel" class="tool-panel" aria-live="polite"></div></section>
+</section></main><script>
+const tg=window.Telegram?.WebApp;tg?.ready();tg?.expand();const API_BASE="https://unwjym.bot-keep.xyz";const $=id=>document.getElementById(id);let role="guest",currentQr="",currentGuest=null,scanner=null,busy=false,events=[];
+function status(m,k=""){ $("status").textContent=m;$("status").className="status "+k; }
+async function post(path,payload={},timeoutMs=15000){
+ const controller=new AbortController();
+ const timer=setTimeout(()=>controller.abort(),timeoutMs);
+ let r;
+ try{
+  r=await fetch(API_BASE+path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({...payload,initData:tg?.initData||""}),signal:controller.signal,cache:"no-store"});
+ }catch(e){
+  if(e.name==="AbortError")throw new Error("EventHub API timed out after "+Math.round(timeoutMs/1000)+" seconds. Check Botkeep logs before retrying any announcement to avoid sending duplicates.");
+  throw new Error("Could not reach EventHub API: "+(e.message||"network error"));
+ }finally{clearTimeout(timer);}
+ const d=await r.json().catch(()=>({ok:false,error:"Server returned a non-JSON response (HTTP "+r.status+")."}));
+ if(!r.ok||!d.ok)throw new Error("HTTP "+r.status+": "+(d.error||"Request failed"));
+ return d;
+}
+function showRole(r){role=r;$("guestView").classList.toggle("hidden",r!=="guest");$("staffPassSection").classList.toggle("hidden",!["volunteer","admin"].includes(r));$("volunteerView").classList.toggle("hidden",!["volunteer","admin"].includes(r));$("adminView").classList.toggle("hidden",r!=="admin");}
+async function boot(){
+ status("Checking Telegram authentication…");
+ if(!tg){status("Telegram WebApp was not detected. Open Event App from the bot menu.","bad");return;}
+ if(!tg.initData){status("Telegram did not provide login data. Close this page and reopen it from the bot menu.","bad");return;}
+ try{
+  const d=await post("/api/role");
+  if(!["admin","volunteer","guest"].includes(d.role))throw new Error("The server replied, but did not return a valid user role.");
+  showRole(d.role);
+  status("Authenticated · "+d.role.toUpperCase(),"good");
+  if(d.role==="admin"){await refreshStats();await loadEvents();await loadAdmins();}
+  else if(d.role==="guest"){status("Authenticated as GUEST. Use the bot to register or receive your QR pass.","good");await loadGuestEvent();}
+ }catch(e){
+  console.error("EventHub boot/authentication error:",e);
+  status(e.message||"Authentication failed. Close and reopen the app from the bot menu.","bad");
+ }
+}
+async function refreshStats(){try{const d=await post("/api/admin",{action:"stats"});$("statGuests").textContent=d.stats.approvedGuests;$("statEntry").textContent=d.stats.checkedIn;$("statMeals").textContent=d.stats.mealsServed;$("statVols").textContent=d.stats.volunteers;}catch(e){status(e.message,"bad");}}
+async function loadEvents(){
+ try{const d=await post("/api/admin",{action:"events"});events=d.events||[];$("eventsList").textContent="";
+  if(!events.length){$("eventsList").textContent="No events yet.";return;}
+  events.forEach(ev=>{
+   const card=document.createElement("div");card.className="card event-workspace-card";
+   const title=document.createElement("strong");title.textContent=ev.name+" · "+ev.status;
+   const meta=document.createElement("p");meta.className="small event-card-meta";meta.textContent=[ev.event_date,ev.event_time,ev.venue,ev.description].filter(Boolean).join(" · ");card.append(title,meta);
+   if(ev.status!=="archived"){
+    const edit=document.createElement("button");edit.className="secondary";edit.type="button";edit.setAttribute("aria-expanded","false");edit.textContent="✏️ Edit details";
+    const editPanel=document.createElement("div");editPanel.className="event-edit-panel hidden";editPanel.setAttribute("aria-label","Edit event details");
+    const fields={};
+    const addEditField=(key,labelText,value,type="text",placeholder="")=>{
+     const label=document.createElement("label");label.textContent=labelText;
+     const input=key==="description"?document.createElement("textarea"):document.createElement("input");
+     if(key!=="description")input.type=type;
+     if(key==="description")input.rows=3;
+     input.value=value||"";input.placeholder=placeholder;input.className="event-edit-input";
+     if(key==="name")input.maxLength=120;
+     if(key==="venue")input.maxLength=200;
+     label.append(input);editPanel.append(label);fields[key]=input;
+    };
+    addEditField("name","Event name",ev.name,"text","Event name");
+    addEditField("description","Description",ev.description||"");
+    addEditField("event_date","Date",ev.event_date||"","date");
+    addEditField("event_time","Time",ev.event_time||"","text","e.g. 5:30 PM");
+    addEditField("venue","Venue",ev.venue||"","text","Venue");
+    const editActions=document.createElement("div");editActions.className="row event-edit-actions";
+    const saveEdit=document.createElement("button");saveEdit.type="button";saveEdit.textContent="Save changes";
+    const cancelEdit=document.createElement("button");cancelEdit.type="button";cancelEdit.className="secondary";cancelEdit.textContent="Cancel";
+    editActions.append(saveEdit,cancelEdit);editPanel.append(editActions);
+    edit.onclick=()=>{const opening=editPanel.classList.contains("hidden");editPanel.classList.toggle("hidden");edit.setAttribute("aria-expanded",String(opening));edit.textContent=opening?"✏️ Close editor":"✏️ Edit details";};
+    cancelEdit.onclick=()=>{editPanel.classList.add("hidden");edit.setAttribute("aria-expanded","false");edit.textContent="✏️ Edit details";};
+    saveEdit.onclick=async()=>{
+     const name=fields.name.value.trim();if(!name){status("Enter an event name before saving.","bad");fields.name.focus();return;}
+     saveEdit.disabled=true;saveEdit.textContent="Saving…";
+     try{const result=await post("/api/admin",{action:"update_event",event_id:ev.id,name,description:fields.description.value.trim(),event_date:fields.event_date.value,event_time:fields.event_time.value.trim(),venue:fields.venue.value.trim()});status(result.message||"Event details saved.","good");await loadEvents();}
+     catch(e){status(e.message,"bad");}
+     finally{saveEdit.disabled=false;saveEdit.textContent="Save changes";}
+    };
+    card.append(edit,editPanel);
+    const archive=document.createElement("button");archive.className="secondary";archive.textContent="Archive event";archive.onclick=async()=>{if(!confirm("Archive "+ev.name+"? Existing data will be retained."))return;try{await post("/api/admin",{action:"archive_event",event_id:ev.id});await loadEvents();status("Event archived.","good");}catch(e){status(e.message,"bad");}};card.append(archive);
+   }
+   $("eventsList").append(card);
+  });
+ }catch(e){$("eventsList").textContent=e.message;status(e.message,"bad");}
+}
+$("createEvent").onclick=async()=>{try{
+ const name=$("eventName").value.trim();if(!name)throw new Error("Enter an event name before creating the event workspace.");const d=await post("/api/admin",{action:"create_event",name,description:$("eventDesc").value.trim(),event_date:$("eventDate").value,event_time:$("eventTime").value.trim(),venue:$("eventVenue").value.trim(),registration_schema:[{key:"full_name",label:"Full name",type:"text",required:true},{key:"phone",label:"Phone",type:"tel",required:true}]});
+ status(d.message,"good");$("eventName").value="";$("eventDesc").value="";$("eventDate").value="";$("eventTime").value="";$("eventVenue").value="";await loadEvents();
+}catch(e){status(e.message,"bad");}};
+$("refreshStats").onclick=refreshStats;$("addVol").onclick=()=>volAction("add_volunteer");$("removeVol").onclick=()=>volAction("remove_volunteer");$("listVols").onclick=loadVolunteers;
+async function loadVolunteers(){const box=$("volList");box.textContent="Loading volunteers…";try{const d=await post("/api/admin",{action:"volunteers"});box.textContent=d.volunteers.length?d.volunteers.map(v=>v.telegram_id+" · added "+(v.added_at||"date unavailable")).join("\n"):"No volunteers configured.";}catch(e){box.textContent=e.message;status(e.message,"bad");}}
+async function volAction(action){try{const telegram_id=Number($("volId").value);if(!Number.isSafeInteger(telegram_id)||telegram_id<=0)throw Error("Enter a valid numeric Telegram ID.");if(action==="remove_volunteer"&&!confirm("Remove volunteer access for Telegram ID "+telegram_id+"? Scanner access will be removed immediately."))return;const d=await post("/api/admin",{action,telegram_id});status(d.message+(action==="remove_volunteer"?" Volunteer access removed.":""),"good");$("volId").value="";await refreshStats();await loadVolunteers();}catch(e){status(e.message,"bad");}}
+$("loadPending").onclick=async()=>{
+ const wrap=$("pendingListWrap"),button=$("loadPending");
+ const opening=wrap.classList.contains("hidden");
+ if(!opening){wrap.classList.add("hidden");button.setAttribute("aria-expanded","false");button.textContent="Show pending approvals";return;}
+ wrap.classList.remove("hidden");button.setAttribute("aria-expanded","true");button.textContent="Hide pending approvals";
+ await loadPendingRegistrations();
+};
+$("refreshPending").onclick=loadPendingRegistrations;
+$("hidePending").onclick=()=>{$("pendingListWrap").classList.add("hidden");$("loadPending").setAttribute("aria-expanded","false");$("loadPending").textContent="Show pending approvals";};
+async function loadPendingRegistrations(){
+ const box=$("pendingList"),count=$("pendingCount");if(!box)return;box.textContent="Loading pending registrations…";if(count)count.textContent="Loading queue…";
+ try{const d=await post("/api/admin",{action:"pending_registrations"});box.textContent="";
+  const requests=Array.isArray(d.registrations)?d.registrations:[];
+  if(count)count.textContent=requests.length+" pending "+(requests.length===1?"request":"requests");
+  $("loadPending").textContent=requests.length?"Hide approvals · "+requests.length:"Hide approvals";
+  if(!requests.length){box.textContent="No pending registrations. You can close this section and continue using the dashboard.";return;}
+  requests.forEach(r=>{
+   const card=document.createElement("div");card.className="record-card";const title=document.createElement("strong");title.textContent=r.full_name+" · Request #"+r.id;
+   const residence=r.residence_type==="Hostel"?("Hostel "+(r.hostel_number||"")+(r.room_number?" · Room "+r.room_number:"")):"Apartment";
+   const meta=document.createElement("div");meta.className="record-meta";meta.textContent=["Telegram ID: "+r.telegram_id,"Phone: "+(r.phone||"Not provided"),"Residence: "+residence,"Food: "+r.food_preference,"Submitted: "+(r.created_at||"")].join("\n");
+   const actions=document.createElement("div");actions.className="record-actions-admin";
+   const approve=document.createElement("button");approve.textContent="✓ Approve + send QR";approve.onclick=()=>decideRegistration(r.id,"approve");
+   const reject=document.createElement("button");reject.className="danger";reject.textContent="Reject request";reject.onclick=()=>decideRegistration(r.id,"reject");
+   actions.append(approve,reject);card.append(title,meta,actions);box.append(card);
+  });
+ }catch(e){box.textContent=e.message;if(count)count.textContent="Queue could not load";status(e.message,"bad");}
+}
+async function decideRegistration(requestId,decision){
+ if(!confirm("Confirm "+(decision==="approve"?"approval and QR delivery for":"rejection of")+" registration request #"+requestId+"?"))return;
+ try{const d=await post("/api/admin",{action:"registration_decision",request_id:requestId,decision});status(d.message+(d.delivered===false?" Use /mypass in the guest's bot chat if delivery failed.":""),d.delivered===false?"bad":"good");await loadPendingRegistrations();await refreshStats();await searchGuests();}
+ catch(e){status(e.message,"bad");}
+}
+async function searchGuests(){
+ const box=$("guestResults");if(!box)return;box.textContent="Searching guest records…";
+ try{const d=await post("/api/admin",{action:"guest_search",query:$("guestSearch").value.trim(),status:$("guestStatus").value});box.textContent="";
+  if(!d.guests.length){box.textContent="No matching guest records. Try another name, phone, pass code or Telegram ID.";return;}
+  d.guests.forEach(g=>{
+   const card=document.createElement("div");card.className="record-card";const title=document.createElement("strong");title.textContent=g.full_name+" · "+g.status.toUpperCase();
+   const residence=g.residence_type==="Hostel"?("Hostel "+(g.hostel_number||"")+(g.room_number?" · Room "+g.room_number:"")):"Apartment";
+   const meta=document.createElement("div");meta.className="record-meta";meta.textContent=["Pass: "+g.pass_code,"Phone: "+(g.phone||"Not recorded"),"Telegram ID: "+g.telegram_id,"Residence: "+residence,"Food: "+g.food_preference,"Entry: "+(g.entry_used?"Recorded":"Not recorded"),"Food: "+(g.food_used?"Collected":"Not collected"),"Created: "+(g.created_at||"")].join("\n");
+   const actions=document.createElement("div");actions.className="record-actions-admin";
+   const addAction=(label,operation,target,danger=false)=>{
+    const b=document.createElement("button");b.type="button";b.className=danger?"danger":"";b.textContent=label;
+    b.onclick=async()=>{const question=operation==="reissue_pass"?"Issue a new QR and invalidate the old pass?":operation==="revoke_pass"?"Revoke this pass immediately?":operation==="reactivate_pass"?"Reactivate this revoked pass with a new QR?":"Reset "+target+" status for this guest?";
+     if(!confirm(question+"\n\n"+g.full_name+" · "+g.pass_code))return;
+     try{const res=await post("/api/admin",{action:"guest_action",guest_id:g.id,operation,target});status(res.message+(res.delivered===false?" Ask the guest to use /mypass if the new QR did not arrive.":""),res.delivered===false?"bad":"good");await searchGuests();await refreshStats();}
+     catch(e){status(e.message,"bad");}
+    };actions.append(b);
+   };
+   if(g.status==="approved"){addAction("↻ Reissue QR","reissue_pass","");addAction("Reset entry","reset_status","entry");addAction("Reset food","reset_status","food");addAction("Revoke pass","revoke_pass","",true);}
+   else{addAction("Reactivate + new QR","reactivate_pass","");}
+   card.append(title,meta,actions);box.append(card);
+  });
+ }catch(e){box.textContent=e.message;status(e.message,"bad");}
+}
+async function loadAdmins(){
+ const box=$("adminList");if(!box)return;box.textContent="Loading admin accounts…";
+ try{const d=await post("/api/admin",{action:"admins"});box.textContent="";
+  if(!d.admins.length){box.textContent="No admin accounts found.";return;}
+  const configured=new Set((d.configured_admin_ids||[]).map(Number));
+  d.admins.forEach(a=>{const line=document.createElement("div");line.className="admin-account-line";line.textContent=a.telegram_id+" · added "+(a.added_at||"date unavailable")+(configured.has(Number(a.telegram_id))?" · OWNER/RECOVERY (protected)":"");box.append(line);});
+ }catch(e){box.textContent=e.message;status(e.message,"bad");}
+}
+async function adminAction(action){
+ const telegram_id=Number($("adminId").value);
+ if(!Number.isSafeInteger(telegram_id)||telegram_id<=0){status("Enter a valid numeric Telegram ID.","bad");return;}
+ if(action==="add_admin"&&!confirm("Grant full admin access to Telegram ID "+telegram_id+"? Admins can manage passes, volunteers, event settings and announcements."))return;
+ if(action==="remove_admin"&&!confirm("Remove admin access for Telegram ID "+telegram_id+"? This cannot be undone here for configured owner/recovery IDs."))return;
+ try{const d=await post("/api/admin",{action,telegram_id});status(d.message||"Admin access updated.", "good");$("adminId").value="";await loadAdmins();}
+ catch(e){status(e.message,"bad");await loadAdmins();}
+}
+$("addAdmin").onclick=()=>adminAction("add_admin");$("removeAdmin").onclick=()=>adminAction("remove_admin");$("listAdmins").onclick=loadAdmins;
+$("searchGuests").onclick=searchGuests;
+$("loadRecentGuests").onclick=()=>{$("guestSearch").value="";$("guestStatus").value="all";searchGuests();};
+$("guestSearch").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();searchGuests();}});
+document.querySelectorAll("[data-admin]").forEach(b=>b.onclick=async()=>{const tool=b.dataset.admin;const panel=$("toolPanel");panel.textContent="";if(tool==="audit"){try{const d=await post("/api/admin",{action:"audit"});panel.textContent=d.logs.map(x=>`${x.created_at} · ${x.actor_id} · ${x.action} · ${x.detail||x.pass_code||""}`).join("\n")||"No audit entries.";}catch(e){panel.textContent=e.message;}}else if(tool==="checkpoints"){panel.innerHTML='<label>Event ID</label><input id="cpEvent" type="number" placeholder="Event ID"><label>Checkpoint name</label><input id="cpName" placeholder="Main Entry / Dinner"><label>Type</label><select id="cpType"><option value="entry">Entry</option><option value="food">Food</option><option value="workshop">Workshop</option><option value="other">Other</option></select><button id="cpCreate" type="button">Create checkpoint</button><button id="cpList" class="secondary" type="button">List checkpoints</button><pre id="cpOutput"></pre>';$("cpCreate").onclick=async()=>{try{await post("/api/admin",{action:"create_checkpoint",event_id:Number($("cpEvent").value),name:$("cpName").value,checkpoint_type:$ ("cpType").value});$("cpOutput").textContent="Checkpoint created.";}catch(e){$("cpOutput").textContent=e.message;}};$("cpList").onclick=async()=>{try{const d=await post("/api/admin",{action:"checkpoints",event_id:Number($("cpEvent").value)});$("cpOutput").textContent=JSON.stringify(d.checkpoints,null,2);}catch(e){$("cpOutput").textContent=e.message;}};}else if(tool==="sheets"){panel.innerHTML='<h4>📊 Google Sheets sync</h4><p class="small">Send existing guest records to the configured Google Apps Script endpoint. This is an explicit admin-only backfill; it does not change the SQLite database. Check the configured endpoint and sheet before starting.</p><button id="runSheetsSync" type="button">Sync existing guest records</button><div id="sheetsSyncResult" class="status" aria-live="polite"></div>';$("runSheetsSync").onclick=async()=>{if(!confirm("Sync all existing guest records to the configured Google Sheets endpoint? No rows will be deleted from the bot database."))return;const b=$("runSheetsSync"),out=$("sheetsSyncResult");b.disabled=true;out.textContent="Syncing records…";try{const d=await post("/api/admin",{action:"sheets_sync"},300000);out.textContent=d.message+" Attempted: "+d.attempted+"; synced: "+d.synced+"; failed: "+d.failed+".";out.className="status "+(d.failed?"bad":"good");}catch(e){out.textContent=e.message;out.className="status bad";}finally{b.disabled=false;}};}else if(tool==="cleanup"){panel.innerHTML='<h4>🧹 Completed event cleanup</h4><p class="small">Only archived events can be deleted. Admins, global volunteer accounts and audit history are preserved. For the legacy DEEPOTSAV 2026 event, guest and pending-registration records are included because the current database stores them globally.</p><label>Archived event</label><select id="cleanupEvent"><option value="">Choose an archived event</option></select><button id="prepareCleanup" type="button">Review data and prepare backup</button><div id="cleanupReview"></div>';const sel=$("cleanupEvent");events.filter(e=>e.status==="archived").forEach(e=>{const o=document.createElement("option");o.value=e.id;o.textContent=e.name+" (ID "+e.id+")";sel.append(o)});$("prepareCleanup").onclick=async()=>{const eid=Number(sel.value);const out=$("cleanupReview");out.textContent="";if(!eid){out.textContent="Choose an archived event first.";return;}try{const d=await post("/api/admin",{action:"cleanup_preview",event_id:eid});const backupText=JSON.stringify(d.backup,null,2);const canonical=v=>Array.isArray(v)?"["+v.map(canonical).join(",")+"]":(v&&typeof v==="object"?"{"+Object.keys(v).sort().map(k=>JSON.stringify(k)+":"+canonical(v[k])).join(",")+"}":JSON.stringify(v));const bytes=new TextEncoder().encode(canonical(d.backup));const hash=Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",bytes))).map(b=>b.toString(16).padStart(2,"0")).join("");if(hash!==d.sha256)throw Error("Backup checksum verification failed in browser. No data was deleted.");const heading=document.createElement("p");heading.textContent="Verified backup preview for "+d.event.name+". Record counts: "+JSON.stringify(d.counts);const download=document.createElement("button");download.textContent="⬇️ Download and verify backup";const del=document.createElement("button");del.textContent="Backup-and-delete";del.disabled=true;const perm=document.createElement("button");perm.className="secondary";perm.textContent="Permanently delete without backup";const note=document.createElement("p");note.className="small";note.textContent="Deletion is irreversible. You must archive the event first. Downloaded backups are saved to your device, not retained on Botkeep by this feature.";let downloaded=false;download.onclick=()=>{const blob=new Blob([backupText],{type:"application/json"});const url=URL.createObjectURL(blob);const a=
+document.createElement("a");a.href=url;a.download="eventhub-backup-event-"+eid+".json";document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);downloaded=true;del.disabled=false;download.textContent="✅ Backup downloaded — download again if needed";};del.onclick=async()=>{if(!downloaded)return;const typed=prompt('Type the exact event name to confirm deletion:\n'+d.event.name);if(typed!==d.event.name)return;try{const done=await post("/api/admin",{action:"cleanup_delete",event_id:eid,mode:"backup_delete",confirm_name:typed,sha256:d.sha256,backup_download_confirmed:true});out.textContent=done.message;status(done.message,"good");await loadEvents();}catch(e){status(e.message,"bad");}};perm.onclick=async()=>{const typed=prompt('PERMANENT deletion without backup. Type the exact event name:\n'+d.event.name);if(typed!==d.event.name)return;if(!confirm("This cannot be undone. Continue permanent deletion?"))return;try{const done=await post("/api/admin",{action:"cleanup_delete",event_id:eid,mode:"permanent",confirm_name:typed});out.textContent=done.message;status(done.message,"good");await loadEvents();}catch(e){status(e.message,"bad");}};out.append(heading,download,del,perm,note);}catch(e){out.textContent=e.message;}};}else if(tool==="announce"){
+panel.innerHTML="";
+const title=document.createElement("h4");title.textContent="📣 Telegram announcements";
+const intro=document.createElement("p");intro.className="small";intro.textContent="Preview the audience and message before sending. Sending is a separate, irreversible action.";
+const eventLabel=document.createElement("label");eventLabel.textContent="Event";
+const eventSelect=document.createElement("select");eventSelect.id="annEvent";
+const eligible=events.filter(e=>e.status!=="archived");
+eligible.forEach(ev=>{const o=document.createElement("option");o.value=ev.id;o.textContent=ev.name+" · ID "+ev.id+(ev.status==="draft"?" (draft)":"");eventSelect.append(o);});
+if(!eligible.length){const o=document.createElement("option");o.value="";o.textContent="No active events";eventSelect.append(o);}
+const audienceLabel=document.createElement("label");audienceLabel.textContent="Recipients";
+const audience=document.createElement("select");audience.id="annAudience";
+[["registered_guests","Approved registered guests (Deepotsav 2026 only)"],["all_started","All users recorded as having started the bot"]].forEach(([v,t])=>{const o=document.createElement("option");o.value=v;o.textContent=t;audience.append(o);});
+const msgLabel=document.createElement("label");msgLabel.textContent="Announcement message";
+const message=document.createElement("textarea");message.id="annMessage";message.rows=5;message.maxLength=3500;message.placeholder="Write your event announcement…";
+const count=document.createElement("p");count.className="small";count.textContent="0 / 3500 characters";message.addEventListener("input",()=>count.textContent=message.value.length+" / 3500 characters");
+const previewBtn=document.createElement("button");previewBtn.textContent="Preview recipients and message";
+const preview=document.createElement("div");preview.id="annPreview";
+const historyBtn=document.createElement("button");historyBtn.className="secondary";historyBtn.textContent="View announcement history";
+const history=document.createElement("div");history.id="annHistory";
+previewBtn.onclick=async()=>{
+ preview.textContent="";history.textContent="";
+ try{
+  const d=await post("/api/admin",{action:"announcement_preview",event_id:Number(eventSelect.value),audience:audience.value,message:message.value.trim()});
+  const box=document.createElement("div");box.className="status";
+  const h=document.createElement("strong");h.textContent="Review before sending";
+  const details=document.createElement("p");details.textContent="Event: "+d.event.name+" · Recipients: "+d.recipient_count;
+  const msg=document.createElement("p");msg.style.whiteSpace="pre-wrap";msg.textContent=d.message;
+  const note=document.createElement("p");note.className="small";note.textContent=d.note||"Please verify the audience and message carefully.";
+  const confirmBtn=document.createElement("button");confirmBtn.textContent="Send announcement to "+d.recipient_count+" users";
+  const cancelBtn=document.createElement("button");cancelBtn.className="secondary";cancelBtn.textContent="Cancel send";
+  const result=document.createElement("div");result.className="status";
+  confirmBtn.onclick=async()=>{
+   if(!confirm("Send this message to "+d.recipient_count+" Telegram users for "+d.event.name+"? This cannot be undone."))return;
+   confirmBtn.disabled=true;cancelBtn.disabled=true;result.textContent="Sending… Please keep this page open.";
+   try{const sent=await post("/api/admin",{action:"announcement_send",event_id:Number(eventSelect.value),audience:audience.value,message:message.value.trim()},300000);result.textContent="Completed. Attempted: "+sent.attempted+" · Sent: "+sent.sent+" · Failed: "+sent.failed+" · Report ID: "+sent.announcement_id;result.className="status good";}
+   catch(e){result.textContent="Send request failed: "+e.message;result.className="status bad";confirmBtn.disabled=false;cancelBtn.disabled=false;}
+  };
+  cancelBtn.onclick=()=>{box.remove();};
+  box.append(h,details,msg,note,confirmBtn,cancelBtn,result);preview.append(box);
+ }catch(e){const err=document.createElement("p");err.className="status bad";err.textContent=e.message;preview.append(err);}
+};
+historyBtn.onclick=async()=>{
+ history.textContent="Loading history…";
+ try{const d=await post("/api/admin",{action:"announcement_history"});history.textContent="";if(!d.announcements?.length){history.textContent="No announcements recorded yet.";return;}
+ d.announcements.forEach(a=>{const card=document.createElement("div");card.className="card";const h=document.createElement("strong");h.textContent="#"+a.id+" · "+(a.event_name||("Event "+a.event_id));const meta=document.createElement("p");meta.className="small";meta.textContent=(a.created_at||"")+" · sent/recorded recipients: "+(a.recipients??0)+" · failed: "+(a.failed??0);const body=document.createElement("p");body.style.whiteSpace="pre-wrap";body.textContent=a.message||"";card.append(h,meta,body);history.append(card);});
+ }catch(e){history.textContent=e.message;}
+};
+const caveat=document.createElement("p");caveat.className="small";caveat.textContent="Important: all-started includes only users the bot has recorded since tracking was deployed. Guest records are global in the current database, so approved-guest broadcasts are only enabled for DEEPOTSAV 2026. Archived events cannot be selected.";
+panel.append(title,intro,eventLabel,eventSelect,audienceLabel,audience,msgLabel,message,count,previewBtn,preview,historyBtn,history,caveat);
+}});
+async function api(path,payload){return post(path,payload)}
 async function checkQr(value){
-  if(busy)return; busy=true; currentQr=value.trim(); $("guestCard").classList.add("hidden");
-  try{
-    const data=await api("/api/guest",{qr:currentQr}); currentGuest=data.guest;
-    $("guestName").textContent=data.guest.name;
-    $("guestInfo").innerHTML="";
-    [["Residence",data.guest.residence],["Food",data.guest.food],["Pass code",data.guest.passCode]].forEach(([k,v])=>{
-      const d=document.createElement("div");d.className="pill";d.textContent=k+": "+v;$("guestInfo").appendChild(d);
-    });
-    updateGuestState(data.guest);$("guestCard").classList.remove("hidden");
-    showStatus("✅ Valid approved pass","good");
-    await stopCamera();
-  }catch(e){showStatus("❌ "+e.message,"bad");}
-  finally{busy=false;}
+ if(busy)return;const scanned=String(value||"").trim();if(!scanned){status("Enter a guest pass code or scan its QR.","bad");return;}
+ busy=true;currentQr=scanned;$("guestCard").classList.add("hidden");
+ try{const d=await api("/api/guest",{qr:currentQr});if(!d.guest)throw new Error("The server returned no event pass details.");
+  currentGuest=d.guest;$("guestName").textContent=d.guest.name;$("guestInfo").textContent=["Pass type: "+(d.guest.passRole||"Guest"),"Residence: "+d.guest.residence,"Food: "+d.guest.food,"Pass: "+d.guest.passCode].join(" · ");
+  $("guestState").textContent="Entry: "+(d.guest.entryUsed?"Recorded":"Not recorded")+"\nFood: "+(d.guest.foodUsed?"Collected":"Not collected");
+  $("recordEntry").disabled=d.guest.entryUsed;$("recordFood").disabled=d.guest.foodUsed;$("guestCard").classList.remove("hidden");status("Valid "+(d.guest.passRole||"guest").toLowerCase()+" pass. Entry and food actions are available.","good");await stopCamera();
+ }catch(e){currentQr="";currentGuest=null;status(e.message,"bad");}finally{busy=false;}
 }
-function updateGuestState(g){
-  $("guestState").textContent=`Entry: ${g.entryUsed?"Already recorded":"Not yet recorded"}\nFood: ${g.foodUsed?"Already collected":"Not yet collected"}`;
-  $("recordEntry").disabled=g.entryUsed;$("recordFood").disabled=g.foodUsed;
+async function record(action){if(!currentQr)return;try{const d=await api("/api/action",{qr:currentQr,action});currentGuest=d.guest;$("guestState").textContent=`Entry: ${d.guest.entryUsed?"Recorded":"Not recorded"}
+Food: ${d.guest.foodUsed?"Collected":"Not collected"}`;$("recordEntry").disabled=d.guest.entryUsed;$("recordFood").disabled=d.guest.foodUsed;if(d.counts)$("counts").textContent=`Meals served — Vegetarian: ${d.counts.vegetarianServed} | Non-vegetarian: ${d.counts.nonVegetarianServed}`;status(d.message,"good");}catch(e){status(e.message,"bad");}}
+async function startCamera(){if(!tg?.initData){status("Open from Telegram to authenticate.","bad");return;}try{$("reader").classList.remove("hidden");$("startScan").classList.add("hidden");$("stopScan").classList.remove("hidden");scanner=new Html5Qrcode("reader");await scanner.start({facingMode:"environment"},{fps:10,qrbox:{width:240,height:240}},text=>checkQr(text),()=>{});status("Camera active — scan a pass.","good");if($("scannerBadge"))$("scannerBadge").textContent="● CAMERA LIVE";}catch(e){status("Camera unavailable. Allow camera access or enter a pass code manually.","bad");}}
+async function stopCamera(){if(scanner){try{if(scanner.isScanning)await scanner.stop();await scanner.clear();}catch(e){}scanner=null;}$("reader").classList.add("hidden");$("startScan").classList.remove("hidden");$("stopScan").classList.add("hidden");if($("scannerBadge"))$("scannerBadge").textContent="● SCANNER READY";}
+$("startScan").onclick=startCamera;$("stopScan").onclick=stopCamera;$("checkManual").onclick=()=>checkQr($("manual").value);$("recordEntry").onclick=()=>record("entry");$("recordFood").onclick=()=>record("food");$("guestPass").onclick=loadMyPass;
+async function loadMyPass(){
+ const button=$("guestPass"),box=$("myPassDisplay");
+ box.classList.remove("hidden");box.textContent="Loading your active pass…";button.disabled=true;
+ try{
+  const d=await post("/api/my_pass");
+  if(!d.pass||!d.pass.image)throw new Error("The server did not return a pass image.");
+  const p=d.pass;box.textContent="";
+  const heading=document.createElement("h3");heading.textContent="🎟️ Your active pass";
+  const img=document.createElement("img");img.alt="Personal Deepotsav QR pass";img.src="data:image/png;base64,"+p.image;img.style.cssText="display:block;width:100%;max-width:420px;height:auto;margin:10px auto;border-radius:10px;background:#fff";
+  const info=document.createElement("p");info.className="small";info.style.whiteSpace="pre-line";info.textContent="Name: "+p.name+"\nPass code: "+p.passCode+"\nResidence: "+p.residence+(p.roomNumber?"\nRoom: "+p.roomNumber:"")+"\nFood: "+p.food+"\nEntry: "+(p.entryUsed?"Recorded":"Not recorded")+"\nFood collection: "+(p.foodUsed?"Recorded":"Not recorded")+"\nKeep this QR private.";
+  const download=document.createElement("button");download.textContent="⬇️ Save pass image";download.onclick=()=>{const a=document.createElement("a");a.href=img.src;a.download="Deepotsav-"+p.passCode+".png";document.body.append(a);a.click();a.remove();};
+  box.append(heading,img,info,download);status("Your active pass is loaded. Keep the QR private.","good");
+ }catch(e){box.textContent=e.message;status(e.message,"bad");}
+ finally{button.disabled=false;}
 }
-async function record(action){
-  if(!currentQr||!currentGuest)return;
-  try{
-    const data=await api("/api/action",{qr:currentQr,action});
-    currentGuest=data.guest;updateGuestState(data.guest);
-    if(data.counts)$("counts").textContent=`Meals served — Vegetarian: ${data.counts.vegetarianServed} | Non-vegetarian: ${data.counts.nonVegetarianServed}`;
-    showStatus("✅ "+data.message,"good");
-  }catch(e){showStatus("⚠️ "+e.message,"bad");}
+$("guestEvent").onclick=loadGuestEvent;
+$("guestSupport").onclick=()=>{const url="https://t.me/DRvediyappanvishnu";if(tg?.openTelegramLink)tg.openTelegramLink(url);else window.open(url,"_blank","noopener,noreferrer");};
+$("loadMyGuestStylePass").onclick=loadMyGuestStylePass;
+async function loadMyGuestStylePass(){
+ const button=$("loadMyGuestStylePass"),box=$("staffPassDisplay");box.classList.remove("hidden");box.textContent="Loading your event pass…";button.disabled=true;
+ try{
+  const d=await post("/api/my_pass",{food_preference:$("staffFoodPreference").value});
+  if(!d.pass||!d.pass.image)throw new Error("The server did not return an event pass image.");
+  const p=d.pass;box.textContent="";
+  const heading=document.createElement("h3");heading.textContent="🎟️ Your "+(p.passRole||"staff")+" pass";
+  const img=document.createElement("img");img.alt="Personal standard EventHub QR pass for entry and food";img.src="data:image/png;base64,"+p.image;
+  const info=document.createElement("p");info.className="small";info.style.whiteSpace="pre-line";info.textContent="Name: "+p.name+"\nRole: "+(p.passRole||"Staff")+"\nPass code: "+p.passCode+"\nResidence: "+p.residence+(p.roomNumber?"\nRoom: "+p.roomNumber:"")+"\nFood: "+p.food+"\nEntry: "+(p.entryUsed?"Recorded":"Not recorded")+"\nFood collection: "+(p.foodUsed?"Recorded":"Not collected")+"\nThis is your standard guest-style QR. Use it for your own entry and food collection.";
+  const download=document.createElement("button");download.type="button";download.textContent="⬇️ Save event pass";download.onclick=()=>{const a=document.createElement("a");a.href=img.src;a.download="EventHub-"+String(p.passRole||"Staff")+"-"+p.passCode+".png";document.body.append(a);a.click();a.remove();};
+  box.append(heading,img,info,download);
+  if(p.createdForStaff)status("Your standard staff pass was created. The same QR works for entry and food collection.","good");
+  else status("Your existing approved pass is ready. Its saved food preference is unchanged.","good");
+ }catch(e){box.textContent=e.message;status(e.message,"bad");}finally{button.disabled=false;}
 }
-async function startCamera(){
-  if(!tg?.initData){showStatus("Open the scanner from inside Telegram so the volunteer can be authenticated.","bad");return;}
-  try{
-    $("reader").classList.remove("hidden");$("startScan").classList.add("hidden");$("stopScan").classList.remove("hidden");
-    scanner=new Html5Qrcode("reader",{verbose:true});
-    
-
-await scanner.start(
-  { facingMode: "environment" },
-  { fps: 10, qrbox: { width: 240, height: 240 } },
-  text => checkQr(text),
-  error => console.debug("QR scan:", error)
-);
-    
-
-    showStatus("Camera active — point it at a guest QR pass.","neutral");
-  }catch(e){showStatus("Camera could not start. Allow camera permission or use manual entry. "+e,"bad");}
+async function loadGuestEvent(){
+ const box=$("eventDetails");box.textContent="Loading event details…";
+ try{const d=await post("/api/event_details");const ev=d.event;const dateText=ev.event_date?new Date(ev.event_date+"T12:00:00").toLocaleDateString(undefined,{year:"numeric",month:"long",day:"numeric"}):"";const time=d.time||ev.event_time||"";
+  box.textContent=[ev.name,ev.description,dateText?"Date: "+dateText:"",time?"Time: "+time:"",ev.venue?"Venue: "+ev.venue:""].filter(Boolean).join("\n");
+  if($("headerEventName"))$("headerEventName").textContent=ev.name||"DEEPOSTAV";if($("headerEventTitle"))$("headerEventTitle").textContent=ev.description||"The Journey Through India";
+  if($("headerEventMeta"))$("headerEventMeta").textContent=[dateText.toUpperCase(),time,ev.venue].filter(Boolean).join(" · ");
+  status("Event details loaded.","good");
+ }catch(e){box.textContent="Could not load event details: "+e.message;status(e.message,"bad");}
 }
-async function stopCamera(){
-  if(scanner){try{if(scanner.isScanning)await scanner.stop();await scanner.clear();}catch(e){}scanner=null;}
-  $("reader").classList.add("hidden");$("startScan").classList.remove("hidden");$("stopScan").classList.add("hidden");
-}
-$("startScan").addEventListener("click",startCamera);
-$("stopScan").addEventListener("click",stopCamera);
-$("checkManual").addEventListener("click",()=>checkQr($("manual").value));
-$("recordEntry").addEventListener("click",()=>record("entry"));
-$("recordFood").addEventListener("click",()=>record("food"));
+boot();
 </script>
-</body>
-</html>
 
+<canvas id="diwaliAtmosphere" aria-hidden="true"></canvas>
+<style>
+#diwaliAtmosphere{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:1}
+body>main{position:relative;z-index:1}
+@media(prefers-reduced-motion:reduce){#diwaliAtmosphere{display:none}}
+</style>
+<script>
+(()=> {
+ const canvas=document.getElementById("diwaliAtmosphere");
+ if(!canvas||window.matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+ const ctx=canvas.getContext("2d",{alpha:true});if(!ctx)return;
+ let w=0,h=0,dpr=1,raf=0,last=0,lights=[],petals=[],rockets=[],bursts=[],lastBurst=0,running=true;
+ const rand=(a,b)=>a+Math.random()*(b-a),choose=a=>a[Math.floor(Math.random()*a.length)];
+ const colors=["#FFF200","#FF3D00","#FF1493","#00F5FF","#B6FF00","#FF00E5","#7CFF00","#FF8C00","#FFFFFF"];
+ function resize(){dpr=Math.min(window.devicePixelRatio||1,1.5);w=innerWidth;h=innerHeight;canvas.width=Math.floor(w*dpr);canvas.height=Math.floor(h*dpr);canvas.style.width=w+"px";canvas.style.height=h+"px";ctx.setTransform(dpr,0,0,dpr,0,0);
+ lights=Array.from({length:Math.min(125,Math.floor(w*h/7500))},()=>({x:rand(0,w),y:rand(0,h),r:rand(.7,2.5),v:rand(5,20),p:rand(0,7),a:rand(.45,.95),color:choose(colors)}));
+ petals=Array.from({length:Math.min(22,Math.floor(w/42))},()=>({x:rand(0,w),y:rand(0,h),r:rand(2,5),v:rand(8,20),p:rand(0,7),spin:rand(-1,1)}));}
+ function glow(x,y,r,color,alpha=1){const g=ctx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,color.replace(")",","+alpha+")").replace("rgb(","rgba("));g.addColorStop(1,"rgba(255,20,147,0)");ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();}
+ function diya(x,y,s,t){ctx.save();ctx.translate(x,y);ctx.scale(s,s);glow(0,-13,38,"rgba(255,173,57)",.45);
+ ctx.beginPath();ctx.moveTo(-20,0);ctx.quadraticCurveTo(0,8,20,0);ctx.quadraticCurveTo(0,19,-20,0);let b=ctx.createLinearGradient(0,0,0,18);b.addColorStop(0,"#ffd27a");b.addColorStop(1,"#a44739");ctx.fillStyle=b;ctx.fill();ctx.strokeStyle="#ffe1a0";ctx.stroke();
+ ctx.beginPath();ctx.moveTo(0,1);ctx.bezierCurveTo(-9,-8,-2,-14,1,-22);ctx.bezierCurveTo(11,-12,7,-6,0,1);let f=ctx.createRadialGradient(0,-9,1,0,-9,13);f.addColorStop(0,"#fffce0");f.addColorStop(.4,"#ffd34d");f.addColorStop(1,"#ff6a24");ctx.fillStyle=f;ctx.fill();ctx.restore();}
+ function firework(x,y){let hue=choose(colors);const count=118;for(let i=0;i<count;i++){let a=Math.PI*2*i/count+rand(-.035,.035),speed=rand(45,175);bursts.push({x,y,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,life:rand(.8,1.55),max:1,color:Math.random()<.22?choose(colors):hue,r:rand(1.8,4.2)});}bursts.push({x,y,vx:0,vy:0,life:.22,max:.22,color:"#fff6c9",r:13,flash:true});for(let i=0;i<18;i++){let a=rand(0,Math.PI*2),speed=rand(20,95);bursts.push({x,y,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,life:rand(1.1,1.8),max:1,color:"#fff1b8",r:rand(.7,1.4)});}}
+ function rocket(){if(rockets.length>3)return;let x=rand(w*.12,w*.88),y=h+10;rockets.push({x,y,vx:rand(-15,15),vy:-rand(150,235),target:rand(h*.1,h*.42),color:choose(colors),trail:[]});}
+ function frame(now){if(!running)return;raf=requestAnimationFrame(frame);if(now-last<30)return;let dt=Math.min(.04,(now-last)/1000||.016);last=now;ctx.clearRect(0,0,w,h);
+ // Saturated ambient colour blooms make the animation visibly vivid, not washed out.
+ for(const bloom of [{x:w*.08,y:h*.25,r:Math.max(w,h)*.48,c:"rgba(255,0,110,.13)"},{x:w*.92,y:h*.22,r:Math.max(w,h)*.46,c:"rgba(0,220,255,.12)"},{x:w*.5,y:h*.92,r:Math.max(w,h)*.52,c:"rgba(255,145,0,.14)"}]){const g=ctx.createRadialGradient(bloom.x,bloom.y,0,bloom.x,bloom.y,bloom.r);g.addColorStop(0,bloom.c);g.addColorStop(1,"rgba(0,0,0,0)");ctx.fillStyle=g;ctx.fillRect(0,0,w,h);}
+ // Golden dust, drifting petals and gentle light trails
+ for(const p of petals){p.y+=p.v*dt*.35;p.x+=Math.sin(now*.0005+p.p)*.24+p.spin*.16;if(p.y>h+12){p.y=-12;p.x=rand(0,w)}ctx.save();ctx.translate(p.x,p.y);ctx.rotate(Math.sin(now*.0007+p.p));ctx.beginPath();ctx.ellipse(0,0,p.r*.6,p.r*1.5,0,0,Math.PI*2);ctx.fillStyle="rgba(255,95,0,.85)";ctx.fill();ctx.restore();}
+ for(const l of lights){l.y-=l.v*dt*.3;l.x+=Math.sin(now*.0005+l.p)*.18;if(l.y<-5){l.y=h+5;l.x=rand(0,w)}let a=l.a*(.5+.5*Math.sin(now*.002+l.p));ctx.globalAlpha=a;ctx.fillStyle=l.color;ctx.shadowBlur=12;ctx.shadowColor=l.color;ctx.beginPath();ctx.arc(l.x,l.y,l.r,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;}ctx.globalAlpha=1;
+ // Occasional small fireworks in outer margins, away from the main content center
+ if(now-lastBurst>rand(420,800)){lastBurst=now;firework(Math.random()<.5?rand(24,w*.2):rand(w*.8,w-24),rand(h*.12,h*.52));}
+ if(Math.random()<.015&&rockets.length<4)rocket();
+ for(let i=rockets.length-1;i>=0;i--){let r=rockets[i];r.trail.push({x:r.x,y:r.y});if(r.trail.length>9)r.trail.shift();r.x+=r.vx*dt;r.y+=r.vy*dt;r.vy+=70*dt;ctx.strokeStyle=r.color;ctx.lineWidth=2;ctx.beginPath();r.trail.forEach((p,j)=>j?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.stroke();ctx.fillStyle="#fff3be";ctx.beginPath();ctx.arc(r.x,r.y,2.4,0,Math.PI*2);ctx.fill();if(r.y<=r.target||r.vy>0){firework(r.x,r.y);rockets.splice(i,1);}}
+ for(let i=bursts.length-1;i>=0;i--){let b=bursts[i];b.life-=dt;b.x+=b.vx*dt;b.y+=b.vy*dt;b.vx*=.985;b.vy=b.vy*.985+28*dt;ctx.globalAlpha=Math.max(0,b.life/b.max);ctx.fillStyle=b.color;ctx.shadowBlur=b.flash?26:12;ctx.shadowColor=b.color;ctx.beginPath();ctx.arc(b.x,b.y,b.flash?b.r*(1-b.life/b.max+.2):b.r,0,Math.PI*2);ctx.fill();if(b.flash){ctx.globalAlpha=Math.max(0,b.life/b.max)*.65;ctx.strokeStyle=b.color;ctx.lineWidth=2;ctx.beginPath();ctx.arc(b.x,b.y,22*(1-b.life/b.max),0,Math.PI*2);ctx.stroke();}if(b.life<=0)bursts.splice(i,1);}ctx.globalAlpha=1;ctx.shadowBlur=0;
+ // Subtle decorative diyas at the top edge; no blocking overlays
+ const n=Math.max(3,Math.min(5,Math.floor(w/260)));for(let i=0;i<n;i++){let x=(i+1)*w/(n+1),y=42+Math.sin(now*.001+i)*3;diya(x,y,.58+.04*Math.sin(now*.003+i),now);}
+ }
+ resize();raf=requestAnimationFrame(frame);window.addEventListener("resize",resize,{passive:true});document.addEventListener("visibilitychange",()=>{if(document.hidden){running=false;cancelAnimationFrame(raf)}else if(!running){running=true;last=0;raf=requestAnimationFrame(frame)}});
+})();
+</script>
 
+</body></html>
