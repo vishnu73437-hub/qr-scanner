@@ -413,6 +413,21 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .guest-results .empty-state{padding:16px;border:1px dashed #ffd36c55;border-radius:14px;color:#d7c7e7;text-align:center;line-height:1.55}
 @media(max-width:600px){.guest-manager-tools{padding:11px}.guest-search-row{grid-template-columns:minmax(0,1fr)}.guest-search-row button{width:100%;margin-top:0}.guest-filter-grid{grid-template-columns:minmax(0,1fr)}.guest-filter-grid button{width:100%;margin-top:0}.guest-results .record-actions-admin{grid-template-columns:repeat(2,minmax(0,1fr))}.guest-results .record-actions-admin button{font-size:13px;padding:12px 7px}}
 
+
+/* Compact guest manager: collapsible search and less visual clutter */
+.guest-search-options{padding:0;overflow:hidden}
+.guest-search-options>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;list-style:none;padding:14px 15px;font-weight:750;min-height:54px;color:#fff0bc;touch-action:manipulation}
+.guest-search-options>summary::-webkit-details-marker{display:none}
+.guest-search-options>summary:after{content:"＋";font-size:20px;color:#ffd36c}
+.guest-search-options[open]>summary:after{content:"−"}
+.guest-search-options>summary .small{font-weight:500;text-align:right}
+.guest-search-options-body{padding:0 14px 12px;border-top:1px solid #ffd36c30}
+.guest-manager-tools{margin:10px 0}
+.guest-pass-manager>.section-heading{margin-bottom:10px}
+.guest-pass-manager>.section-heading p{margin-top:6px}
+.guest-results .record-actions-admin button{min-height:42px}
+@media(max-width:600px){.guest-search-options>summary{padding:12px;flex-wrap:wrap}.guest-search-options>summary .small{width:100%;text-align:left}.guest-search-options-body{padding:0 10px 10px}}
+
 </style><style id="eventhub-role-upgrade">
 /* EventHub role redesign; retain the existing Deepotsav artwork and palette. */
 .section-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 13px}
@@ -599,11 +614,14 @@ body.scan-mode #status{position:fixed!important;z-index:99992!important;top:6px!
 </section>
 <section class="card admin-panel guest-pass-manager">
 <div class="section-heading"><div><div class="eyebrow">03 · GUEST ACCESS</div><h3>🎟️ Guest & QR pass manager</h3><p class="small">Find a guest first, then choose the action you need. Each pass action is confirmed before it changes access.</p></div><span class="panel-index">03</span></div>
-<div class="guest-manager-tools">
+<details class="guest-manager-tools guest-search-options">
+<summary><span>🔎 Search & filters</span><span class="small">Find a guest or narrow results</span></summary>
+<div class="guest-search-options-body">
 <label for="guestSearch">Find a guest</label><div class="manual-row guest-search-row"><input id="guestSearch" type="search" placeholder="Name, phone, pass code or Telegram ID" autocomplete="off" aria-label="Search guest records"><button id="searchGuests" type="button">🔎 Search</button></div>
-<div class="guest-filter-grid"><div><label for="guestStatus">Filter by pass status</label><select id="guestStatus"><option value="all">All guests</option><option value="approved">Active / approved</option><option value="revoked">Revoked</option></select></div><button id="loadRecentGuests" class="secondary" type="button">↻ Load recent guests</button></div>
-<p class="small guest-manager-hint">Tip: search with just a few letters or the last digits of a phone number. Leave search empty to browse recent guests.</p>
+<div class="guest-filter-grid"><div><label for="guestStatus">Pass status</label><select id="guestStatus"><option value="all">All guests</option><option value="approved">Active / approved</option><option value="revoked">Revoked</option></select></div><button id="loadRecentGuests" class="secondary" type="button">↻ Load recent guests</button></div>
+<p class="small guest-manager-hint">Search by name, phone, pass code or Telegram ID.</p>
 </div>
+</details>
 <div id="guestResults" class="records-list guest-results" aria-live="polite"><div class="empty-state">Search for a guest or load recent guests to begin.</div></div>
 </section>
 <section class="card admin-panel"><div class="section-heading"><div><div class="eyebrow">04 · PEOPLE & PERMISSIONS</div><h3>👥 Volunteer access</h3></div><span class="panel-index">04</span></div><p class="small">Grant or remove scanner access by Telegram numeric ID. Removing volunteer access disables scanner privileges. Existing guest pass records are retained.</p><label for="volId">Telegram numeric ID</label><div class="manual-row"><input id="volId" inputmode="numeric" placeholder="e.g. 123456789"><button id="addVol" type="button">＋ Add</button></div><div class="row"><button id="removeVol" class="secondary" type="button">Remove access</button><button id="listVols" class="secondary" type="button">List volunteers</button></div><div id="volList" class="volunteer-list small" aria-live="polite"></div></section>
