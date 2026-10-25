@@ -590,6 +590,17 @@ body.scan-mode #guestCard button{min-height:48px;margin:0}
 body.scan-mode #status{position:fixed!important;z-index:99992!important;top:6px!important;left:8px!important;right:8px!important;width:auto!important;max-width:none!important;font-size:13px!important;pointer-events:none}
 @media(min-width:700px){body.scan-mode .scanner-workspace{padding:18px!important}body.scan-mode #reader video{max-height:48dvh!important}}
 </style>
+<style id="eventhub-ui-audit-fixes">
+/* Accessible, compact preview controls and responsive admin actions */
+.announcement-preview-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
+.announcement-preview-actions button{width:100%;min-width:0;margin:0!important;white-space:normal;line-height:1.3}
+#announcementFileInfo.status{margin:8px 0 12px}
+#announcementResult{overflow-wrap:anywhere;word-break:break-word}
+@media(max-width:440px){
+ .announcement-preview-actions{grid-template-columns:1fr}
+ .announcement-preview-actions button{min-height:48px}
+}
+</style>
 </head>
 <body><div id="diwaliScene" aria-hidden="true"><svg viewBox="0 0 900 1500" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
 <defs>
@@ -739,7 +750,7 @@ async function refreshCurrentRole(){
  }
 }
 async function initializeAdminWorkspace(){
- await Promise.all([refreshStats(),loadEvents(),loadAdmins(),initAnnouncementPanel(),loadAnnouncementHistory()]);
+ await Promise.all([refreshStats(),loadEvents(),loadAdmins(),loadAnnouncementHistory()]);
 }
 async function boot(){
  status("Checking Telegram authentication…");
@@ -773,7 +784,7 @@ async function runAdminDiagnostics(){
 }
 async function loadEvents(){
  try{const d=await post("/api/admin",{action:"events"});events=d.events||[];$("eventsList").textContent="";
-  if(!events.length){$("eventsList").textContent="No events yet.";return;}
+  if(!events.length){$("eventsList").textContent="No events yet.";initAnnouncementPanel();return;}
   events.forEach(ev=>{
    const card=document.createElement("div");card.className="card event-workspace-card";
    const title=document.createElement("strong");title.textContent=ev.name+" · "+ev.status;
@@ -815,6 +826,7 @@ async function loadEvents(){
    }
    $("eventsList").append(card);
   });
+  initAnnouncementPanel();
  }catch(e){$("eventsList").textContent=e.message;status(e.message,"bad");}
 }
 $("createEvent").onclick=async()=>{
@@ -1159,10 +1171,16 @@ async function stopCamera(){
 }
 async function setDedicatedScanner(open){document.body.classList.toggle("scan-mode",open);$("scanModeToggle").classList.toggle("hidden",open);$("scanModeToggle").setAttribute("aria-expanded",String(open));$("scanModeExit").classList.toggle("hidden",!open);if(open){$("scanModeToggle").textContent="📷 Open QR Scanner";if(!scanner||!scanner.isScanning)await startCamera();}else{await stopCamera();$("scanModeToggle").textContent="📷 Open QR Scanner";$("guestCard").classList.add("hidden");currentQr="";currentGuest=null;$("recordEntry").disabled=true;$("recordFood").disabled=true;}}
 $("scanModeToggle").onclick=()=>setDedicatedScanner(true);$("scanModeExit").onclick=()=>setDedicatedScanner(false);
-$("startScan").onclick=startCamera;$("stopScan").onclick=stopCamera;$("checkManual").onclick=()=>checkQr($("manual").value,"manual");$("manual").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();checkQr($("manual").value,"manual");}});$("recordEntry").onclick=()=>record("entry");$("recordFood").onclick=()=>record("food");$("guestPass").onclick=loadMyPass;
+$("startScan").onclick=startCamera;$("stopScan").onclick=stopCamera;$("checkManual").onclick=()=>checkQr($("manual").value,"manual");$("manual").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();checkQr($("manual").value,"manual");}});$("recordEntry").onclick=()=>record("entry");$("recordFood").onclick=()=>record("food");$("guestPass").onclick=()=>{
+ const box=$("myPassDisplay"),button=$("guestPass");
+ if(box.dataset.loaded==="true"&&!box.classList.contains("hidden")){
+  box.classList.add("hidden");box.dataset.loaded="false";button.textContent="🎟️ My Pass";return;
+ }
+ loadMyPass();
+};
 async function loadMyPass(){
  const button=$("guestPass"),box=$("myPassDisplay");
- box.classList.remove("hidden");box.textContent="Loading your active pass…";button.disabled=true;
+ box.dataset.loaded="false";box.classList.remove("hidden");box.textContent="Loading your active pass…";button.disabled=true;button.textContent="Loading pass…";
  try{
   const d=await post("/api/my_pass");
   if(!d.pass||!d.pass.image)throw new Error("The server did not return a pass image.");
@@ -1171,15 +1189,21 @@ async function loadMyPass(){
   const img=document.createElement("img");img.alt="Personal Deepotsav QR pass";img.src="data:image/png;base64,"+p.image;img.style.cssText="display:block;width:100%;max-width:420px;height:auto;margin:10px auto;border-radius:10px;background:#fff";
   const info=document.createElement("p");info.className="small";info.style.whiteSpace="pre-line";info.textContent="Name: "+p.name+"\nPass code: "+p.passCode+"\nResidence: "+p.residence+(p.roomNumber?"\nRoom: "+p.roomNumber:"")+"\nFood: "+p.food+"\nEntry: "+(p.entryUsed?"Recorded":"Not recorded")+"\nFood collection: "+(p.foodUsed?"Recorded":"Not recorded")+"\nKeep this QR private.";
   const download=document.createElement("button");download.textContent="⬇️ Save pass image";download.onclick=()=>{const a=document.createElement("a");a.href=img.src;a.download="Deepotsav-"+p.passCode+".png";document.body.append(a);a.click();a.remove();};
-  box.append(heading,img,info,download);status("Your active pass is loaded. Keep the QR private.","good");
+  box.append(heading,img,info,download);box.dataset.loaded="true";button.textContent="🙈 Hide my pass";status("Your active pass is loaded. Keep the QR private.","good");
  }catch(e){box.textContent=e.message;status(e.message,"bad");}
- finally{button.disabled=false;}
+ finally{button.disabled=false;if(box.dataset.loaded!=="true")button.textContent="🎟️ My Pass";}
 }
 $("guestEvent").onclick=loadGuestEvent;
 $("guestSupport").onclick=()=>{const url="https://t.me/DRvediyappanvishnu";if(tg?.openTelegramLink)tg.openTelegramLink(url);else window.open(url,"_blank","noopener,noreferrer");};
-$("loadMyGuestStylePass").onclick=loadMyGuestStylePass;
+$("loadMyGuestStylePass").onclick=()=>{
+ const box=$("staffPassDisplay"),button=$("loadMyGuestStylePass");
+ if(box.dataset.loaded==="true"&&!box.classList.contains("hidden")){
+  box.classList.add("hidden");box.dataset.loaded="false";button.textContent="🎟️ Show my event pass";return;
+ }
+ loadMyGuestStylePass();
+};
 async function loadMyGuestStylePass(){
- const button=$("loadMyGuestStylePass"),box=$("staffPassDisplay");box.classList.remove("hidden");box.textContent="Loading your event pass…";button.disabled=true;
+ const button=$("loadMyGuestStylePass"),box=$("staffPassDisplay");box.dataset.loaded="false";box.classList.remove("hidden");box.textContent="Loading your event pass…";button.disabled=true;button.textContent="Loading event pass…";
  try{
   const d=await post("/api/my_pass");
   if(!d.pass||!d.pass.image)throw new Error("The server did not return an event pass image.");
@@ -1188,7 +1212,7 @@ async function loadMyGuestStylePass(){
   const img=document.createElement("img");img.alt="Personal standard EventHub QR pass for entry and food";img.src="data:image/png;base64,"+p.image;
   const info=document.createElement("p");info.className="small";info.style.whiteSpace="pre-line";info.textContent="Name: "+p.name+"\nRole: "+(p.passRole||"Staff")+"\nPass code: "+p.passCode+"\nResidence: "+p.residence+(p.roomNumber?"\nRoom: "+p.roomNumber:"")+"\nFood: "+p.food+"\nEntry: "+(p.entryUsed?"Recorded":"Not recorded")+"\nFood collection: "+(p.foodUsed?"Recorded":"Not collected")+"\nThis is your standard guest-style QR. Use it for your own entry and food collection.";
   const download=document.createElement("button");download.type="button";download.textContent="⬇️ Save event pass";download.onclick=()=>{const a=document.createElement("a");a.href=img.src;a.download="EventHub-"+String(p.passRole||"Staff")+"-"+p.passCode+".png";document.body.append(a);a.click();a.remove();};
-  box.append(heading,img,info,download);
+  box.append(heading,img,info,download);box.dataset.loaded="true";button.textContent="🙈 Hide my event pass";
   if(p.createdForStaff)status("Your standard staff pass was created. The same QR works for entry and food collection.","good");
   else status("Your existing approved pass is ready. Its saved food preference is unchanged.","good");
  }catch(e){
@@ -1207,7 +1231,7 @@ async function loadMyGuestStylePass(){
    console.error("EventHub pass error:",raw);
   }
   box.textContent=userMessage;status(userMessage,"bad");
- }finally{button.disabled=false;}
+ }finally{button.disabled=false;if(box.dataset.loaded!=="true")button.textContent="🎟️ Show my event pass";}
 }
 async function loadGuestEvent(){
  const box=$("eventDetails");box.textContent="Loading event details…";
@@ -1269,26 +1293,101 @@ async function announcementPayload(){
   payload.media_type=file.type.startsWith("image/")?"photo":"document";payload.media_name=file.name;payload.media_mime=file.type||"application/octet-stream";payload.media_base64=dataUrl.split(",")[1]||"";}
  return payload;
 }
-async function initAnnouncementPanel(){
+function initAnnouncementPanel(){
  const select=$("announcementEvent");if(!select)return;
- try{const d=await post("/api/admin",{action:"events"}),list=(d.events||[]).filter(e=>e.status!=="archived");select.textContent="";
-  if(!list.length){const o=document.createElement("option");o.value="";o.textContent="No active events";select.append(o);return;}
-  list.forEach(ev=>{const o=document.createElement("option");o.value=ev.id;o.textContent=ev.name+" · ID "+ev.id;select.append(o);});
- }catch(e){select.innerHTML='<option value="">Could not load events</option>';status(e.message,"bad");}
+ const previous=select.value;
+ const list=(events||[]).filter(e=>e.status!=="archived");
+ select.textContent="";
+ if(!list.length){const o=document.createElement("option");o.value="";o.textContent="No active events";select.append(o);return;}
+ list.forEach(ev=>{const o=document.createElement("option");o.value=ev.id;o.textContent=ev.name+" · ID "+ev.id;select.append(o);});
+ if(list.some(ev=>String(ev.id)===previous))select.value=previous;
 }
-$("announcementFile")?.addEventListener("change",()=>{const f=$("announcementFile").files?.[0];$("announcementFileInfo").textContent=f?f.name+" · "+(f.size/1024/1024).toFixed(2)+" MB · "+(f.type||"file"):"No attachment selected.";});
+function announcementSignature(){
+ const file=$("announcementFile").files?.[0];
+ return JSON.stringify([
+  $("announcementEvent").value,
+  $("announcementAudience").value,
+  $("announcementMessage").value,
+  file?[file.name,file.size,file.lastModified,file.type]:null
+ ]);
+}
+let announcementPreviewSignature="";
+function invalidateAnnouncementPreview(){
+ const out=$("announcementResult");if(!out)return;
+ if(!announcementPreviewSignature&&!out.querySelector("button"))return;
+ announcementPreviewSignature="";
+ out.textContent="Announcement details changed. Preview again before sending.";
+}
+["announcementEvent","announcementAudience","announcementMessage","announcementFile"].forEach(id=>{
+ const el=$(id);if(!el)return;
+ el.addEventListener(id==="announcementMessage"?"input":"change",invalidateAnnouncementPreview);
+});
+$("announcementFile")?.addEventListener("change",()=>{
+ const file=$("announcementFile").files?.[0],info=$("announcementFileInfo"),preview=$("announcementPreview");
+ if(file&&file.size>8*1024*1024){
+  info.textContent="This file is larger than 8 MB. Choose a smaller file.";
+  info.className="small status bad";preview.disabled=true;
+ }else{
+  info.textContent=file?file.name+" · "+(file.size/1024/1024).toFixed(2)+" MB · "+(file.type||"file"):"No attachment selected.";
+  info.className="small";preview.disabled=false;
+ }
+});
 $("announcementPreview")?.addEventListener("click",async()=>{
- const button=$("announcementPreview"),out=$("announcementResult");button.disabled=true;out.textContent="Preparing preview…";
- try{const payload=await announcementPayload(),d=await post("/api/admin",{...payload,action:"announcement_preview"});
+ const button=$("announcementPreview"),out=$("announcementResult");
+ if(button.disabled)return;
+ button.disabled=true;out.textContent="Preparing preview…";
+ try{
+  const signature=announcementSignature();
+  const payload=await announcementPayload();
+  if(signature!==announcementSignature())throw new Error("Announcement details changed while preparing the preview. Please preview again.");
+  const d=await post("/api/admin",{...payload,action:"announcement_preview"});
+  if(signature!==announcementSignature())throw new Error("Announcement details changed while the preview was being checked. Please preview again.");
+  announcementPreviewSignature=signature;
   out.textContent="Preview: "+d.event.name+" · "+d.recipient_count+" recipients"+(payload.media_name?" · Attachment: "+payload.media_name:"")+".";
   const send=document.createElement("button");send.type="button";send.textContent="Confirm & send to "+d.recipient_count+" users";send.style.marginTop="10px";
-  const cancel=document.createElement("button");cancel.type="button";cancel.className="secondary";cancel.textContent="Cancel";cancel.style.marginTop="10px";cancel.style.marginLeft="8px";
-  const controls=document.createElement("div");controls.append(send,cancel);out.append(controls);
-  cancel.onclick=()=>{controls.remove();out.textContent="Sending cancelled. Nothing was sent.";};
-  send.onclick=async()=>{if(!confirm("Send this announcement to "+d.recipient_count+" recipients? This cannot be undone."))return;send.disabled=true;cancel.disabled=true;out.firstChild.textContent="Sending announcement… Please wait.";
-   try{const result=await post("/api/admin",{...payload,action:"announcement_send"},300000);out.textContent=result.message||("Sent: "+result.sent+" · Failed: "+result.failed);await loadAnnouncementHistory();}
-   catch(e){out.textContent=e.message;send.disabled=false;cancel.disabled=false;}};
- }catch(e){out.textContent=e.message;}finally{button.disabled=false;}
+  const cancel=document.createElement("button");cancel.type="button";cancel.className="secondary";cancel.textContent="Cancel";cancel.style.marginTop="10px";
+  const controls=document.createElement("div");controls.className="announcement-preview-actions";controls.append(send,cancel);out.append(controls);
+  cancel.onclick=()=>{
+   announcementPreviewSignature="";controls.remove();out.textContent="Sending cancelled. Nothing was sent.";
+  };
+  send.onclick=async()=>{
+   if(!announcementPreviewSignature||announcementPreviewSignature!==signature||signature!==announcementSignature()){
+    invalidateAnnouncementPreview();out.textContent="Announcement details changed. Preview again before sending.";return;
+   }
+   if(!confirm("Send this announcement to "+d.recipient_count+" recipients? This cannot be undone."))return;
+   send.disabled=true;cancel.disabled=true;button.disabled=true;
+   const fields=["announcementEvent","announcementAudience","announcementMessage","announcementFile"].map($);
+   fields.forEach(el=>el.disabled=true);
+   out.firstChild.textContent="Sending announcement… Please keep this page open.";
+   let outcomeUnknown=false;
+   try{
+    const result=await post("/api/admin",{...payload,action:"announcement_send"},300000);
+    announcementPreviewSignature="";
+    out.textContent=result.message||("Sent: "+result.sent+" · Failed: "+result.failed);
+    await loadAnnouncementHistory();
+   }catch(e){
+    out.textContent=e.message;
+    if(/timed out|Could not reach EventHub API|Failed to fetch|HTTP 5\d\d/i.test(String(e.message||e))){
+     outcomeUnknown=true;announcementPreviewSignature="";
+     out.append(document.createTextNode(" Send status may be uncertain. Check announcement history and Botkeep logs before retrying, to avoid duplicate delivery."));
+     send.disabled=true;cancel.disabled=true;
+    }else{
+     announcementPreviewSignature=signature;
+     send.disabled=false;cancel.disabled=false;
+    }
+   }finally{
+    if(!outcomeUnknown){
+     fields.forEach(el=>el.disabled=false);
+     button.disabled=false;
+    }
+   }
+  };
+ }catch(e){out.textContent=e.message;}
+ finally{
+  const fieldsLocked=["announcementEvent","announcementAudience","announcementMessage","announcementFile"].some(id=>$(id).disabled);
+  const selectedFile=$("announcementFile").files?.[0];
+  if(!fieldsLocked)button.disabled=!!(selectedFile&&selectedFile.size>8*1024*1024);
+ }
 });
 let announcementHistoryItems=[],announcementHistoryPage=0;
 const ANNOUNCEMENTS_PER_PAGE=8;
