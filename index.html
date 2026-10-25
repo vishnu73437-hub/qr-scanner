@@ -729,7 +729,11 @@ async function startCamera(){
  try{
   if(typeof Html5Qrcode==="undefined")throw new Error("QR scanner library did not load. Check your internet connection and reopen EventHub.");
   scanner=new Html5Qrcode("reader",{verbose:false});
-  const config={fps:10,qrbox:(w,h)=>{const side=Math.max(180,Math.min(280,w-24,h-24));return {width:side,height:side};},aspectRatio:1.0,videoConstraints:{facingMode:{ideal:"environment"}}};
+  const isAppleTablet=/iPad|Macintosh/i.test(navigator.userAgent)&&(navigator.maxTouchPoints||0)>1;
+  // Full-frame decoding is more reliable on iPad cameras when the QR is near the edge
+  // or the preview is landscape. Keep a modest viewfinder on phones.
+  const config={fps:isAppleTablet?15:12,disableFlip:false,formatsToSupport:[Html5QrcodeSupportedFormats.QR_CODE],aspectRatio:1.0,videoConstraints:{facingMode:{ideal:"environment"},width:{ideal:1920},height:{ideal:1080}}};
+  if(!isAppleTablet)config.qrbox=(w,h)=>{const side=Math.max(220,Math.min(320,w-20,h-20));return {width:side,height:side};};
   const onDecoded=text=>{const decoded=String(text||"").trim();if(decoded&&decoded!==lastCameraQr&&!busy){lastCameraQr=decoded;checkQr(decoded);}};
   try{await scanner.start({facingMode:"environment"},config,onDecoded,()=>{});}
   catch(firstError){
