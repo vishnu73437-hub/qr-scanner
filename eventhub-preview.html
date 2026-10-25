@@ -457,8 +457,8 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 @media(max-width:600px){.broadcast-compose-options>summary{flex-wrap:wrap;padding:12px}.broadcast-compose-options>summary .small{width:100%;text-align:left}.broadcast-compose-body{padding:10px}.announcement-history-summary{padding:12px}.announcement-history-actions{padding:0 10px 10px}.announcement-pagination button{padding:9px 8px}}
 
 
-/* QR Scanner: dedicated camera is the only primary scanner entry point */
-.scanner-workspace .manual-entry{display:none!important}
+/* QR Scanner: keep manual pass-code verification while using the dedicated camera entry point */
+.scanner-workspace .manual-entry{display:block!important}
 .scanner-workspace #startScan{display:none!important}
 .scanner-workspace .section-heading .eyebrow{font-size:11px}
 .scanner-workspace .scanner-controls{grid-template-columns:minmax(0,1fr)}
@@ -622,7 +622,7 @@ body.scan-mode #status{position:fixed!important;z-index:99992!important;top:6px!
 <section class="role-hero volunteer-hero"><div class="role-hero-copy"><div class="eyebrow">EVENTHUB · OPERATIONS</div><h2>Check-in desk</h2><p>Verify guest passes, record entry and food collection, and display your personal staff QR badge.</p></div><div class="role-hero-side"><span class="role-chip">🛡️ VOLUNTEER ACCESS</span><span id="scannerBadge" class="scanner-badge">● SCANNER READY</span></div></section>
 <div class="ops-kpis volunteer-kpis"><div class="ops-kpi"><span>01</span><strong>Verify</strong><small>Scan a guest or staff QR</small></div><div class="ops-kpi"><span>02</span><strong>Check in</strong><small>Record entry once</small></div><div class="ops-kpi"><span>03</span><strong>Serve</strong><small>Record food once</small></div></div>
 
-<section class="card scanner-workspace"><div class="section-heading"><div><div class="eyebrow">VOLUNTEER TOOL</div><h3>📷 QR Scanner</h3></div><span class="secure-tag">🔒 Authenticated</span></div><p class="small">Open the dedicated scanner to verify guest QR passes. Staff badges are identified separately and never count as guest entry.</p><div class="scanner-controls"><button id="scanModeToggle" type="button">📷 Open QR Scanner</button><button id="scanModeExit" class="secondary hidden" type="button">← Back to check-in desk</button><button id="startScan" class="hidden" type="button" aria-hidden="true" tabindex="-1">Start camera scanner</button><button id="stopScan" class="secondary hidden" type="button">Stop camera</button></div><div id="reader" class="hidden"></div><div class="manual-entry"><label for="manual">Manual guest pass code / QR token</label><div class="manual-row"><input id="manual" placeholder="H5-XXXXXXXX or QR token" autocomplete="off" autocapitalize="off" spellcheck="false"><button id="checkManual" type="button">Check pass</button></div></div></section>
+<section class="card scanner-workspace"><div class="section-heading"><div><div class="eyebrow">VOLUNTEER TOOL</div><h3>📷 QR Scanner</h3></div><span class="secure-tag">🔒 Authenticated</span></div><p class="small">Scan a guest or staff QR in the dedicated camera view, or enter a pass code / QR token manually below. Staff badges are identified separately and never count as guest entry.</p><div class="scanner-controls"><button id="scanModeToggle" type="button">📷 Open QR Scanner</button><button id="scanModeExit" class="secondary hidden" type="button">← Back to check-in desk</button><button id="startScan" class="hidden" type="button" aria-hidden="true" tabindex="-1">Start camera scanner</button><button id="stopScan" class="secondary hidden" type="button">Stop camera</button></div><div id="reader" class="hidden"></div><div class="manual-entry"><label for="manual">Manual guest pass code / QR token</label><div class="manual-row"><input id="manual" placeholder="H5-XXXXXXXX or QR token" autocomplete="off" autocapitalize="off" spellcheck="false"><button id="checkManual" type="button">Check pass</button></div></div></section>
 <section id="guestCard" class="card verified-pass hidden"><div class="section-heading"><div><div class="eyebrow">GUEST RECORD</div><h3 id="guestName">Verified guest</h3></div><span class="secure-tag">✓ VALID PASS</span></div><div id="guestInfo" class="guest-info-grid"></div><div id="guestState" class="status" aria-live="polite"></div><div class="record-actions"><button id="recordEntry" type="button">✓ Record entry</button><button id="recordFood" type="button">🍽️ Record food</button></div><div id="counts" class="small"></div></section>
 
 <div class="notice volunteer-footnote">⚠️ Check the guest’s details before choosing an action. Entry and food collection are separate, auditable actions and cannot be repeated for the same pass.</div>
@@ -940,14 +940,14 @@ panel.append(title,intro,eventLabel,eventSelect,audienceLabel,audience,msgLabel,
 }});
 async function api(path,payload){return post(path,payload)}
 let lastCameraQr="";
-async function checkQr(value){
+async function checkQr(value,source="manual"){
  if(busy)return;const scanned=String(value||"").trim();if(!scanned){status("Enter a guest pass code or scan its QR.","bad");return;}
  busy=true;currentQr=scanned;$("guestCard").classList.add("hidden");
  try{const d=await api("/api/guest",{qr:currentQr});if(!d.guest)throw new Error("The server returned no event pass details.");
-  currentGuest=d.guest;lastCameraQr=scanned;$("guestName").textContent=d.guest.name;$("guestInfo").textContent=["Pass type: "+(d.guest.passRole||"Guest"),"Residence: "+d.guest.residence,"Food: "+d.guest.food,"Pass: "+d.guest.passCode].join(" · ");
+  currentGuest=d.guest;if(source==="camera")lastCameraQr=scanned;$("guestName").textContent=d.guest.name;$("guestInfo").textContent=["Pass type: "+(d.guest.passRole||"Guest"),"Residence: "+d.guest.residence,"Food: "+d.guest.food,"Pass: "+d.guest.passCode].join(" · ");
   $("guestState").textContent="Entry: "+(d.guest.entryUsed?"Recorded":"Not recorded")+"\nFood: "+(d.guest.foodUsed?"Collected":"Not collected");
   $("recordEntry").disabled=d.guest.entryUsed;$("recordFood").disabled=d.guest.foodUsed;$("guestCard").classList.remove("hidden");status("Valid "+(d.guest.passRole||"guest").toLowerCase()+" pass. Camera stays on — scan the next pass.","good");
- }catch(e){currentQr="";currentGuest=null;lastCameraQr="";status(e.message,"bad");}finally{busy=false;}
+ }catch(e){currentQr="";currentGuest=null;if(source==="camera")lastCameraQr=scanned;status(e.message,"bad");}finally{busy=false;}
 }
 async function record(action){if(!currentQr)return;try{const d=await api("/api/action",{qr:currentQr,action});currentGuest=d.guest;$("guestState").textContent=`Entry: ${d.guest.entryUsed?"Recorded":"Not recorded"}
 Food: ${d.guest.foodUsed?"Collected":"Not collected"}`;$("recordEntry").disabled=d.guest.entryUsed;$("recordFood").disabled=d.guest.foodUsed;if(d.counts)$("counts").textContent=`Meals served — Vegetarian: ${d.counts.vegetarianServed} | Non-vegetarian: ${d.counts.nonVegetarianServed}`;status(d.message,"good");}catch(e){status(e.message,"bad");}}
@@ -965,7 +965,7 @@ async function startCamera(){
   // or the preview is landscape. Keep a modest viewfinder on phones.
   const config={fps:isAppleTablet?15:12,disableFlip:false,formatsToSupport:[Html5QrcodeSupportedFormats.QR_CODE],aspectRatio:1.0,videoConstraints:{facingMode:{ideal:"environment"},width:{ideal:1920},height:{ideal:1080}}};
   if(!isAppleTablet)config.qrbox=(w,h)=>{const side=Math.max(220,Math.min(320,w-20,h-20));return {width:side,height:side};};
-  const onDecoded=text=>{const decoded=String(text||"").trim();if(decoded&&decoded!==lastCameraQr&&!busy){lastCameraQr=decoded;checkQr(decoded);}};
+  const onDecoded=text=>{const decoded=String(text||"").trim();if(decoded&&decoded!==lastCameraQr&&!busy)checkQr(decoded,"camera");};
   try{await scanner.start({facingMode:"environment"},config,onDecoded,()=>{});}
   catch(firstError){
    lastError=firstError;
@@ -991,9 +991,9 @@ async function startCamera(){
  }
 }
 async function stopCamera(){lastCameraQr="";if(scanner){try{if(scanner.isScanning)await scanner.stop();await scanner.clear();}catch(e){}scanner=null;}$("reader").classList.add("hidden");$("startScan").classList.remove("hidden");$("stopScan").classList.add("hidden");if($("scannerBadge"))$("scannerBadge").textContent="● SCANNER READY";}
-function setDedicatedScanner(open){document.body.classList.toggle("scan-mode",open);$("scanModeToggle").classList.toggle("hidden",open);$("scanModeExit").classList.toggle("hidden",!open);if(open&&(!scanner||!scanner.isScanning))startCamera();}
+async function setDedicatedScanner(open){document.body.classList.toggle("scan-mode",open);$("scanModeToggle").classList.toggle("hidden",open);$("scanModeExit").classList.toggle("hidden",!open);if(open){if(!scanner||!scanner.isScanning)await startCamera();}else{await stopCamera();$("guestCard").classList.add("hidden");currentQr="";currentGuest=null;}}
 $("scanModeToggle").onclick=()=>setDedicatedScanner(true);$("scanModeExit").onclick=()=>setDedicatedScanner(false);
-$("startScan").onclick=startCamera;$("stopScan").onclick=stopCamera;$("checkManual").onclick=()=>checkQr($("manual").value);$("recordEntry").onclick=()=>record("entry");$("recordFood").onclick=()=>record("food");$("guestPass").onclick=loadMyPass;
+$("startScan").onclick=startCamera;$("stopScan").onclick=stopCamera;$("checkManual").onclick=()=>checkQr($("manual").value,"manual");$("manual").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();checkQr($("manual").value,"manual");}});$("recordEntry").onclick=()=>record("entry");$("recordFood").onclick=()=>record("food");$("guestPass").onclick=loadMyPass;
 async function loadMyPass(){
  const button=$("guestPass"),box=$("myPassDisplay");
  box.classList.remove("hidden");box.textContent="Loading your active pass…";button.disabled=true;
