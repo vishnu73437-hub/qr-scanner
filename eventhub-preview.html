@@ -474,7 +474,7 @@ async function loadEvents(){
    const title=document.createElement("strong");title.textContent=ev.name+" · "+ev.status;
    const meta=document.createElement("p");meta.className="small event-card-meta";meta.textContent=[ev.event_date,ev.event_time,ev.venue,ev.description].filter(Boolean).join(" · ");card.append(title,meta);
    if(ev.status!=="archived"){
-    const edit=document.createElement("button");edit.className="secondary";edit.type="button";edit.textContent="✏️ Edit details";
+    const edit=document.createElement("button");edit.className="secondary";edit.type="button";edit.setAttribute("aria-expanded","false");edit.textContent="✏️ Edit details";
     const editPanel=document.createElement("div");editPanel.className="event-edit-panel hidden";editPanel.setAttribute("aria-label","Edit event details");
     const fields={};
     const addEditField=(key,labelText,value,type="text",placeholder="")=>{
