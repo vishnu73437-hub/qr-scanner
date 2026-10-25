@@ -647,11 +647,14 @@ body.scan-mode #status{position:fixed!important;z-index:99992!important;top:6px!
 </section>
 <section class="card admin-panel guest-pass-manager">
 <div class="section-heading"><div><div class="eyebrow">03 · GUEST ACCESS</div><h3>🎟️ Guest & QR pass manager</h3><p class="small">Find a guest first, then choose the action you need. Each pass action is confirmed before it changes access.</p></div><span class="panel-index">03</span></div>
-<div class="guest-manager-tools">
+<details class="guest-manager-tools guest-search-options">
+<summary><span>🔎 Search & filters</span><span class="small">Find a guest or narrow results</span></summary>
+<div class="guest-search-options-body">
 <label for="guestSearch">Find a guest</label><div class="manual-row guest-search-row"><input id="guestSearch" type="search" placeholder="Name, phone, pass code or Telegram ID" autocomplete="off" aria-label="Search guest records"><button id="searchGuests" type="button">🔎 Search</button></div>
-<div class="guest-filter-grid"><div><label for="guestStatus">Filter by pass status</label><select id="guestStatus"><option value="all">All guests</option><option value="approved">Active / approved</option><option value="revoked">Revoked</option></select></div><button id="loadRecentGuests" class="secondary" type="button">↻ Load recent guests</button></div>
-<p class="small guest-manager-hint">Tip: search with just a few letters or the last digits of a phone number. Leave search empty to browse recent guests.</p>
+<div class="guest-filter-grid"><div><label for="guestStatus">Pass status</label><select id="guestStatus"><option value="all">All guests</option><option value="approved">Active / approved</option><option value="revoked">Revoked</option></select></div><button id="loadRecentGuests" class="secondary" type="button">↻ Load recent guests</button></div>
+<p class="small guest-manager-hint">Search by name, phone, pass code or Telegram ID.</p>
 </div>
+</details>
 <div id="guestResults" class="records-list guest-results" aria-live="polite"><div class="empty-state">Search for a guest or load recent guests to begin.</div></div>
 </section>
 <section class="card admin-panel"><div class="section-heading"><div><div class="eyebrow">04 · PEOPLE & PERMISSIONS</div><h3>👥 Volunteer access</h3></div><span class="panel-index">04</span></div><p class="small">Grant or remove scanner access by Telegram numeric ID. Removing volunteer access disables scanner privileges. Existing guest pass records are retained.</p><label for="volId">Telegram numeric ID</label><div class="manual-row"><input id="volId" inputmode="numeric" placeholder="e.g. 123456789"><button id="addVol" type="button">＋ Add</button></div><div class="row"><button id="removeVol" class="secondary" type="button">Remove access</button><button id="listVols" class="secondary" type="button">List volunteers</button></div><div id="volList" class="volunteer-list small" aria-live="polite"></div></section>
