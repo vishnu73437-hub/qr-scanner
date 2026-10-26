@@ -994,22 +994,22 @@ async function stopCamera(){lastCameraQr="";if(scanner){try{if(scanner.isScannin
 async function setDedicatedScanner(open){document.body.classList.toggle("scan-mode",open);$("scanModeToggle").classList.toggle("hidden",open);$("scanModeExit").classList.toggle("hidden",!open);if(open){if(!scanner||!scanner.isScanning)await startCamera();}else{await stopCamera();$("guestCard").classList.add("hidden");currentQr="";currentGuest=null;}}
 $("scanModeToggle").onclick=()=>setDedicatedScanner(true);$("scanModeExit").onclick=()=>setDedicatedScanner(false);
 $("startScan").onclick=startCamera;$("stopScan").onclick=stopCamera;$("checkManual").onclick=()=>checkQr($("manual").value,"manual");$("manual").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();checkQr($("manual").value,"manual");}});$("recordEntry").onclick=()=>record("entry");$("recordFood").onclick=()=>record("food");$("guestPass").onclick=loadMyPass;
-async function savePassImage(imageDataUrl,filename){
- const response=await fetch(imageDataUrl);
- if(!response.ok)throw new Error("Could not prepare the pass image.");
- const blob=await response.blob();
- const file=new File([blob],filename,{type:blob.type||"image/png"});
- // Prefer the native share sheet on mobile/Telegram webviews; it is more reliable
- // than downloading a data: URL directly.
- if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
-  await navigator.share({files:[file],title:"Deepotsav event pass"});
-  return;
- }
- const url=URL.createObjectURL(blob);
- const a=document.createElement("a");
- a.href=url;a.download=filename;a.style.display="none";
- document.body.append(a);a.click();a.remove();
- setTimeout(()=>URL.revokeObjectURL(url),60000);
+async function savePassImage(imageDataUrl,filename,container){
+ const old=container.querySelector(".pass-save-help");if(old)old.remove();
+ const help=document.createElement("div");help.className="pass-save-help card";help.style.cssText="margin-top:12px;padding:14px;text-align:center";
+ const title=document.createElement("strong");title.textContent="Save your pass";
+ const note=document.createElement("p");note.className="small";note.textContent="If your device does not download automatically, tap Open pass image, then use your browser’s Share or Save Image option. You can also press and hold the image.";
+ const open=document.createElement("a");open.href=imageDataUrl;open.target="_blank";open.rel="noopener";open.textContent="Open pass image";open.style.cssText="display:inline-block;margin:8px;padding:12px 18px;border-radius:12px;background:#ffcf55;color:#29103c;font-weight:700;text-decoration:none";
+ help.append(title,note,open);container.append(help);
+ try{
+  const response=await fetch(imageDataUrl);if(!response.ok)throw new Error("Image preparation failed");
+  const blob=await response.blob();const file=new File([blob],filename,{type:blob.type||"image/png"});
+  if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
+   const shareButton=document.createElement("button");shareButton.type="button";shareButton.textContent="Share / Save pass";shareButton.onclick=async()=>{try{await navigator.share({files:[file],title:"Event pass"});}catch(e){if(e.name!=="AbortError")note.textContent="Use Open pass image above to save it manually.";}};help.append(shareButton);
+  }else{
+   const download=document.createElement("button");download.type="button";download.textContent="Try download again";download.onclick=()=>{const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=filename;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);};help.append(download);
+  }
+ }catch(e){note.textContent="Use Open pass image above, then save it from your browser. Keep your QR private.";}
 }
 
 async function loadMyPass(){
@@ -1022,7 +1022,7 @@ async function loadMyPass(){
   const heading=document.createElement("h3");heading.textContent="🎟️ Your active pass";
   const img=document.createElement("img");img.alt="Personal Deepotsav QR pass";img.src="data:image/png;base64,"+p.image;img.style.cssText="display:block;width:100%;max-width:420px;height:auto;margin:10px auto;border-radius:10px;background:#fff";img.src=await addSponsorFooter(img.src);
   const info=document.createElement("p");info.className="small";info.style.whiteSpace="pre-line";info.textContent="Name: "+p.name+"\nPass code: "+p.passCode+"\nResidence: "+p.residence+(p.roomNumber?"\nRoom: "+p.roomNumber:"")+"\nFood: "+p.food+"\nEntry: "+(p.entryUsed?"Recorded":"Not recorded")+"\nFood collection: "+(p.foodUsed?"Recorded":"Not recorded")+"\nKeep this QR private.";
-  const download=document.createElement("button");download.textContent="⬇️ Save pass image";download.onclick=async()=>{download.disabled=true;try{await savePassImage(img.src,"Deepotsav-"+p.passCode+".png");status("Pass image is ready to save or share.","good");}catch(e){if(e.name!=="AbortError")status("Could not save the pass. Please try again or take a screenshot as a backup.", "bad");}finally{download.disabled=false;}};
+  const download=document.createElement("button");download.textContent="⬇️ Save pass image";download.onclick=async()=>{download.disabled=true;try{await savePassImage(img.src,"Deepotsav-"+p.passCode+".png",box);status("Choose an option below to save your pass.","good");}catch(e){if(e.name!=="AbortError")status("Could not save the pass. Please try again or take a screenshot as a backup.", "bad");}finally{download.disabled=false;}};
   box.append(heading,img,info,download);status("Your active pass is loaded. Keep the QR private.","good");
  }catch(e){box.textContent=e.message;status(e.message,"bad");}
  finally{button.disabled=false;}
@@ -1039,7 +1039,7 @@ async function loadMyGuestStylePass(){
   const heading=document.createElement("h3");heading.textContent="🎟️ Your "+(p.passRole||"staff")+" pass";
   const img=document.createElement("img");img.alt="Personal standard EventHub QR pass for entry and food";img.src="data:image/png;base64,"+p.image;img.src=await addSponsorFooter(img.src);
   const info=document.createElement("p");info.className="small";info.style.whiteSpace="pre-line";info.textContent="Name: "+p.name+"\nRole: "+(p.passRole||"Staff")+"\nPass code: "+p.passCode+"\nResidence: "+p.residence+(p.roomNumber?"\nRoom: "+p.roomNumber:"")+"\nFood: "+p.food+"\nEntry: "+(p.entryUsed?"Recorded":"Not recorded")+"\nFood collection: "+(p.foodUsed?"Recorded":"Not collected")+"\nThis is your standard guest-style QR. Use it for your own entry and food collection.";
-  const download=document.createElement("button");download.type="button";download.textContent="⬇️ Save event pass";download.onclick=async()=>{download.disabled=true;try{await savePassImage(img.src,"EventHub-"+String(p.passRole||"Staff")+"-"+p.passCode+".png");status("Pass image is ready to save or share.","good");}catch(e){if(e.name!=="AbortError")status("Could not save the pass. Please try again or take a screenshot as a backup.", "bad");}finally{download.disabled=false;}};
+  const download=document.createElement("button");download.type="button";download.textContent="⬇️ Save event pass";download.onclick=async()=>{download.disabled=true;try{await savePassImage(img.src,"EventHub-"+String(p.passRole||"Staff")+"-"+p.passCode+".png",box);status("Choose an option below to save your pass.","good");}catch(e){if(e.name!=="AbortError")status("Could not save the pass. Please try again or take a screenshot as a backup.", "bad");}finally{download.disabled=false;}};
   box.append(heading,img,info,download);
   if(p.createdForStaff)status("Your standard staff pass was created. The same QR works for entry and food collection.","good");
   else status("Your existing approved pass is ready. Its saved food preference is unchanged.","good");
