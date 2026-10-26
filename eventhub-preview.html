@@ -993,7 +993,7 @@ async function startCamera(){
 async function stopCamera(){lastCameraQr="";if(scanner){try{if(scanner.isScanning)await scanner.stop();await scanner.clear();}catch(e){}scanner=null;}$("reader").classList.add("hidden");$("startScan").classList.remove("hidden");$("stopScan").classList.add("hidden");if($("scannerBadge"))$("scannerBadge").textContent="● SCANNER READY";}
 async function setDedicatedScanner(open){document.body.classList.toggle("scan-mode",open);$("scanModeToggle").classList.toggle("hidden",open);$("scanModeExit").classList.toggle("hidden",!open);if(open){if(!scanner||!scanner.isScanning)await startCamera();}else{await stopCamera();$("guestCard").classList.add("hidden");currentQr="";currentGuest=null;}}
 $("scanModeToggle").onclick=()=>setDedicatedScanner(true);$("scanModeExit").onclick=()=>setDedicatedScanner(false);
-$("startScan").onclick=startCamera;$("stopScan").onclick=stopCamera;$("checkManual").onclick=()=>checkQr($("manual").value,"manual");$("manual").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();checkQr($("manual").value,"manual");}});$("recordEntry").onclick=()=>record("entry");$("recordFood").onclick=()=>record("food");$("guestPass").onclick=loadMyPass;
+$("startScan").onclick=startCamera;$("stopScan").onclick=stopCamera;$("checkManual").onclick=()=>checkQr($("manual").value,"manual");$("manual").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();checkQr($("manual").value,"manual");}});$("recordEntry").onclick=()=>record("entry");$("recordFood").onclick=()=>record("food");$("guestPass").onclick=()=>{const box=$("myPassDisplay"),button=$("guestPass");if(box.dataset.loaded==="true"&&!box.classList.contains("hidden")){box.classList.add("hidden");box.dataset.loaded="false";button.textContent="🎟️ My Pass";return;}loadMyPass();};
 async function sendPassToTelegram(passCode,button){
  const originalLabel=button.textContent;
  button.disabled=true;button.textContent="📩 Sending to Telegram…";
@@ -1009,18 +1009,18 @@ async function sendPassToTelegram(passCode,button){
 
 async function loadMyPass(){
  const button=$("guestPass"),box=$("myPassDisplay");
- box.classList.remove("hidden");box.textContent="Loading your active pass…";button.disabled=true;
+ box.dataset.loaded="false";box.classList.remove("hidden");box.textContent="Loading your active pass…";button.disabled=true;button.textContent="Loading pass…";
  try{
   const d=await post("/api/my_pass");
   if(!d.pass||!d.pass.image)throw new Error("The server did not return a pass image.");
   const p=d.pass;box.textContent="";
   const heading=document.createElement("h3");heading.textContent="🎟️ Your active pass";
-  const img=document.createElement("img");img.alt="Personal Deepotsav QR pass";img.src="data:image/png;base64,"+p.image;img.style.cssText="display:block;width:100%;max-width:420px;height:auto;margin:10px auto;border-radius:10px;background:#fff";img.src=await addSponsorFooter(img.src);
+  const img=document.createElement("img");img.alt="Personal Deepotsav QR pass";img.src="data:image/png;base64,"+p.image;img.style.cssText="display:block;width:100%;max-width:420px;height:auto;margin:10px auto;border-radius:10px;background:#fff";/* Sponsor branding stays on the Mini App page, not inside the QR pass image. */
   const info=document.createElement("p");info.className="small";info.style.whiteSpace="pre-line";info.textContent="Name: "+p.name+"\nPass code: "+p.passCode+"\nResidence: "+p.residence+(p.roomNumber?"\nRoom: "+p.roomNumber:"")+"\nFood: "+p.food+"\nEntry: "+(p.entryUsed?"Recorded":"Not recorded")+"\nFood collection: "+(p.foodUsed?"Recorded":"Not recorded")+"\nKeep this QR private.";
   const sendButton=document.createElement("button");sendButton.type="button";sendButton.textContent="📩 Send pass to Telegram";sendButton.onclick=()=>sendPassToTelegram(p.passCode,sendButton);
-  box.append(heading,img,info,sendButton);status("Your active pass is loaded. Keep the QR private.","good");
+  box.append(heading,img,info,sendButton);box.dataset.loaded="true";button.textContent="🙈 Hide my pass";status("Your active pass is loaded. Keep the QR private.","good");
  }catch(e){box.textContent=e.message;status(e.message,"bad");}
- finally{button.disabled=false;}
+ finally{button.disabled=false;if(box.dataset.loaded!=="true")button.textContent="🎟️ My Pass";}
 }
 $("guestEvent").onclick=loadGuestEvent;
 $("guestSupport").onclick=()=>{const url="https://t.me/DRvediyappanvishnu";if(tg?.openTelegramLink)tg.openTelegramLink(url);else window.open(url,"_blank","noopener,noreferrer");};
@@ -1032,7 +1032,7 @@ async function loadMyGuestStylePass(){
   if(!d.pass||!d.pass.image)throw new Error("The server did not return an event pass image.");
   const p=d.pass;box.textContent="";
   const heading=document.createElement("h3");heading.textContent="🎟️ Your "+(p.passRole||"staff")+" pass";
-  const img=document.createElement("img");img.alt="Personal standard EventHub QR pass for entry and food";img.src="data:image/png;base64,"+p.image;img.src=await addSponsorFooter(img.src);
+  const img=document.createElement("img");img.alt="Personal standard EventHub QR pass for entry and food";img.src="data:image/png;base64,"+p.image;/* Sponsor branding stays on the Mini App page, not inside the QR pass image. */
   const info=document.createElement("p");info.className="small";info.style.whiteSpace="pre-line";info.textContent="Name: "+p.name+"\nRole: "+(p.passRole||"Staff")+"\nPass code: "+p.passCode+"\nResidence: "+p.residence+(p.roomNumber?"\nRoom: "+p.roomNumber:"")+"\nFood: "+p.food+"\nEntry: "+(p.entryUsed?"Recorded":"Not recorded")+"\nFood collection: "+(p.foodUsed?"Recorded":"Not collected")+"\nThis is your standard guest-style QR. Use it for your own entry and food collection.";
   const sendButton=document.createElement("button");sendButton.type="button";sendButton.textContent="📩 Send pass to Telegram";sendButton.onclick=()=>sendPassToTelegram(p.passCode,sendButton);
   box.append(heading,img,info,sendButton);
