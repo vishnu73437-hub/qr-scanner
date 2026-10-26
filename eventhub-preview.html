@@ -995,31 +995,27 @@ async function setDedicatedScanner(open){document.body.classList.toggle("scan-mo
 $("scanModeToggle").onclick=()=>setDedicatedScanner(true);$("scanModeExit").onclick=()=>setDedicatedScanner(false);
 $("startScan").onclick=startCamera;$("stopScan").onclick=stopCamera;$("checkManual").onclick=()=>checkQr($("manual").value,"manual");$("manual").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();checkQr($("manual").value,"manual");}});$("recordEntry").onclick=()=>record("entry");$("recordFood").onclick=()=>record("food");$("guestPass").onclick=loadMyPass;
 async function savePassImage(imageDataUrl,filename,container){
- let help=container.querySelector(".pass-save-help");
- if(!help){help=document.createElement("div");help.className="pass-save-help card";help.style.cssText="margin-top:12px;padding:14px;text-align:center";container.append(help);}
- help.textContent="";
- const title=document.createElement("strong");title.textContent="Save your pass to your device";
- const note=document.createElement("p");note.className="small";note.textContent="Tap Open image. When it opens, use your device’s Share menu or press and hold the image to save it. The automatic download is not supported reliably in every Telegram view.";
- const open=document.createElement("button");open.type="button";open.textContent="🖼️ Open image to save";open.onclick=()=>{
-  const win=window.open("about:blank","_blank");
-  if(!win){note.textContent="Pop-up blocked. Press and hold the pass image shown above, or open EventHub in your browser and try again.";return;}
-  win.document.title=filename;
-  win.document.body.style.cssText="margin:0;background:#171717;display:flex;align-items:center;justify-content:center;min-height:100vh";
-  const image=win.document.createElement("img");image.src=imageDataUrl;image.alt="Personal event QR pass";image.style.cssText="max-width:100%;height:auto;object-fit:contain";
-  win.document.body.append(image);
-  const tip=win.document.createElement("p");tip.textContent="Use Share or press and hold the image to save it.";tip.style.cssText="position:fixed;bottom:8px;left:8px;right:8px;color:white;text-align:center;font:16px sans-serif";
-  win.document.body.append(tip);
+ let panel=container.querySelector(".pass-save-help");
+ if(!panel){panel=document.createElement("div");panel.className="pass-save-help card";panel.style.cssText="margin-top:12px;padding:14px;text-align:center";container.append(panel);}
+ panel.textContent="";
+ const title=document.createElement("strong");title.textContent="Save your pass";
+ const note=document.createElement("p");note.className="small";note.textContent="Telegram may block pop-ups and automatic downloads. Use the button below to open the pass in this same view, then use your device’s Share or Save Image control.";
+ const preview=document.createElement("img");preview.src=imageDataUrl;preview.alt="Your personal QR pass";preview.style.cssText="display:block;width:100%;height:auto;max-width:520px;margin:12px auto;background:white;border-radius:10px";
+ const open=document.createElement("button");open.type="button";open.textContent="Show full-size pass";open.onclick=()=>{
+   preview.style.maxWidth="100%";preview.style.width="100%";preview.scrollIntoView({behavior:"smooth",block:"center"});
+   note.textContent="Pass image is shown below. Press and hold the image, or use your device’s image/share controls to save it.";
  };
  open.style.cssText="display:inline-block;margin:8px;padding:12px 18px;border:0;border-radius:12px;background:#ffcf55;color:#29103c;font-weight:700";
  const share=document.createElement("button");share.type="button";share.textContent="Share pass image";
  share.onclick=async()=>{
-  try{
-   const response=await fetch(imageDataUrl);const blob=await response.blob();const file=new File([blob],filename,{type:blob.type||"image/png"});
-   if(navigator.canShare&&navigator.canShare({files:[file]})&&navigator.share)await navigator.share({files:[file],title:"Event pass"});
-   else note.textContent="File sharing is not supported here. Tap Open image to save it manually.";
-  }catch(e){if(e.name!=="AbortError")note.textContent="Sharing is unavailable here. Tap Open image to save it manually.";}
+   try{
+    const response=await fetch(imageDataUrl);const blob=await response.blob();const file=new File([blob],filename,{type:blob.type||"image/png"});
+    if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]}))await navigator.share({files:[file],title:"Event pass"});
+    else note.textContent="File sharing is not supported in this Telegram view. Press and hold the pass image below to save it, or open the bot in your device’s regular browser.";
+   }catch(e){if(e.name!=="AbortError")note.textContent="Sharing is blocked here. Press and hold the pass image below to save it, or open EventHub in your regular browser.";}
  };
- help.append(title,note,open,share);
+ share.style.cssText=open.style.cssText;
+ panel.append(title,note,open,share,preview);
 }
 
 async function loadMyPass(){
