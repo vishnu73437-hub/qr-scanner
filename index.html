@@ -479,6 +479,15 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .scanner-workspace .scanner-controls{grid-template-columns:minmax(0,1fr)}
 body.scan-mode .scanner-workspace .scanner-controls{grid-template-columns:repeat(2,minmax(0,1fr))}
 
+</style>
+<style id="admin-scan-management-style">
+.admin-scan-actions{margin-top:14px;padding:14px;border:1px solid #e5bf5b88;border-radius:15px;background:linear-gradient(145deg,#291744,#120d26);color:#fff4d6}
+.admin-scan-actions h4{margin:5px 0 12px;font-size:1.05rem}.admin-scan-buttons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:10px 0}
+.admin-scan-actions button{min-width:0;white-space:normal}.admin-scan-actions .danger{background:#7c2638!important;border-color:#ff8d9a!important}
+.scan-edit-form{display:grid;gap:10px;padding:12px;margin-top:12px;border:1px solid #e5bf5b55;border-radius:12px;background:#100b20}
+.scan-edit-form label{display:grid;gap:5px;font-size:.9rem}.scan-edit-form input,.scan-edit-form select{width:100%;min-width:0;padding:10px;border-radius:9px;border:1px solid #ffffff30;background:#201630;color:inherit}
+#scanHostelFields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+@media(max-width:420px){.admin-scan-buttons{grid-template-columns:1fr}#scanHostelFields{grid-template-columns:1fr}}
 </style><style id="eventhub-role-upgrade">
 /* EventHub role redesign; retain the existing Deepotsav artwork and palette. */
 .section-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 13px}
@@ -649,7 +658,26 @@ body.scan-mode #status{position:fixed!important;z-index:99992!important;top:6px!
 <div class="ops-kpis volunteer-kpis"><div class="ops-kpi"><span>01</span><strong>Verify</strong><small>Scan a guest or staff QR</small></div><div class="ops-kpi"><span>02</span><strong>Check in</strong><small>Record entry once</small></div><div class="ops-kpi"><span>03</span><strong>Serve</strong><small>Record food once</small></div></div>
 
 <section class="card scanner-workspace"><div class="section-heading"><div><div class="eyebrow">VOLUNTEER TOOL</div><h3>📷 QR Scanner</h3></div><span class="secure-tag">🔒 Authenticated</span></div><p class="small">Scan a guest or staff QR in the dedicated camera view, or enter a pass code / QR token manually below. Staff badges are identified separately and never count as guest entry.</p><div class="scanner-controls"><button id="scanModeToggle" type="button" aria-expanded="false" aria-controls="reader">📷 Open QR Scanner</button><button id="scanModeExit" class="secondary hidden" type="button">← Back to check-in desk</button><button id="startScan" class="hidden" type="button" aria-hidden="true" tabindex="-1">Start camera scanner</button><button id="stopScan" class="secondary hidden" type="button">Stop camera</button></div><div id="reader" class="hidden"></div><div class="manual-entry"><label for="manual">Manual guest pass code / QR token</label><div class="manual-row"><input id="manual" placeholder="H5-XXXXXXXX or QR token" autocomplete="off" autocapitalize="off" spellcheck="false"><button id="checkManual" type="button">Check pass</button></div></div></section>
-<section id="guestCard" class="card verified-pass hidden"><div class="section-heading"><div><div class="eyebrow">GUEST RECORD</div><h3 id="guestName">Verified guest</h3></div><span class="secure-tag">✓ VALID PASS</span></div><div id="guestInfo" class="guest-info-grid"></div><div id="guestState" class="status" aria-live="polite"></div><div class="record-actions"><button id="recordEntry" type="button">✓ Record entry</button><button id="recordFood" type="button">🍽️ Record food</button></div><div id="counts" class="small"></div></section>
+<section id="guestCard" class="card verified-pass hidden"><div class="section-heading"><div><div class="eyebrow">GUEST RECORD</div><h3 id="guestName">Verified guest</h3></div><span class="secure-tag">✓ VALID PASS</span></div><div id="guestInfo" class="guest-info-grid"></div><div id="guestState" class="status" aria-live="polite"></div><div id="adminScanActions" class="admin-scan-actions hidden" aria-live="polite">
+  <div class="eyebrow">ADMIN ONLY · SCANNED GUEST</div>
+  <h4>Manage this guest</h4>
+  <div class="admin-scan-buttons">
+    <button id="scanEditGuest" type="button">✏️ Edit details</button>
+    <button id="scanReissuePass" type="button">🔁 Reissue QR</button>
+    <button id="scanResetEntry" type="button">↻ Reset entry</button>
+    <button id="scanResetFood" type="button">🍽️ Reset food</button>
+    <button id="scanRevokePass" type="button" class="danger">⛔ Revoke pass</button>
+  </div>
+  <form id="scanEditForm" class="scan-edit-form hidden">
+    <label>Full name<input id="scanEditName" maxlength="160" required></label>
+    <label>Phone<input id="scanEditPhone" maxlength="40" required></label>
+    <label>Residence<select id="scanEditResidence"><option value="Hostel">Hostel</option><option value="Apartment">Apartment</option></select></label>
+    <div id="scanHostelFields"><label>Hostel number<input id="scanEditHostel" maxlength="80"></label><label>Room number<input id="scanEditRoom" maxlength="80"></label></div>
+    <label>Food preference<select id="scanEditFood"><option>Vegetarian</option><option>Non-vegetarian</option></select></label>
+    <div class="admin-scan-buttons"><button id="scanSaveGuest" type="submit">💾 Save changes</button><button id="scanCancelEdit" type="button">Cancel</button></div>
+  </form>
+  <p class="small">Changes are admin-authorized, logged, and synced to Google Sheets when configured.</p>
+</div><div class="record-actions"><button id="recordEntry" type="button">✓ Record entry</button><button id="recordFood" type="button">🍽️ Record food</button></div><div id="counts" class="small"></div></section>
 
 <div class="notice volunteer-footnote">⚠️ Check the guest’s details before choosing an action. Entry and food collection are separate, auditable actions and cannot be repeated for the same pass.</div>
 </section><section id="adminView" class="hidden role-shell admin-shell">
@@ -1083,7 +1111,7 @@ async function checkQr(value,source="manual"){
  try{
   const d=await api("/api/guest",{qr:currentQr});
   if(!d.guest)throw new Error("The server returned no event pass details.");
-  currentGuest=d.guest;if(source==="camera")lastCameraQr=scanned;
+  currentGuest=d.guest;renderAdminScanActions(d.guest);if(source==="camera")lastCameraQr=scanned;
   $("guestName").textContent=d.guest.name||"Verified guest";
   $("guestInfo").textContent=["Pass type: "+(d.guest.passRole||"Guest"),"Residence: "+(d.guest.residence||"Not recorded"),"Food: "+(d.guest.food||"Not recorded"),"Pass: "+(d.guest.passCode||"—")].join(" · ");
   $("guestState").textContent="Entry: "+(d.guest.entryUsed?"Recorded":"Not recorded")+"\nFood: "+(d.guest.foodUsed?"Collected":"Not collected");
@@ -1098,6 +1126,54 @@ async function checkQr(value,source="manual"){
   $("recordFood").disabled=!currentGuest||!!currentGuest.foodUsed;
  }
 }
+
+function renderAdminScanActions(g){
+ const panel=$("adminScanActions"); if(!panel)return;
+ const allowed=role==="admin"&&!!g?.canManage;
+ panel.classList.toggle("hidden",!allowed);
+ $("scanEditForm").classList.add("hidden");
+ if(!allowed)return;
+ $("scanEditName").value=g.name||"";
+ $("scanEditPhone").value=g.phone||"";
+ $("scanEditResidence").value=g.residenceType||"Apartment";
+ $("scanEditHostel").value=g.hostelNumber||"";
+ $("scanEditRoom").value=g.roomNumber||"";
+ $("scanEditFood").value=g.food||"Vegetarian";
+ $("scanHostelFields").classList.toggle("hidden",g.residenceType!=="Hostel");
+}
+function bindAdminScanActions(){
+ const edit=$("scanEditGuest"), form=$("scanEditForm"), residence=$("scanEditResidence");
+ if(!edit||edit.dataset.bound)return;edit.dataset.bound="1";
+ edit.addEventListener("click",()=>{if(role!=="admin"||!currentGuest?.canManage)return;form.classList.toggle("hidden");});
+ residence.addEventListener("change",()=>{$("scanHostelFields").classList.toggle("hidden",residence.value!=="Hostel");});
+ $("scanCancelEdit").addEventListener("click",()=>form.classList.add("hidden"));
+ form.addEventListener("submit",async ev=>{
+  ev.preventDefault();if(role!=="admin"||!currentGuest?.canManage||!currentGuest.id)return;
+  const button=$("scanSaveGuest");button.disabled=true;
+  try{
+   const res=await api("/api/admin",{action:"guest_update",guest_id:currentGuest.id,full_name:$("scanEditName").value.trim(),phone:$("scanEditPhone").value.trim(),residence_type:residence.value,hostel_number:$("scanEditHostel").value.trim(),room_number:$("scanEditRoom").value.trim(),food_preference:$("scanEditFood").value});
+   status(res.message||"Guest details updated.","good");form.classList.add("hidden");
+   await checkQr(currentQr,"manual");
+  }catch(e){status(e.message,"bad");}finally{button.disabled=false;}
+ });
+ const doGuestAction=async(operation,target,label)=>{
+  if(role!=="admin"||!currentGuest?.canManage||!currentGuest.id)return;
+  if(!confirm(label+" for "+(currentGuest.name||"this guest")+"?"))return;
+  const buttons=[...$("adminScanActions").querySelectorAll("button")];buttons.forEach(b=>b.disabled=true);
+  try{
+   const res=await api("/api/admin",{action:"guest_action",guest_id:currentGuest.id,operation,target});
+   status(res.message||"Guest action completed.",res.delivered===false?"bad":"good");
+   if(operation==="reissue_pass"||operation==="revoke_pass"||operation==="reactivate_pass"){currentQr="";currentGuest=null;$("guestCard").classList.add("hidden");$("adminScanActions").classList.add("hidden");}
+   else await checkQr(currentQr,"manual");
+  }catch(e){status(e.message,"bad");}finally{buttons.forEach(b=>b.disabled=false);}
+ };
+ $("scanReissuePass").addEventListener("click",()=>doGuestAction("reissue_pass","","Reissue this QR pass"));
+ $("scanResetEntry").addEventListener("click",()=>doGuestAction("reset_status","entry","Reset entry status"));
+ $("scanResetFood").addEventListener("click",()=>doGuestAction("reset_status","food","Reset food status"));
+ $("scanRevokePass").addEventListener("click",()=>doGuestAction("revoke_pass","","Revoke this pass"));
+}
+bindAdminScanActions();
+
 async function record(action){
  if(!currentQr||busy)return;
  busy=true;
