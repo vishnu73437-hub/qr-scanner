@@ -479,6 +479,8 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .scanner-workspace .scanner-controls{grid-template-columns:minmax(0,1fr)}
 body.scan-mode .scanner-workspace .scanner-controls{grid-template-columns:repeat(2,minmax(0,1fr))}
 
+
+.proof-actions{margin-top:14px;padding:14px;border:1px solid rgba(217,177,95,.5);border-radius:14px;background:rgba(217,177,95,.08)}.proof-actions .admin-scan-buttons{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.proof-actions button{min-height:42px;flex:1 1 170px}.proof-actions .small{margin-top:8px}
 </style>
 <style id="admin-scan-management-style">
 .admin-scan-actions{margin-top:14px;padding:14px;border:1px solid #e5bf5b88;border-radius:15px;background:linear-gradient(145deg,#291744,#120d26);color:#fff4d6}
@@ -658,7 +660,8 @@ body.scan-mode #status{position:fixed!important;z-index:99992!important;top:6px!
 <div class="ops-kpis volunteer-kpis"><div class="ops-kpi"><span>01</span><strong>Verify</strong><small>Scan a guest or staff QR</small></div><div class="ops-kpi"><span>02</span><strong>Check in</strong><small>Record entry once</small></div><div class="ops-kpi"><span>03</span><strong>Serve</strong><small>Record food once</small></div></div>
 
 <section class="card scanner-workspace"><div class="section-heading"><div><div class="eyebrow">VOLUNTEER TOOL</div><h3>📷 QR Scanner</h3></div><span class="secure-tag">🔒 Authenticated</span></div><p class="small">Scan a guest or staff QR in the dedicated camera view, or enter a pass code / QR token manually below. Staff badges are identified separately and never count as guest entry.</p><div class="scanner-controls"><button id="scanModeToggle" type="button" aria-expanded="false" aria-controls="reader">📷 Open QR Scanner</button><button id="scanModeExit" class="secondary hidden" type="button">← Back to check-in desk</button><button id="startScan" class="hidden" type="button" aria-hidden="true" tabindex="-1">Start camera scanner</button><button id="stopScan" class="secondary hidden" type="button">Stop camera</button></div><div id="reader" class="hidden"></div><div class="manual-entry"><label for="manual">Manual guest pass code / QR token</label><div class="manual-row"><input id="manual" placeholder="H5-XXXXXXXX or QR token" autocomplete="off" autocapitalize="off" spellcheck="false"><button id="checkManual" type="button">Check pass</button></div></div></section>
-<section id="guestCard" class="card verified-pass hidden"><div class="section-heading"><div><div class="eyebrow">GUEST RECORD</div><h3 id="guestName">Verified guest</h3></div><span class="secure-tag">✓ VALID PASS</span></div><div id="guestInfo" class="guest-info-grid"></div><div id="guestState" class="status" aria-live="polite"></div><div id="adminScanActions" class="admin-scan-actions hidden" aria-live="polite">
+<section id="guestCard" class="card verified-pass hidden"><div class="section-heading"><div><div class="eyebrow">GUEST RECORD</div><h3 id="guestName">Verified guest</h3></div><span class="secure-tag">✓ VALID PASS</span></div><div id="guestInfo" class="guest-info-grid"></div><div id="guestState" class="status" aria-live="polite"></div>
+<div id="proofActions" class="proof-actions hidden" aria-live="polite"><div class="eyebrow">EVENT DAY · PROOF DESK</div><div id="proofSlot" class="small">Storage slot will appear here.</div><div class="admin-scan-buttons"><button id="proofStore" type="button">📦 Store proof & assign slot</button><button id="proofNoProof" type="button">✓ Accept without proof</button><button id="proofReturn" type="button">↩ Return stored proof</button></div><p class="small">Scan the guest QR again at exit to return stored proof. Food collection is recorded separately.</p></div><div id="adminScanActions" class="admin-scan-actions hidden" aria-live="polite">
   <div class="eyebrow">ADMIN ONLY · SCANNED GUEST</div>
   <h4>Manage this guest</h4>
   <div class="admin-scan-buttons">
@@ -1117,7 +1120,7 @@ async function checkQr(value,source="manual"){
  try{
   const d=await api("/api/guest",{qr:currentQr});
   if(!d.guest)throw new Error("The server returned no event pass details.");
-  currentGuest=d.guest;renderAdminScanActions(d.guest);if(source==="camera")lastCameraQr=scanned;
+  currentGuest=d.guest;renderAdminScanActions(d.guest);updateProofActions(d.guest);if(source==="camera")lastCameraQr=scanned;
   $("guestName").textContent=d.guest.name||"Verified guest";
   $("guestInfo").textContent=["Pass type: "+(d.guest.passRole||"Guest"),"Residence: "+(d.guest.residence||"Not recorded"),"Food: "+(d.guest.food||"Not recorded"),"Pass: "+(d.guest.passCode||"—")].join(" · ");
   $("guestState").textContent="Entry: "+(d.guest.entryUsed?"Recorded":"Not recorded")+"\nFood: "+(d.guest.foodUsed?"Collected":"Not collected");
@@ -1187,7 +1190,7 @@ async function record(action){
  try{
   const d=await api("/api/action",{qr:currentQr,action});
   if(!d.guest)throw new Error("The server did not return updated pass status.");
-  currentGuest=d.guest;
+  currentGuest=d.guest;updateProofActions(d.guest);
   $("guestState").textContent="Entry: "+(d.guest.entryUsed?"Recorded":"Not recorded")+"\nFood: "+(d.guest.foodUsed?"Collected":"Not collected");
   entryButton.disabled=!!d.guest.entryUsed;foodButton.disabled=!!d.guest.foodUsed;
   if(d.counts)$("counts").textContent="Meals served — Vegetarian: "+d.counts.vegetarianServed+" | Non-vegetarian: "+d.counts.nonVegetarianServed;
@@ -1197,6 +1200,34 @@ async function record(action){
   busy=false;entryButton.disabled=!currentGuest||!!currentGuest.entryUsed;foodButton.disabled=!currentGuest||!!currentGuest.foodUsed;
  }
 }
+async function proofAction(action){
+ if(!currentQr||busy||!currentGuest)return;
+ if(action==="proof_store"&&!currentGuest.entryUsed){status("Record entry first, then store the guest's proof.","bad");return;}
+ if(action==="proof_no_proof"&&!currentGuest.entryUsed){status("Record entry first, then mark accepted without proof.","bad");return;}
+ const labels={proof_store:"Store proof and assign a storage slot?",proof_no_proof:"Accept this guest without collecting proof?",proof_return:"Confirm the stored proof is returned to the guest?"};
+ if(!confirm(labels[action]||"Confirm action?"))return;
+ busy=true;const buttons=["proofStore","proofNoProof","proofReturn"].map(id:=>$(id)).filter(Boolean);
+ buttons.forEach(b=>b.disabled=true);
+ try{
+  const d=await api("/api/action",{qr:currentQr,action,event_id:1,proof_type:"ID card"});
+  if(d.storage){$("proofSlot").textContent=d.storage.status==="stored"?"Stored at "+d.storage.unit+" / "+d.storage.section:"Proof status: "+d.storage.status;}
+  else $("proofSlot").textContent=action==="proof_no_proof"?"Accepted without proof — no slot assigned.":"No stored proof assignment.";
+  status(d.message,"good");
+ }catch(e){status(e.message,"bad");}
+ finally{busy=false;buttons.forEach(b=>b.disabled=false);}
+}
+function updateProofActions(g){
+ const panel=$("proofActions");if(!panel)return;
+ panel.classList.toggle("hidden",!g);
+ if(!g)return;
+ $("proofStore").disabled=!g.entryUsed;
+ $("proofNoProof").disabled=!g.entryUsed;
+ $("proofReturn").disabled=!g.entryUsed;
+}
+$("proofStore")?.addEventListener("click",()=>proofAction("proof_store"));
+$("proofNoProof")?.addEventListener("click",()=>proofAction("proof_no_proof"));
+$("proofReturn")?.addEventListener("click",()=>proofAction("proof_return"));
+
 function scannerStartError(message){
  status(message,"bad");
  $("reader").classList.add("hidden");$("stopScan").classList.add("hidden");
