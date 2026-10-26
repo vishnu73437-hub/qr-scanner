@@ -951,10 +951,22 @@ async function checkQr(value,source="manual"){
 }
 async function record(action){if(!currentQr)return;try{const d=await api("/api/action",{qr:currentQr,action});currentGuest=d.guest;$("guestState").textContent=`Entry: ${d.guest.entryUsed?"Recorded":"Not recorded"}
 Food: ${d.guest.foodUsed?"Collected":"Not collected"}`;$("recordEntry").disabled=d.guest.entryUsed;$("recordFood").disabled=d.guest.foodUsed;if(d.counts)$("counts").textContent=`Meals served — Vegetarian: ${d.counts.vegetarianServed} | Non-vegetarian: ${d.counts.nonVegetarianServed}`;status(d.message,"good");}catch(e){status(e.message,"bad");}}
+function scannerStartError(message){
+ status(message,"bad");
+ $("reader").classList.add("hidden");$("stopScan").classList.add("hidden");
+ if(document.body.classList.contains("scan-mode")){
+  $("startScan").classList.add("hidden");
+  $("scanModeToggle").classList.remove("hidden");$("scanModeToggle").textContent="↻ Retry QR Scanner";
+  $("scanModeExit").classList.remove("hidden");
+ }else{
+  $("startScan").classList.remove("hidden");
+ }
+ if($("scannerBadge"))$("scannerBadge").textContent="● CAMERA UNAVAILABLE";
+}
 async function startCamera(){
- if(!tg?.initData){status("Open EventHub from the Telegram bot to authenticate.","bad");return;}
- if(!window.isSecureContext){status("Camera needs a secure connection. Open the HTTPS EventHub link inside Telegram.","bad");return;}
- if(!navigator.mediaDevices?.getUserMedia){status("This browser does not expose camera access. Update Telegram/iPadOS or open EventHub in Safari, then allow Camera access.","bad");return;}
+ if(!tg?.initData){scannerStartError("Open EventHub from the Telegram bot to authenticate.");return;}
+ if(!window.isSecureContext){scannerStartError("Camera needs a secure connection. Open the HTTPS EventHub link inside Telegram.");return;}
+ if(!navigator.mediaDevices?.getUserMedia){scannerStartError("This browser does not expose camera access. Update Telegram/iPadOS or open EventHub in Safari, then allow Camera access.");return;}
  $("reader").classList.remove("hidden");$("startScan").classList.add("hidden");$("stopScan").classList.remove("hidden");
  lastCameraQr="";let lastError=null;
  try{
@@ -982,16 +994,44 @@ async function startCamera(){
  }catch(e){
   const message=String(e?.message||e||lastError||"Unknown camera error");
   if(scanner){try{if(scanner.isScanning)await scanner.stop();await scanner.clear();}catch(_){}scanner=null;}
-  $("reader").classList.add("hidden");$("startScan").classList.remove("hidden");$("stopScan").classList.add("hidden");
   let help="Camera could not start. On iPad, allow Camera for Telegram/Safari in Settings, close other apps using the camera, then try again.";
   if(/permission|denied|notallowed/i.test(message))help="Camera permission was denied. On iPad, enable Camera access for Telegram or Safari in Settings, then reopen EventHub.";
   else if(/notfound|no camera|device not found/i.test(message))help="No available camera was found. Close other camera apps and retry.";
   else if(/secure|https/i.test(message))help="Camera requires HTTPS. Reopen the official HTTPS EventHub link inside Telegram.";
-  status(help+" ("+message.slice(0,150)+")","bad");
+  scannerStartError(help+" ("+message.slice(0,150)+")");
  }
 }
-async function stopCamera(){lastCameraQr="";if(scanner){try{if(scanner.isScanning)await scanner.stop();await scanner.clear();}catch(e){}scanner=null;}$("reader").classList.add("hidden");$("startScan").classList.remove("hidden");$("stopScan").classList.add("hidden");if($("scannerBadge"))$("scannerBadge").textContent="● SCANNER READY";}
-async function setDedicatedScanner(open){document.body.classList.toggle("scan-mode",open);$("scanModeToggle").classList.toggle("hidden",open);$("scanModeExit").classList.toggle("hidden",!open);if(open){if(!scanner||!scanner.isScanning)await startCamera();}else{await stopCamera();$("guestCard").classList.add("hidden");currentQr="";currentGuest=null;}}
+async function stopCamera(){
+ lastCameraQr="";
+ if(scanner){try{if(scanner.isScanning)await scanner.stop();await scanner.clear();}catch(e){console.warn("QR scanner cleanup:",e);}finally{scanner=null;}}
+ $("reader").classList.add("hidden");
+ $("startScan").classList.toggle("hidden",document.body.classList.contains("scan-mode"));
+ $("stopScan").classList.add("hidden");
+ if($("scannerBadge"))$("scannerBadge").textContent="● SCANNER READY";
+ if(document.body.classList.contains("scan-mode")){
+  $("scanModeToggle").classList.remove("hidden");$("scanModeToggle").textContent="↻ Restart QR Scanner";
+  $("scanModeExit").classList.remove("hidden");
+  status("Camera stopped. Tap Restart QR Scanner to resume, or exit to return to the check-in desk.","");
+ }else{
+  $("scanModeToggle").classList.remove("hidden");$("scanModeToggle").textContent="📷 Open QR Scanner";
+  $("scanModeExit").classList.add("hidden");
+ }
+}
+async function setDedicatedScanner(open){
+ document.body.classList.toggle("scan-mode",open);
+ $("scanModeToggle").classList.toggle("hidden",open);
+ $("scanModeToggle").setAttribute("aria-expanded",String(open));
+ $("scanModeExit").classList.toggle("hidden",!open);
+ if(open){
+  $("scanModeToggle").textContent="📷 Open QR Scanner";
+  if(!scanner||!scanner.isScanning)await startCamera();
+ }else{
+  await stopCamera();
+  $("scanModeToggle").textContent="📷 Open QR Scanner";
+  $("guestCard").classList.add("hidden");currentQr="";currentGuest=null;
+  $("recordEntry").disabled=true;$("recordFood").disabled=true;
+ }
+}
 $("scanModeToggle").onclick=()=>setDedicatedScanner(true);$("scanModeExit").onclick=()=>setDedicatedScanner(false);
 $("startScan").onclick=startCamera;$("stopScan").onclick=stopCamera;$("checkManual").onclick=()=>checkQr($("manual").value,"manual");$("manual").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();checkQr($("manual").value,"manual");}});$("recordEntry").onclick=()=>record("entry");$("recordFood").onclick=()=>record("food");$("guestPass").onclick=()=>{const box=$("myPassDisplay"),button=$("guestPass");if(box.dataset.loaded==="true"&&!box.classList.contains("hidden")){box.classList.add("hidden");box.dataset.loaded="false";button.textContent="🎟️ My Pass";return;}loadMyPass();};
 async function sendPassToTelegram(passCode,button){
