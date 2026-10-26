@@ -1183,28 +1183,17 @@ $("startScan").onclick=startCamera;$("stopScan").onclick=stopCamera;$("checkManu
  }
  loadMyPass();
 };
-async function savePassImage(imageDataUrl,filename,container){
- let panel=container.querySelector(".pass-save-help");
- if(!panel){panel=document.createElement("div");panel.className="pass-save-help card";panel.style.cssText="margin-top:12px;padding:14px;text-align:center";container.append(panel);}
- panel.textContent="";
- const title=document.createElement("strong");title.textContent="Save your pass";
- const note=document.createElement("p");note.className="small";note.textContent="Tap Download pass. If Telegram does not save the file, use Share pass image and choose Save to device/Files if available.";
- const download=document.createElement("button");download.type="button";download.textContent="⬇️ Download pass";download.style.cssText="display:inline-block;margin:8px;padding:12px 18px;border:0;border-radius:12px;background:#ffcf55;color:#29103c;font-weight:700";
- download.onclick=()=>{
-  try{
-   const a=document.createElement("a");a.href=imageDataUrl;a.download=filename;a.style.display="none";container.append(a);a.click();a.remove();
-   note.textContent="Download requested. Check your device’s Downloads folder. If nothing appears, try Share pass image.";
-  }catch(e){note.textContent="Download was blocked. Try Share pass image instead.";}
- };
- const share=document.createElement("button");share.type="button";share.textContent="Share pass image";share.style.cssText=download.style.cssText;
- share.onclick=async()=>{
-  try{
-   const response=await fetch(imageDataUrl);const blob=await response.blob();const file=new File([blob],filename,{type:blob.type||"image/png"});
-   if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]}))await navigator.share({files:[file],title:"Event pass"});
-   else note.textContent="File sharing is not supported in this Telegram view. Use Download pass, or open the bot in your device’s regular browser and save the image there.";
-  }catch(e){if(e.name!=="AbortError")note.textContent="Sharing is unavailable here. Use Download pass or open EventHub in your regular browser.";}
- };
- panel.append(title,note,download,share);
+async function sendPassToTelegram(passCode,button){
+ const originalLabel=button.textContent;
+ button.disabled=true;button.textContent="📩 Sending to Telegram…";
+ try{
+  await post("/api/send_my_pass",{passCode},35000);
+  button.textContent="✅ Sent to Telegram";
+  status("Your pass image has been sent to your Telegram chat. Open the bot chat, tap the image, then use the image menu to save it to your device.","good");
+ }catch(e){
+  button.textContent=originalLabel;
+  status(e.message||"Could not send your pass to Telegram. Please try again.","bad");
+ }finally{button.disabled=false;}
 }
 
 async function loadMyPass(){
@@ -1217,8 +1206,8 @@ async function loadMyPass(){
   const heading=document.createElement("h3");heading.textContent="🎟️ Your active pass";
   const img=document.createElement("img");img.alt="Personal Deepotsav QR pass";img.src="data:image/png;base64,"+p.image;img.style.cssText="display:block;width:100%;max-width:420px;height:auto;margin:10px auto;border-radius:10px;background:#fff";img.src=await addSponsorFooter(img.src);
   const info=document.createElement("p");info.className="small";info.style.whiteSpace="pre-line";info.textContent="Name: "+p.name+"\nPass code: "+p.passCode+"\nResidence: "+p.residence+(p.roomNumber?"\nRoom: "+p.roomNumber:"")+"\nFood: "+p.food+"\nEntry: "+(p.entryUsed?"Recorded":"Not recorded")+"\nFood collection: "+(p.foodUsed?"Recorded":"Not recorded")+"\nKeep this QR private.";
-  const download=document.createElement("button");download.textContent="⬇️ Save pass image";download.onclick=async()=>{download.disabled=true;try{await savePassImage(img.src,"Deepotsav-"+p.passCode+".png",box);status("Pass is ready. Use the save options below the pass.","good");}catch(e){if(e.name!=="AbortError")status("Could not save the pass. Please try again or take a screenshot as a backup.", "bad");}finally{download.disabled=false;}};
-  box.append(heading,img,info,download);box.dataset.loaded="true";button.textContent="🙈 Hide my pass";status("Your active pass is loaded. Keep the QR private.","good");
+  const sendButton=document.createElement("button");sendButton.type="button";sendButton.textContent="📩 Send pass to Telegram";sendButton.onclick=()=>sendPassToTelegram(p.passCode,sendButton);
+  box.append(heading,img,info,sendButton);box.dataset.loaded="true";button.textContent="🙈 Hide my pass";status("Your active pass is loaded. Keep the QR private.","good");
  }catch(e){box.textContent=e.message;status(e.message,"bad");}
  finally{button.disabled=false;if(box.dataset.loaded!=="true")button.textContent="🎟️ My Pass";}
 }
@@ -1240,8 +1229,8 @@ async function loadMyGuestStylePass(){
   const heading=document.createElement("h3");heading.textContent="🎟️ Your "+(p.passRole||"staff")+" pass";
   const img=document.createElement("img");img.alt="Personal standard EventHub QR pass for entry and food";img.src="data:image/png;base64,"+p.image;img.src=await addSponsorFooter(img.src);
   const info=document.createElement("p");info.className="small";info.style.whiteSpace="pre-line";info.textContent="Name: "+p.name+"\nRole: "+(p.passRole||"Staff")+"\nPass code: "+p.passCode+"\nResidence: "+p.residence+(p.roomNumber?"\nRoom: "+p.roomNumber:"")+"\nFood: "+p.food+"\nEntry: "+(p.entryUsed?"Recorded":"Not recorded")+"\nFood collection: "+(p.foodUsed?"Recorded":"Not collected")+"\nThis is your standard guest-style QR. Use it for your own entry and food collection.";
-  const download=document.createElement("button");download.type="button";download.textContent="⬇️ Save event pass";download.onclick=async()=>{download.disabled=true;try{await savePassImage(img.src,"EventHub-"+String(p.passRole||"Staff")+"-"+p.passCode+".png",box);status("Pass is ready. Use the save options below the pass.","good");}catch(e){if(e.name!=="AbortError")status("Could not save the pass. Please try again or take a screenshot as a backup.", "bad");}finally{download.disabled=false;}};
-  box.append(heading,img,info,download);box.dataset.loaded="true";button.textContent="🙈 Hide my event pass";
+  const sendButton=document.createElement("button");sendButton.type="button";sendButton.textContent="📩 Send pass to Telegram";sendButton.onclick=()=>sendPassToTelegram(p.passCode,sendButton);
+  box.append(heading,img,info,sendButton);box.dataset.loaded="true";button.textContent="🙈 Hide my event pass";
   if(p.createdForStaff)status("Your standard staff pass was created. The same QR works for entry and food collection.","good");
   else status("Your existing approved pass is ready. Its saved food preference is unchanged.","good");
  }catch(e){
