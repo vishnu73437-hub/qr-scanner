@@ -1506,7 +1506,7 @@ function addSponsorFooter(imageSrc){
     const logo=new Image();
     logo.onload=()=>{try{const pad=Math.round(width*.035),maxW=width-pad*2,maxH=footerH-Math.round(footerH*.14),ratio=Math.min(maxW/logo.naturalWidth,maxH/logo.naturalHeight);const w=logo.naturalWidth*ratio,h=logo.naturalHeight*ratio;ctx.drawImage(logo,(width-w)/2,height+(footerH-h)/2,w,h);resolve(canvas.toDataURL("image/png"));}catch(e){resolve(imageSrc);}};
     logo.onerror=()=>resolve(canvas.toDataURL("image/png"));
-    logo.src="./doc-tutorials-logo.svg";
+    logo.src="./doc-tutorials-original.jpg";
    }catch(e){resolve(imageSrc);}
   };
   source.onerror=()=>resolve(imageSrc);
@@ -1518,7 +1518,7 @@ function addSponsorFooter(imageSrc){
   document.querySelectorAll(".brand").forEach((brand)=>{
    if(brand.nextElementSibling?.classList.contains("sponsor-banner"))return;
    const banner=document.createElement("div");banner.className="sponsor-banner";banner.setAttribute("aria-label","Event sponsor Doc Tutorials");
-   banner.innerHTML='<img src="./doc-tutorials-logo.svg" alt="Doc Tutorials logo" style="display:block;flex:0 0 94px;width:94px;height:70px;object-fit:contain;border-radius:8px" loading="eager"><span class="sponsor-side-copy"><small>PROUD SPONSOR</small><strong>DOC TUTORIALS</strong></span>';
+   banner.innerHTML='<img src="./doc-tutorials-original.jpg" alt="Doc Tutorials logo" style="display:block;flex:0 0 94px;width:94px;height:70px;object-fit:contain;border-radius:8px" loading="eager"><span class="sponsor-side-copy"><small>PROUD SPONSOR</small><strong>DOC TUTORIALS</strong></span>';
    brand.insertAdjacentElement("afterend",banner);
   });
  };
