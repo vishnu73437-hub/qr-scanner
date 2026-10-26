@@ -1,14 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 310" role="img" aria-label="Doc Tutorials logo">
-<rect width="640" height="310" rx="18" fill="#f7fbfc"/>
-<g transform="translate(28 18)">
-<path d="M36 25 H118 C181 25 210 57 244 105 L300 185 C330 228 360 246 410 246 H548 V213 H423 C387 213 367 195 343 160 L285 80 C243 22 204 0 132 0 H36 Z" fill="#0878e9"/>
-<path d="M36 246 H126 C189 246 220 214 254 166 L311 86 C339 47 372 25 421 25 H548 V58 H421 C386 58 365 77 339 113 L283 193 C241 252 202 279 129 279 H36 Z" fill="#111c49"/>
-<path d="M48 62 H126 C151 62 169 72 186 95 L211 129 L194 153 L164 113 C153 98 143 94 126 94 H48 Z" fill="#75c6e8"/>
-<path d="M48 183 H126 C145 183 160 174 173 156 L191 132 L211 160 L198 178 C178 205 155 215 126 215 H48 Z" fill="#75c6e8"/>
-<path d="M435 62 H536 V94 H435 C418 94 406 102 394 119 L373 149 L353 121 L369 97 C386 73 407 62 435 62 Z" fill="#75c6e8"/>
-<path d="M435 183 H536 V215 H435 C406 215 386 203 369 179 L353 157 L373 129 L394 159 C406 176 418 183 435 183 Z" fill="#75c6e8"/>
-<circle cx="320" cy="139" r="73" fill="#f7fbfc"/>
-<path d="M296 101 L354 139 L296 177 Z" fill="#111c49"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 574" role="img" aria-label="Doc Tutorials original full logo">
+<rect width="900" height="574" fill="#f7fbfc"/>
+<g transform="translate(18 25)">
+<path fill="#0878e9" d="M4 0H210C280 0 326 35 374 104L303 177C275 135 253 104 210 104H4Z"/>
+<path fill="#75c6e8" d="M20 112H151C179 112 201 126 220 154L250 199L213 245L184 201C173 184 165 178 150 178H20Z"/>
+<path fill="#75c6e8" d="M22 265H151C165 265 177 258 188 243L213 211L250 255L221 293C202 318 180 331 151 331H22Z"/>
+<path fill="#111c49" d="M4 338H164C210 338 238 310 269 266L365 130C408 70 453 34 521 34H620V100H521C477 100 450 123 420 165L324 301C279 365 235 404 164 404H4Z"/>
+<path fill="#0878e9" d="M878 0H671C601 0 555 35 507 104L578 177C606 135 628 104 671 104H878Z"/>
+<path fill="#75c6e8" d="M862 112H731C703 112 681 126 662 154L632 199L669 245L698 201C709 184 717 178 732 178H862Z"/>
+<path fill="#75c6e8" d="M860 265H731C717 265 705 258 694 243L669 211L632 255L661 293C680 318 702 331 731 331H860Z"/>
+<path fill="#111c49" d="M878 338H718C672 338 644 310 613 266L517 130C474 70 429 34 361 34H315V100H361C405 100 432 123 462 165L558 301C603 365 647 404 718 404H878Z"/>
+<circle cx="450" cy="203" r="91" fill="#f7fbfc"/>
+<path fill="#111c49" d="M425 151L491 203L425 255Z"/>
 </g>
-<text x="320" y="294" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="69" font-weight="800" letter-spacing="5" fill="#0878e9">TUTORIALS</text>
+<text x="450" y="530" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="105" font-weight="800" letter-spacing="2" fill="#0878e9">TUTORIALS</text>
 </svg>
