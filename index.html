@@ -1210,9 +1210,17 @@ async function proofAction(action){
  buttons.forEach(b=>b.disabled=true);
  try{
   const d=await api("/api/action",{qr:currentQr,action,event_id:1,proof_type:"ID card"});
-  if(d.storage){$("proofSlot").textContent=d.storage.status==="stored"?"Stored at "+d.storage.unit+" / "+d.storage.section:"Proof status: "+d.storage.status;}
-  else $("proofSlot").textContent=action==="proof_no_proof"?"Accepted without proof — no slot assigned.":"No stored proof assignment.";
-  status(d.message,"good");
+  if((action==="proof_store"||action==="proof_return")&&!d.storage){
+   $("proofSlot").textContent="Storage status not confirmed. Check the backend logs before retrying.";
+   throw new Error("The backend did not return a storage result. This action is not confirmed; check Botkeep logs and verify the guest's storage status before retrying.");
+  }
+  if(d.storage){
+   const slot=[d.storage.unit,d.storage.section].filter(Boolean).join(" / ");
+   $("proofSlot").textContent=d.storage.status==="stored"?"Stored at "+(slot||"assigned slot") : d.storage.status==="returned"?"Proof returned from "+(slot||"the assigned slot"):"Proof status: "+(d.storage.status||"updated");
+  }else if(action==="proof_no_proof") $("proofSlot").textContent="Accepted without proof — no slot assigned.";
+  else $("proofSlot").textContent="No stored proof assignment.";
+  if(d.guest){currentGuest=d.guest;updateProofActions(d.guest);}
+  status(d.message||"Action completed.", "good");
  }catch(e){status(e.message,"bad");}
  finally{busy=false;buttons.forEach(b=>b.disabled=false);}
 }
