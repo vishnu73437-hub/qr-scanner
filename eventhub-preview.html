@@ -644,6 +644,7 @@ body.scan-mode #status{position:fixed!important;z-index:99992!important;top:6px!
     <button id="scanResetEntry" type="button">↻ Reset entry</button>
     <button id="scanResetFood" type="button">🍽️ Reset food</button>
     <button id="scanRevokePass" type="button" class="danger">⛔ Revoke pass</button>
+    <button id="scanReactivatePass" type="button">♻️ Reactivate + new QR</button>
   </div>
   <form id="scanEditForm" class="scan-edit-form hidden">
     <label>Full name<input id="scanEditName" maxlength="160" required></label>
@@ -993,6 +994,10 @@ function renderAdminScanActions(g){
  panel.classList.toggle("hidden",!allowed);
  $("scanEditForm").classList.add("hidden");
  if(!allowed)return;
+ const revoked=g.status==="revoked";
+ $("scanRevokePass").classList.toggle("hidden",revoked);
+ $("scanReactivatePass").classList.toggle("hidden",!revoked);
+ ["scanEditGuest","scanReissuePass","scanResetEntry","scanResetFood"].forEach(id=>$(id).classList.toggle("hidden",revoked));
  $("scanEditName").value=g.name||"";
  $("scanEditPhone").value=g.phone||"";
  $("scanEditResidence").value=g.residenceType||"Apartment";
@@ -1031,6 +1036,7 @@ function bindAdminScanActions(){
  $("scanResetEntry").addEventListener("click",()=>doGuestAction("reset_status","entry","Reset entry status"));
  $("scanResetFood").addEventListener("click",()=>doGuestAction("reset_status","food","Reset food status"));
  $("scanRevokePass").addEventListener("click",()=>doGuestAction("revoke_pass","","Revoke this pass"));
+ $("scanReactivatePass").addEventListener("click",()=>doGuestAction("reactivate_pass","","Reactivate and issue a new QR pass"));
 }
 bindAdminScanActions();
 
