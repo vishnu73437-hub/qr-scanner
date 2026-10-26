@@ -1117,10 +1117,13 @@ async function record(action){
 }
 function scannerStartError(message){
  status(message,"bad");
- $("reader").classList.add("hidden");$("startScan").classList.add("hidden");$("stopScan").classList.add("hidden");
+ $("reader").classList.add("hidden");$("stopScan").classList.add("hidden");
  if(document.body.classList.contains("scan-mode")){
+  $("startScan").classList.add("hidden");
   $("scanModeToggle").classList.remove("hidden");$("scanModeToggle").textContent="↻ Retry QR Scanner";
   $("scanModeExit").classList.remove("hidden");
+ }else{
+  $("startScan").classList.remove("hidden");
  }
  if($("scannerBadge"))$("scannerBadge").textContent="● CAMERA UNAVAILABLE";
 }
@@ -1163,7 +1166,9 @@ async function startCamera(){
 async function stopCamera(){
  lastCameraQr="";
  if(scanner){try{if(scanner.isScanning)await scanner.stop();await scanner.clear();}catch(e){console.warn("QR scanner cleanup:",e);}finally{scanner=null;}}
- $("reader").classList.add("hidden");$("startScan").classList.add("hidden");$("stopScan").classList.add("hidden");
+ $("reader").classList.add("hidden");
+ $("startScan").classList.toggle("hidden",document.body.classList.contains("scan-mode"));
+ $("stopScan").classList.add("hidden");
  if($("scannerBadge"))$("scannerBadge").textContent="● SCANNER READY";
  if(document.body.classList.contains("scan-mode")){
   $("scanModeToggle").classList.remove("hidden");$("scanModeToggle").textContent="↻ Restart QR Scanner";
@@ -1204,7 +1209,7 @@ async function loadMyPass(){
   if(!d.pass||!d.pass.image)throw new Error("The server did not return a pass image.");
   const p=d.pass;box.textContent="";
   const heading=document.createElement("h3");heading.textContent="🎟️ Your active pass";
-  const img=document.createElement("img");img.alt="Personal Deepotsav QR pass";img.src="data:image/png;base64,"+p.image;img.style.cssText="display:block;width:100%;max-width:420px;height:auto;margin:10px auto;border-radius:10px;background:#fff";img.src=await addSponsorFooter(img.src);
+  const img=document.createElement("img");img.alt="Personal Deepotsav QR pass";img.src="data:image/png;base64,"+p.image;img.style.cssText="display:block;width:100%;max-width:420px;height:auto;margin:10px auto;border-radius:10px;background:#fff";/* Sponsor branding stays on the Mini App page, not inside the QR pass image. */
   const info=document.createElement("p");info.className="small";info.style.whiteSpace="pre-line";info.textContent="Name: "+p.name+"\nPass code: "+p.passCode+"\nResidence: "+p.residence+(p.roomNumber?"\nRoom: "+p.roomNumber:"")+"\nFood: "+p.food+"\nEntry: "+(p.entryUsed?"Recorded":"Not recorded")+"\nFood collection: "+(p.foodUsed?"Recorded":"Not recorded")+"\nKeep this QR private.";
   const sendButton=document.createElement("button");sendButton.type="button";sendButton.textContent="📩 Send pass to Telegram";sendButton.onclick=()=>sendPassToTelegram(p.passCode,sendButton);
   box.append(heading,img,info,sendButton);box.dataset.loaded="true";button.textContent="🙈 Hide my pass";status("Your active pass is loaded. Keep the QR private.","good");
@@ -1227,7 +1232,7 @@ async function loadMyGuestStylePass(){
   if(!d.pass||!d.pass.image)throw new Error("The server did not return an event pass image.");
   const p=d.pass;box.textContent="";
   const heading=document.createElement("h3");heading.textContent="🎟️ Your "+(p.passRole||"staff")+" pass";
-  const img=document.createElement("img");img.alt="Personal standard EventHub QR pass for entry and food";img.src="data:image/png;base64,"+p.image;img.src=await addSponsorFooter(img.src);
+  const img=document.createElement("img");img.alt="Personal standard EventHub QR pass for entry and food";img.src="data:image/png;base64,"+p.image;/* Sponsor branding stays on the Mini App page, not inside the QR pass image. */
   const info=document.createElement("p");info.className="small";info.style.whiteSpace="pre-line";info.textContent="Name: "+p.name+"\nRole: "+(p.passRole||"Staff")+"\nPass code: "+p.passCode+"\nResidence: "+p.residence+(p.roomNumber?"\nRoom: "+p.roomNumber:"")+"\nFood: "+p.food+"\nEntry: "+(p.entryUsed?"Recorded":"Not recorded")+"\nFood collection: "+(p.foodUsed?"Recorded":"Not collected")+"\nThis is your standard guest-style QR. Use it for your own entry and food collection.";
   const sendButton=document.createElement("button");sendButton.type="button";sendButton.textContent="📩 Send pass to Telegram";sendButton.onclick=()=>sendPassToTelegram(p.passCode,sendButton);
   box.append(heading,img,info,sendButton);box.dataset.loaded="true";button.textContent="🙈 Hide my event pass";
