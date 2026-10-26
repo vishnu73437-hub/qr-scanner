@@ -1202,11 +1202,6 @@ async function record(action){
 }
 async function proofAction(action){
  if(!currentQr||busy||!currentGuest)return;
- if(action==="proof_no_proof"){
-  status("This backend version does not support accepting a guest without proof yet. No action was sent and no record was changed.","bad");
-  $("proofSlot").textContent="No-proof acceptance is not available in the current backend.";
-  return;
- }
  if(action==="proof_store"&&!currentGuest.entryUsed){status("Record entry first, then store the guest's proof.","bad");return;}
  if(action==="proof_return"&&!currentGuest.entryUsed){status("Record entry first, then return the guest's proof.","bad");return;}
  const backendAction=action==="proof_store"?"proof_deposit":action;
@@ -1220,7 +1215,9 @@ async function proofAction(action){
    $("proofSlot").textContent="Storage status not confirmed. Check the backend logs before retrying.";
    throw new Error("The backend did not return a storage result. This action is not confirmed; check Botkeep logs and verify the guest's storage status before retrying.");
   }
-  if(d.storage){
+  if(d.storage?.status==="not_collected"){
+   $("proofSlot").textContent=d.storage.label||"Accepted without proof — no slot assigned.";
+  }else if(d.storage){
    const box=d.storage.box??d.storage.unit;
    const section=d.storage.section;
    const slot=d.storage.label||[box!=null?"Box "+box:null,section!=null?"Section "+section:null].filter(Boolean).join(" / ");
