@@ -1206,7 +1206,7 @@ async function proofAction(action){
  if(action==="proof_no_proof"&&!currentGuest.entryUsed){status("Record entry first, then mark accepted without proof.","bad");return;}
  const labels={proof_store:"Store proof and assign a storage slot?",proof_no_proof:"Accept this guest without collecting proof?",proof_return:"Confirm the stored proof is returned to the guest?"};
  if(!confirm(labels[action]||"Confirm action?"))return;
- busy=true;const buttons=["proofStore","proofNoProof","proofReturn"].map(id:=>$(id)).filter(Boolean);
+ busy=true;const buttons=["proofStore","proofNoProof","proofReturn"].map(id=>$(id)).filter(Boolean);
  buttons.forEach(b=>b.disabled=true);
  try{
   const d=await api("/api/action",{qr:currentQr,action,event_id:1,proof_type:"ID card"});
