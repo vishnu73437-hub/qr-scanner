@@ -1227,4 +1227,26 @@ function addSponsorFooter(imageSrc){
 })();
 </script>
 
+
+<style id="eventhub-responsive-ui-polish">
+/* Consistent, touch-friendly layout across guest, volunteer, admin and iPad views */
+#guestView,#volunteerView,#adminView{min-width:0}
+#adminView .card,#volunteerView .card,#guestView .card{min-width:0;overflow-wrap:anywhere}
+#adminView .section-heading,#volunteerView .section-heading{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+#adminView details>summary,#volunteerView details>summary{cursor:pointer;padding:12px;border-radius:12px;touch-action:manipulation}
+#adminView .record-card,#volunteerView .record-card,#guestView .record-card{min-width:0;overflow-wrap:anywhere}
+#adminView input,#adminView select,#adminView textarea,#volunteerView input,#volunteerView select,#volunteerView textarea{max-width:100%}
+@media(min-width:741px) and (max-width:1100px){
+ main{width:min(100%,980px);padding-left:clamp(16px,2.5vw,28px);padding-right:clamp(16px,2.5vw,28px)}
+ .admin-shell,.volunteer-shell{gap:14px}
+ .sponsor-banner{margin-bottom:18px}
+}
+@media(max-width:600px){
+ #adminView button,#volunteerView button,#guestView button{min-height:46px}
+ #adminView .section-heading button,#volunteerView .section-heading button{flex:1 1 130px;width:auto}
+ .sponsor-banner{gap:10px;padding:10px 12px;border-radius:14px}
+ .sponsor-mark{flex-basis:34px;width:34px;height:34px}
+}
+</style>
+
 </body></html>
