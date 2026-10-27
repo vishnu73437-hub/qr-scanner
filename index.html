@@ -701,6 +701,8 @@ body.scan-mode #status{position:fixed!important;z-index:99992!important;top:6px!
 <div class="live-status-tile"><span>Approved guests</span><strong id="liveApproved">—</strong><small>Active guest passes</small></div>
 <div class="live-status-tile"><span>Checked in</span><strong id="liveEntry">—</strong><small id="liveEntryRate">Waiting for data</small></div>
 <div class="live-status-tile"><span>Food served</span><strong id="liveFood">—</strong><small>Recorded collections</small></div>
+<div class="live-status-tile veg-status-tile"><span>Vegetarian choices</span><strong id="liveVeg">—</strong><small id="liveVegServed">Approved guests · served: —</small></div>
+<div class="live-status-tile nonveg-status-tile"><span>Non-vegetarian choices</span><strong id="liveNonveg">—</strong><small id="liveNonvegServed">Approved guests · served: —</small></div>
 <div class="live-status-tile food-preference-tile"><span>🥗 Vegetarian</span><strong id="liveVeg">—</strong><small id="liveVegDetail">Guest records</small></div>
 <div class="live-status-tile food-preference-tile"><span>🍗 Non-vegetarian</span><strong id="liveNonVeg">—</strong><small id="liveNonVegDetail">Guest records</small></div>
 <div class="live-status-tile"><span>Pending approvals</span><strong id="livePending">—</strong><small>Registration requests</small></div>
@@ -1119,9 +1121,13 @@ async function refreshLiveStatus(){
   liveStatusText("liveApproved",Number.isFinite(Number(st.approvedGuests))?String(st.approvedGuests):"Unavailable");
   liveStatusText("liveEntry",Number.isFinite(Number(st.checkedIn))?String(st.checkedIn):"Unavailable");
   liveStatusText("liveFood",Number.isFinite(Number(st.mealsServed))?String(st.mealsServed):"Unavailable");
+  liveStatusText("liveVeg",st.vegetarianGuests!=null?String(st.vegetarianGuests):"Unavailable");
+  liveStatusText("liveNonveg",st.nonVegetarianGuests!=null?String(st.nonVegetarianGuests):"Unavailable");
+  liveStatusText("liveVegServed",st.vegetarianServed!=null?"Served: "+st.vegetarianServed:"Served count unavailable");
+  liveStatusText("liveNonvegServed",st.nonVegetarianServed!=null?"Served: "+st.nonVegetarianServed:"Served count unavailable");
   const approved=Number(st.approvedGuests),entry=Number(st.checkedIn);
   liveStatusText("liveEntryRate",Number.isFinite(approved)&&approved>0&&Number.isFinite(entry)?Math.round(entry/approved*100)+"% of approved guests":"Entry rate unavailable");
- }else{["liveApproved","liveEntry","liveFood","liveEntryRate"].forEach(id=>liveStatusText(id,"Unavailable"));notes.push("Guest statistics unavailable: "+(checks[0].reason?.message||"API check failed"));}
+ }else{["liveApproved","liveEntry","liveFood","liveEntryRate","liveVeg","liveNonveg","liveVegServed","liveNonvegServed"].forEach(id=>liveStatusText(id,"Unavailable"));notes.push("Guest statistics unavailable: "+(checks[0].reason?.message||"API check failed"));}
  if(checks[4].status==="fulfilled"){
   const guests=Array.isArray(checks[4].value.guests)?checks[4].value.guests:null;
   if(guests){
@@ -1876,6 +1882,9 @@ function addSponsorFooter(imageSrc){
 .live-status-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;font-size:11px;opacity:.8}
 .live-status-footer button{margin:0}
 @media(max-width:600px){.live-status-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.live-status-tile{padding:11px}.live-status-board .section-heading{flex-direction:column}.live-status-board .section-heading button{width:100%}.live-status-footer{align-items:stretch;flex-direction:column}.live-status-footer button{width:100%}}
+
+.live-status-tile.veg-status-tile{border-color:rgba(87,205,133,.55);background:rgba(15,100,55,.17)}
+.live-status-tile.nonveg-status-tile{border-color:rgba(236,143,91,.55);background:rgba(130,62,25,.17)}
 </style>
 
 </body></html>
