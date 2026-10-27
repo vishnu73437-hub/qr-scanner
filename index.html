@@ -1154,9 +1154,9 @@ async function checkQr(value,source="manual"){
   $("guestName").textContent=d.guest.name||"Verified guest";
   $("guestInfo").textContent=["Pass type: "+(d.guest.passRole||"Guest"),"Residence: "+(d.guest.residence||"Not recorded"),"Food: "+(d.guest.food||"Not recorded"),"Pass: "+(d.guest.passCode||"—")].join(" · ");
   $("guestState").textContent="Entry: "+(d.guest.entryUsed?"Recorded":"Not recorded")+"\nFood: "+(d.guest.foodUsed?"Collected":"Not collected");
-  $("recordEntry").disabled=!!d.guest.entryUsed;$("recordFood").disabled=!!d.guest.foodUsed;
+  $("recordEntry").disabled=d.guest.status==="revoked"||!!d.guest.entryUsed;$("recordFood").disabled=d.guest.status==="revoked"||!!d.guest.foodUsed;
   $("guestCard").classList.remove("hidden");
-  status("Valid "+(d.guest.passRole||"guest").toLowerCase()+" pass. Camera stays on — scan the next pass.","good");
+  status(d.guest.status==="revoked"?"Revoked pass loaded for admin review. Do not admit this pass.":"Valid "+(d.guest.passRole||"guest").toLowerCase()+" pass. Camera stays on — scan the next pass.","good");
  }catch(e){
   currentQr="";currentGuest=null;if(source==="camera")lastCameraQr=scanned;status(e.message,"bad");
  }finally{
@@ -1233,7 +1233,7 @@ async function record(action){
   status(d.message,"good");
  }catch(e){status(e.message,"bad");}
  finally{
-  busy=false;entryButton.disabled=!currentGuest||!!currentGuest.entryUsed;foodButton.disabled=!currentGuest||!!currentGuest.foodUsed;
+  busy=false;entryButton.disabled=!currentGuest||currentGuest.status==="revoked"||!!currentGuest.entryUsed;foodButton.disabled=!currentGuest||currentGuest.status==="revoked"||!!currentGuest.foodUsed;
  }
 }
 async function proofAction(action){
