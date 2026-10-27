@@ -1110,8 +1110,7 @@ async function refreshLiveStatus(){
   post("/api/admin",{action:"stats"}),
   post("/api/admin",{action:"pending_registrations"}),
   post("/api/admin",{action:"proof_storage_report"}),
-  post("/api/admin",{action:"sheets_queue_status"}),
-  post("/api/admin",{action:"guest_search",query:"",status:"all"})
+  post("/api/admin",{action:"sheets_queue_status"})
  ]);
  const notes=[];
  if(checks[0].status==="fulfilled"){
@@ -1126,12 +1125,19 @@ async function refreshLiveStatus(){
   const approved=Number(st.approvedGuests),entry=Number(st.checkedIn);
   liveStatusText("liveEntryRate",Number.isFinite(approved)&&approved>0&&Number.isFinite(entry)?Math.round(entry/approved*100)+"% of approved guests":"Entry rate unavailable");
  }else{["liveApproved","liveEntry","liveFood","liveEntryRate"].forEach(id=>liveStatusText(id,"Unavailable"));notes.push("Guest statistics unavailable: "+(checks[0].reason?.message||"API check failed"));}
- if(checks[4].status==="fulfilled"){
-  const guests=Array.isArray(checks[4].value.guests)?checks[4].value.guests:null;
-  if(guests){
-   if(guests.some(g=>!String(g.food_preference||"").trim()))notes.push("Some of the latest guest records have no food preference recorded; check the full approved total and missing-preference count from the statistics API.");
-  }else{["liveVeg","liveNonVeg","liveVegDetail","liveNonVegDetail"].forEach(id=>liveStatusText(id,"Unavailable"));notes.push("Food preference counts unavailable: guest-search response was unexpected.");}
- }else{["liveVeg","liveNonVeg","liveVegDetail","liveNonVegDetail"].forEach(id=>liveStatusText(id,"Unavailable"));notes.push("Food preference counts unavailable: "+(checks[4].reason?.message||"guest search failed"));}
+ if(checks[0].status==="fulfilled"){
+  const st=checks[0].value.stats||{};
+  if(st.vegetarianGuests==null||st.nonVegetarianGuests==null){
+   liveStatusText("liveVeg","Unavailable");liveStatusText("liveNonVeg","Unavailable");
+   liveStatusText("liveVegDetail","Backend update required for full totals");liveStatusText("liveNonVegDetail","Backend update required for full totals");
+   notes.push("Full food totals unavailable: update the backend to return complete approved-guest food counts.");
+  }else{
+   liveStatusText("liveVeg",String(st.vegetarianGuests));liveStatusText("liveNonVeg",String(st.nonVegetarianGuests));
+   liveStatusText("liveVegDetail","All approved guests · served: "+(st.vegetarianServed!=null?st.vegetarianServed:"Unavailable"));
+   liveStatusText("liveNonVegDetail","All approved guests · served: "+(st.nonVegetarianServed!=null?st.nonVegetarianServed:"Unavailable"));
+   if(Number(st.missingOrInvalidFoodPreference)>0)notes.push("Catering check: "+st.missingOrInvalidFoodPreference+" approved guest(s) have a missing or invalid food preference.");
+  }
+ }
  if(checks[1].status==="fulfilled"){
   const rows=checks[1].value.registrations;
   liveStatusText("livePending",Array.isArray(rows)?String(rows.length):"Unavailable");
