@@ -1119,19 +1119,17 @@ async function refreshLiveStatus(){
   liveStatusText("liveApproved",Number.isFinite(Number(st.approvedGuests))?String(st.approvedGuests):"Unavailable");
   liveStatusText("liveEntry",Number.isFinite(Number(st.checkedIn))?String(st.checkedIn):"Unavailable");
   liveStatusText("liveFood",Number.isFinite(Number(st.mealsServed))?String(st.mealsServed):"Unavailable");
+  liveStatusText("liveVeg",st.vegetarianGuests!=null?String(st.vegetarianGuests):"Unavailable");
+  liveStatusText("liveNonVeg",st.nonVegetarianGuests!=null?String(st.nonVegetarianGuests):"Unavailable");
+  liveStatusText("liveVegDetail","Full approved total · served: "+(st.vegetarianServed!=null?st.vegetarianServed:"Unavailable"));
+  liveStatusText("liveNonVegDetail","Full approved total · served: "+(st.nonVegetarianServed!=null?st.nonVegetarianServed:"Unavailable"));
   const approved=Number(st.approvedGuests),entry=Number(st.checkedIn);
   liveStatusText("liveEntryRate",Number.isFinite(approved)&&approved>0&&Number.isFinite(entry)?Math.round(entry/approved*100)+"% of approved guests":"Entry rate unavailable");
  }else{["liveApproved","liveEntry","liveFood","liveEntryRate"].forEach(id=>liveStatusText(id,"Unavailable"));notes.push("Guest statistics unavailable: "+(checks[0].reason?.message||"API check failed"));}
  if(checks[4].status==="fulfilled"){
   const guests=Array.isArray(checks[4].value.guests)?checks[4].value.guests:null;
   if(guests){
-   const veg=guests.filter(g=>String(g.food_preference||"").trim().toLowerCase()==="vegetarian").length;
-   const nonVeg=guests.filter(g=>["non-vegetarian","non vegetarian","nonveg","non-veg"].includes(String(g.food_preference||"").trim().toLowerCase())).length;
-   liveStatusText("liveVeg",String(veg));liveStatusText("liveNonVeg",String(nonVeg));
-   liveStatusText("liveVegDetail","Among latest "+guests.length+" guest records · not full total");
-   liveStatusText("liveNonVegDetail","Among latest "+guests.length+" guest records · not full total");
-   if(guests.length>=50)notes.push("Food preference counts cover the latest 50 guest records only (backend search limit); they may not represent the full event. Use them as a quick snapshot, not the final catering total.");
-   if(guests.some(g=>!String(g.food_preference||"").trim()))notes.push("Some guest records have no food preference recorded; verify those before final catering.");
+   if(guests.some(g=>!String(g.food_preference||"").trim()))notes.push("Some of the latest guest records have no food preference recorded; check the full approved total and missing-preference count from the statistics API.");
   }else{["liveVeg","liveNonVeg","liveVegDetail","liveNonVegDetail"].forEach(id=>liveStatusText(id,"Unavailable"));notes.push("Food preference counts unavailable: guest-search response was unexpected.");}
  }else{["liveVeg","liveNonVeg","liveVegDetail","liveNonVegDetail"].forEach(id=>liveStatusText(id,"Unavailable"));notes.push("Food preference counts unavailable: "+(checks[4].reason?.message||"guest search failed"));}
  if(checks[1].status==="fulfilled"){
