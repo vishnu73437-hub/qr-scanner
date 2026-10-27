@@ -669,6 +669,7 @@ body.scan-mode #status{position:fixed!important;z-index:99992!important;top:6px!
     <button id="scanEditGuest" type="button">✏️ Edit details</button>
     <button id="scanReissuePass" type="button">🔁 Reissue QR</button>
     <button id="scanResetEntry" type="button">↻ Reset entry</button>
+    <button id="scanResetEntryStorage" type="button" class="danger">↻ Reset entry + storage</button>
     <button id="scanResetFood" type="button">🍽️ Reset food</button>
     <button id="scanRevokePass" type="button" class="danger">⛔ Revoke pass</button>
     <button id="scanReactivatePass" type="button">♻️ Reactivate + new QR</button>
@@ -1011,7 +1012,7 @@ function renderGuestPage(){
     const question=operation==="reissue_pass"?"Issue a new QR and invalidate the old pass?":operation==="revoke_pass"?"Revoke this pass immediately?":operation==="reactivate_pass"?"Reactivate this revoked pass with a new QR?":(operation==="reset_status"&&target==="entry")?"Reset entry status only? Proof-storage assignment and Stored/Returned status will remain unchanged.":"Reset "+target+" status for this guest?";
     if(!confirm(question+"\n\n"+g.full_name+" · "+g.pass_code))return;
     const actionButtons=[...actions.querySelectorAll("button")];actionButtons.forEach(button=>button.disabled=true);b.textContent="Working…";
-    try{const res=await post("/api/admin",{action:"guest_action",guest_id:g.id,operation,target});status(res.message+(res.delivered===false?" Ask the guest to use /mypass if the new QR did not arrive.":""),res.delivered===false?"bad":"good");await searchGuests();await refreshStats();if(((operation==="reset_status"&&target==="entry")||operation==="reset_entry_and_storage")&&typeof window.refreshProofStorageMonitor==="function")await window.refreshProofStorageMonitor();}
+    try{const res=await post("/api/admin",{action:"guest_action",guest_id:g.id,operation,target});status(res.message+(res.delivered===false?" Ask the guest to use /mypass if the new QR did not arrive.":""),res.delivered===false?"bad":"good");await searchGuests();await refreshStats();if(operation==="reset_entry_and_storage"&&typeof window.refreshProofStorageMonitor==="function")await window.refreshProofStorageMonitor();if(((operation==="reset_status"&&target==="entry")||operation==="reset_entry_and_storage")&&typeof window.refreshProofStorageMonitor==="function")await window.refreshProofStorageMonitor();}
     catch(e){status(e.message,"bad");actionButtons.forEach(button=>button.disabled=false);b.textContent=label;}
    };actions.append(b);
   };
@@ -1174,7 +1175,7 @@ function renderAdminScanActions(g){
  const revoked=g.status==="revoked";
  $("scanRevokePass").classList.toggle("hidden",revoked);
  $("scanReactivatePass").classList.toggle("hidden",!revoked);
- ["scanEditGuest","scanReissuePass","scanResetEntry","scanResetFood"].forEach(id=>$(id).classList.toggle("hidden",revoked));
+ ["scanEditGuest","scanReissuePass","scanResetEntry","scanResetEntryStorage","scanResetFood"].forEach(id=>$(id).classList.toggle("hidden",revoked));
  $("scanEditName").value=g.name||"";
  $("scanEditPhone").value=g.phone||"";
  $("scanEditResidence").value=g.residenceType||"Apartment";
@@ -1211,6 +1212,7 @@ function bindAdminScanActions(){
  };
  $("scanReissuePass").addEventListener("click",()=>doGuestAction("reissue_pass","","Reissue this QR pass"));
  $("scanResetEntry").addEventListener("click",()=>doGuestAction("reset_status","entry","Reset entry status"));
+ $("scanResetEntryStorage").addEventListener("click",()=>doGuestAction("reset_entry_and_storage","","Reset entry and clear current storage assignment (proof must already be returned)"));
  $("scanResetFood").addEventListener("click",()=>doGuestAction("reset_status","food","Reset food status"));
  $("scanRevokePass").addEventListener("click",()=>doGuestAction("revoke_pass","","Revoke this pass"));
  $("scanReactivatePass").addEventListener("click",()=>doGuestAction("reactivate_pass","","Reactivate and issue a new QR pass"));
