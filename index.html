@@ -695,7 +695,19 @@ body.scan-mode #status{position:fixed!important;z-index:99992!important;top:6px!
 <button type="button" id="quickStorage" class="quick-action"><span>📦</span><strong>Proof storage</strong><small>Locate / return</small></button>
 <button type="button" id="quickSheets" class="quick-action"><span>📊</span><strong>Sheets status</strong><small>Sync queue</small></button>
 </nav>
-<section class="card event-day-board" aria-labelledby="eventDayBoardTitle">
+<section class="card live-status-board" aria-labelledby="liveStatusTitle">
+<div class="section-heading"><div><div class="eyebrow">LIVE EVENT STATUS</div><h3 id="liveStatusTitle">📊 One-screen event health</h3><p class="small">Read-only snapshot from the admin API. Any failed check is shown as unavailable, never as zero.</p></div><button type="button" id="refreshLiveStatus" class="secondary compact-button">↻ Refresh status</button></div>
+<div class="live-status-grid">
+<div class="live-status-tile"><span>Approved guests</span><strong id="liveApproved">—</strong><small>Active guest passes</small></div>
+<div class="live-status-tile"><span>Checked in</span><strong id="liveEntry">—</strong><small id="liveEntryRate">Waiting for data</small></div>
+<div class="live-status-tile"><span>Food served</span><strong id="liveFood">—</strong><small>Recorded collections</small></div>
+<div class="live-status-tile"><span>Pending approvals</span><strong id="livePending">—</strong><small>Registration requests</small></div>
+<div class="live-status-tile"><span>Proofs stored</span><strong id="liveStored">—</strong><small id="liveStorageCapacity">Capacity: waiting for data</small></div>
+<div class="live-status-tile"><span>Sheets queue</span><strong id="liveSheets">—</strong><small id="liveSheetsDetail">Delivery health</small></div>
+</div>
+<div id="liveStatusWarnings" class="live-status-warnings" aria-live="polite">Loading event status…</div>
+<div class="live-status-footer"><span id="liveStatusUpdated">Not refreshed yet</span><button type="button" id="openLiveStatusDetails" class="secondary compact-button">Open details</button></div>
+</section><section class="card event-day-board" aria-labelledby="eventDayBoardTitle">
 <div class="section-heading"><div><div class="eyebrow">EVENT DAY · AT A GLANCE</div><h3 id="eventDayBoardTitle">🧭 Operations board</h3><p class="small">A quick guide to what happens next at the desk. Counts below come from the live dashboard statistics.</p></div><span class="live-pill"><span></span> Dashboard</span></div>
 <div class="event-flow">
 <div class="event-flow-step"><span class="flow-number">1</span><div><strong>Entry check-in</strong><small>Scan guest QR · confirm identity</small></div><button type="button" class="flow-go" id="flowEntry">Open scanner ↗</button></div>
@@ -802,6 +814,9 @@ async function refreshCurrentRole(){
 }
 async function initializeAdminWorkspace(){
  await Promise.all([refreshStats(),loadEvents(),loadAdmins(),loadAnnouncementHistory()]);
+ await refreshLiveStatus();
+ if(window.liveStatusTimer)clearInterval(window.liveStatusTimer);
+ window.liveStatusTimer=setInterval(()=>{if(!document.hidden&&role==="admin")refreshLiveStatus();},60000);
 }
 async function boot(){
  status("Checking Telegram authentication…");
@@ -1082,6 +1097,55 @@ $("guestSearch").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDef
 
 function adminJump(id){const el=$(id);if(el)el.scrollIntoView({behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});}
 
+
+let liveStatusBusy=false;
+function liveStatusText(id,value){const el=$(id);if(el)el.textContent=value;}
+function liveStatusResult(label,ok,detail){return{label,ok,detail};}
+async function refreshLiveStatus(){
+ if(liveStatusBusy)return;liveStatusBusy=true;const button=$("refreshLiveStatus"),warnings=$("liveStatusWarnings");
+ if(button){button.disabled=true;button.textContent="Checking…";}if(warnings){warnings.className="live-status-warnings";warnings.textContent="Checking guest counts, storage and Sheets delivery…";}
+ const checks=await Promise.allSettled([
+  post("/api/admin",{action:"stats"}),
+  post("/api/admin",{action:"pending_registrations"}),
+  post("/api/admin",{action:"proof_storage_report"}),
+  post("/api/admin",{action:"sheets_queue_status"})
+ ]);
+ const notes=[];
+ if(checks[0].status==="fulfilled"){
+  const st=checks[0].value.stats||{};
+  liveStatusText("liveApproved",Number.isFinite(Number(st.approvedGuests))?String(st.approvedGuests):"Unavailable");
+  liveStatusText("liveEntry",Number.isFinite(Number(st.checkedIn))?String(st.checkedIn):"Unavailable");
+  liveStatusText("liveFood",Number.isFinite(Number(st.mealsServed))?String(st.mealsServed):"Unavailable");
+  const approved=Number(st.approvedGuests),entry=Number(st.checkedIn);
+  liveStatusText("liveEntryRate",Number.isFinite(approved)&&approved>0&&Number.isFinite(entry)?Math.round(entry/approved*100)+"% of approved guests":"Entry rate unavailable");
+ }else{["liveApproved","liveEntry","liveFood","liveEntryRate"].forEach(id=>liveStatusText(id,"Unavailable"));notes.push("Guest statistics unavailable: "+(checks[0].reason?.message||"API check failed"));}
+ if(checks[1].status==="fulfilled"){
+  const rows=checks[1].value.registrations;
+  liveStatusText("livePending",Array.isArray(rows)?String(rows.length):"Unavailable");
+  if(!Array.isArray(rows))notes.push("Pending approval count unavailable: response format was unexpected.");
+ }else{liveStatusText("livePending","Unavailable");notes.push("Pending approvals unavailable: "+(checks[1].reason?.message||"API check failed"));}
+ if(checks[2].status==="fulfilled"){
+  const sum=checks[2].value.summary||{};
+  liveStatusText("liveStored",sum.currentlyStored!=null?String(sum.currentlyStored):"Unavailable");
+  liveStatusText("liveStorageCapacity",sum.capacity!=null?"Capacity: "+sum.capacity+" · tracked: "+(sum.tracked??"—"):"Capacity unavailable");
+  if(sum.capacity!=null&&sum.currentlyStored!=null&&Number(sum.currentlyStored)>=Number(sum.capacity))notes.push("⚠️ Proof storage appears full. Check available capacity before accepting more items.");
+ }else{liveStatusText("liveStored","Unavailable");liveStatusText("liveStorageCapacity","Storage report unavailable");notes.push("Proof storage status unavailable: "+(checks[2].reason?.message||"API check failed"));}
+ if(checks[3].status==="fulfilled"){
+  const q=checks[3].value,pending=Number(q.pending||0),retrying=Number(q.retrying||0),err=q.lastError||q.last_error||"";
+  liveStatusText("liveSheets",!q.configured?"Not configured":(pending+retrying)>0?"Needs attention":"Queue clear");
+  liveStatusText("liveSheetsDetail",q.configured?("Pending "+pending+" · retrying "+retrying):"Configure endpoint");
+  if(!q.configured)notes.push("⚠️ Google Sheets endpoint is not configured.");
+  if(pending>0||retrying>0)notes.push("⚠️ Google Sheets has "+pending+" pending and "+retrying+" retrying record(s).");
+  if(err)notes.push("⚠️ Last Sheets error: "+err);
+  if(q.configured&&pending===0&&retrying===0&&!err)notes.push("Sheets queue is clear; verify the destination spreadsheet contains the latest records.");
+ }else{liveStatusText("liveSheets","Unavailable");liveStatusText("liveSheetsDetail","Queue check failed");notes.push("Google Sheets queue unavailable: "+(checks[3].reason?.message||"API check failed"));}
+ if(!notes.length){notes.push("No API-reported warnings. Confirm the spreadsheet itself has the latest rows and test one entry/food/storage/return flow before doors open.");if(warnings)warnings.className="live-status-warnings good";}
+ if(warnings)warnings.textContent=notes.join("\n");
+ liveStatusText("liveStatusUpdated","Last checked: "+new Date().toLocaleTimeString("en-GB",{timeZone:"Europe/Moscow",hour12:false})+" Moscow time");
+ if(button){button.disabled=false;button.textContent="↻ Refresh status";}liveStatusBusy=false;
+}
+$("refreshLiveStatus").onclick=refreshLiveStatus;
+$("openLiveStatusDetails").onclick=()=>{const sheets=document.querySelector('[data-admin="sheets"]');if(sheets)sheets.click();jumpToAdminSection("toolPanel");};
 function jumpToAdminSection(id){const el=$(id);if(el)el.scrollIntoView({behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});}
 $("flowEntry").onclick=()=>{const b=document.querySelector("#volunteerView #scanModeToggle");if(b){b.click();return;}status("Use the QR Scanner button in the Check-in desk. Volunteer access is required.","");jumpToAdminSection("volunteerView");};
 $("flowStorage").onclick=()=>{const b=document.querySelector('[data-admin="storage"]');if(b)b.click();jumpToAdminSection("toolPanel");};
@@ -1782,6 +1846,21 @@ function addSponsorFooter(imageSrc){
 .event-day-note{display:grid;gap:5px;margin-top:12px;padding:12px 14px;border-radius:12px;background:rgba(217,177,95,.12);border-left:3px solid #d9b15f;font-size:13px;line-height:1.45}
 .event-day-note strong{color:#ffe7a1}
 @media(max-width:600px){.event-flow{grid-template-columns:minmax(0,1fr)}.event-day-board .section-heading{flex-direction:row;align-items:center}.event-flow-step{grid-template-columns:28px minmax(0,1fr)}.event-flow-step strong{font-size:14px}}
+
+/* One-screen live event health */
+.live-status-board{border:1px solid rgba(217,177,95,.8);background:linear-gradient(150deg,rgba(39,18,56,.99),rgba(24,15,25,.99))}
+.live-status-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-top:12px}
+.live-status-tile{min-width:0;padding:13px;border:1px solid rgba(217,177,95,.32);border-radius:13px;background:rgba(10,8,18,.35)}
+.live-status-tile span,.live-status-tile small{display:block;overflow-wrap:anywhere}
+.live-status-tile span{font-size:12px;opacity:.85;line-height:1.35}
+.live-status-tile strong{display:block;font-size:clamp(22px,4vw,30px);line-height:1.2;margin:7px 0;font-variant-numeric:tabular-nums}
+.live-status-tile small{font-size:11px;opacity:.72;line-height:1.35}
+.live-status-warnings{margin-top:11px;padding:11px 13px;border-radius:12px;background:rgba(217,177,95,.1);border:1px solid rgba(217,177,95,.28);font-size:13px;line-height:1.5;white-space:pre-line}
+.live-status-warnings.good{border-color:rgba(95,220,160,.5);background:rgba(0,120,76,.18)}
+.live-status-warnings.bad{border-color:rgba(255,120,100,.6);background:rgba(140,35,25,.2)}
+.live-status-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;font-size:11px;opacity:.8}
+.live-status-footer button{margin:0}
+@media(max-width:600px){.live-status-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.live-status-tile{padding:11px}.live-status-board .section-heading{flex-direction:column}.live-status-board .section-heading button{width:100%}.live-status-footer{align-items:stretch;flex-direction:column}.live-status-footer button{width:100%}}
 </style>
 
 </body></html>
