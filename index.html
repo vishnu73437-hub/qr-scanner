@@ -695,7 +695,16 @@ body.scan-mode #status{position:fixed!important;z-index:99992!important;top:6px!
 <button type="button" id="quickStorage" class="quick-action"><span>📦</span><strong>Proof storage</strong><small>Locate / return</small></button>
 <button type="button" id="quickSheets" class="quick-action"><span>📊</span><strong>Sheets status</strong><small>Sync queue</small></button>
 </nav>
-<section class="card kpi-card"><div class="section-heading"><div><div class="eyebrow">LIVE OVERVIEW</div><h3>Event operations</h3></div><div class="row"><button id="refreshStats" class="secondary compact-button" type="button">↻ Refresh</button><button id="runAdminDiagnostics" class="secondary compact-button" type="button">🧪 Test controls</button></div></div><div class="ops-kpis admin-kpis"><div class="ops-kpi"><span>GUESTS</span><strong id="statGuests">—</strong><small>Approved passes</small></div><div class="ops-kpi"><span>ENTRY</span><strong id="statEntry">—</strong><small>Checked in</small></div><div class="ops-kpi"><span>FOOD</span><strong id="statMeals">—</strong><small>Meals served</small></div><div class="ops-kpi"><span>TEAM</span><strong id="statVols">—</strong><small>Volunteers</small></div></div><div id="adminDiagnostics" class="small" aria-live="polite"></div></section>
+<section class="card event-day-board" aria-labelledby="eventDayBoardTitle">
+<div class="section-heading"><div><div class="eyebrow">EVENT DAY · AT A GLANCE</div><h3 id="eventDayBoardTitle">🧭 Operations board</h3><p class="small">A quick guide to what happens next at the desk. Counts below come from the live dashboard statistics.</p></div><span class="live-pill"><span></span> Dashboard</span></div>
+<div class="event-flow">
+<div class="event-flow-step"><span class="flow-number">1</span><div><strong>Entry check-in</strong><small>Scan guest QR · confirm identity</small></div><button type="button" class="flow-go" id="flowEntry">Open scanner ↗</button></div>
+<div class="event-flow-step"><span class="flow-number">2</span><div><strong>Proof storage</strong><small>Assign and record the storage location</small></div><button type="button" class="flow-go" id="flowStorage">Open storage ↗</button></div>
+<div class="event-flow-step"><span class="flow-number">3</span><div><strong>Food collection</strong><small>Scan the pass once when food is handed over</small></div><button type="button" class="flow-go" id="flowFood">Open scanner ↗</button></div>
+<div class="event-flow-step"><span class="flow-number">4</span><div><strong>Exit · return proof</strong><small>Find the guest, verify proof and record return</small></div><button type="button" class="flow-go" id="flowExit">Find guest ↗</button></div>
+</div>
+<div class="event-day-note"><strong>Before doors open</strong><span>Check storage capacity, test one volunteer scan, confirm Google Sheets delivery and keep the admin dashboard open on a reliable connection.</span></div>
+</section><section class="card kpi-card"><div class="section-heading"><div><div class="eyebrow">LIVE OVERVIEW</div><h3>Event operations</h3></div><div class="row"><button id="refreshStats" class="secondary compact-button" type="button">↻ Refresh</button><button id="runAdminDiagnostics" class="secondary compact-button" type="button">🧪 Test controls</button></div></div><div class="ops-kpis admin-kpis"><div class="ops-kpi"><span>GUESTS</span><strong id="statGuests">—</strong><small>Approved passes</small></div><div class="ops-kpi"><span>ENTRY</span><strong id="statEntry">—</strong><small>Checked in</small></div><div class="ops-kpi"><span>FOOD</span><strong id="statMeals">—</strong><small>Meals served</small></div><div class="ops-kpi"><span>TEAM</span><strong id="statVols">—</strong><small>Volunteers</small></div></div><div id="adminDiagnostics" class="small" aria-live="polite"></div></section>
 <section class="card admin-panel"><div class="section-heading"><div><div class="eyebrow">01 · EVENT SETTINGS</div><h3>📅 Event workspaces</h3></div><span class="panel-index">01</span></div><p class="small">Edit name, description, date, time and venue here. Changes update the guest Event Details screen; new workspaces remain drafts until an event-specific registration workflow is configured.</p><div id="eventsList" class="events-list">Loading events…</div><div class="form-divider"></div><h4>Create an event workspace</h4><label for="eventName">Event name</label><input id="eventName" placeholder="e.g. Medical Conference 2027" maxlength="120"><label for="eventDesc">Description</label><textarea id="eventDesc" rows="2" placeholder="Purpose, theme and important details"></textarea><div class="row form-row"><div><label for="eventDate">Date</label><input id="eventDate" type="date"></div><div><label for="eventTime">Time</label><input id="eventTime" placeholder="e.g. 5:30 PM" maxlength="40"></div></div><label for="eventVenue">Venue</label><input id="eventVenue" placeholder="Venue" maxlength="200"><button id="createEvent" type="button">＋ Create event workspace</button></section>
 <section class="card admin-panel" id="announcementPanel">
 <div class="section-heading"><div><div class="eyebrow">📢 BROADCAST</div><h3>Image & file announcements</h3><p class="small">Send a text, festival poster, image, PDF, or document to your selected audience.</p></div></div>
@@ -1072,6 +1081,12 @@ $("loadRecentGuests").onclick=()=>{$("guestSearch").value="";$("guestStatus").va
 $("guestSearch").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();searchGuests();}});
 
 function adminJump(id){const el=$(id);if(el)el.scrollIntoView({behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});}
+
+function jumpToAdminSection(id){const el=$(id);if(el)el.scrollIntoView({behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});}
+$("flowEntry").onclick=()=>{const b=document.querySelector("#volunteerView #dedicatedScannerButton")||document.querySelector("#volunteerView [data-open-scanner]");if(b){b.click();return;}status("Use the QR Scanner button in the Check-in desk. Volunteer access is required.","");jumpToAdminSection("volunteerView");};
+$("flowStorage").onclick=()=>{const b=document.querySelector('[data-admin="storage"]');if(b)b.click();jumpToAdminSection("toolPanel");};
+$("flowFood").onclick=()=>{const b=document.querySelector("#volunteerView #dedicatedScannerButton")||document.querySelector("#volunteerView [data-open-scanner]");if(b)b.click();else{status("Open the QR Scanner from the Check-in desk to record food collection.","");jumpToAdminSection("volunteerView");}};
+$("flowExit").onclick=()=>{const d=document.querySelector(".guest-search-options");if(d)d.open=true;jumpToAdminSection("guestPassManager");setTimeout(()=> $("guestSearch").focus({preventScroll:true}),250);};
 $("quickRefresh").onclick=async()=>{const b=$("quickRefresh");b.disabled=true;try{await refreshStats();status("Event overview refreshed.","good");}catch(e){status("Refresh failed: "+e.message,"bad");}finally{b.disabled=false;}};
 $("quickApprovals").onclick=()=>{$("loadPending").click();adminJump("pendingApprovalsPanel");};
 $("quickGuests").onclick=()=>{const d=document.querySelector(".guest-search-options");if(d)d.open=true;adminJump("guestPassManager");setTimeout(()=> $("guestSearch").focus({preventScroll:true}),250);};
@@ -1751,6 +1766,22 @@ function addSponsorFooter(imageSrc){
 #adminView .admin-panel,#adminView .kpi-card{scroll-margin-top:100px}
 @media(max-width:600px){.admin-quickbar{grid-template-columns:repeat(3,minmax(0,1fr));top:4px;gap:6px;padding:7px}.admin-quickbar .quick-action{min-height:64px}.admin-quickbar .quick-action strong{font-size:12px}.admin-quickbar .quick-action small{font-size:10px}.admin-quickbar .quick-action:last-child{grid-column:auto}}
 @media(prefers-reduced-motion:reduce){.admin-quickbar *{scroll-behavior:auto!important;transition:none!important}}
+
+/* Event-day glance board */
+.event-day-board{border:1px solid rgba(217,177,95,.75);background:linear-gradient(145deg,rgba(47,20,65,.98),rgba(37,20,28,.98))}
+.event-day-board .section-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.live-pill{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border-radius:999px;border:1px solid rgba(120,220,170,.5);background:rgba(0,120,76,.25);font-size:12px;white-space:nowrap}
+.live-pill span{width:7px;height:7px;border-radius:50%;background:#68e6a8;box-shadow:0 0 8px #68e6a8}
+.event-flow{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:14px}
+.event-flow-step{display:grid;grid-template-columns:30px minmax(0,1fr);gap:8px;align-items:start;padding:12px;border:1px solid rgba(217,177,95,.38);border-radius:14px;background:rgba(15,9,25,.35);min-width:0}
+.flow-number{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#d9b15f;color:#241033;font-weight:900}
+.event-flow-step strong,.event-flow-step small{display:block}
+.event-flow-step strong{font-size:14px;line-height:1.3}
+.event-flow-step small{margin-top:4px;font-size:12px;line-height:1.4;opacity:.82}
+.flow-go{grid-column:2;justify-self:start;margin:3px 0 0;padding:8px 10px;min-height:36px;font-size:12px}
+.event-day-note{display:grid;gap:5px;margin-top:12px;padding:12px 14px;border-radius:12px;background:rgba(217,177,95,.12);border-left:3px solid #d9b15f;font-size:13px;line-height:1.45}
+.event-day-note strong{color:#ffe7a1}
+@media(max-width:600px){.event-flow{grid-template-columns:minmax(0,1fr)}.event-day-board .section-heading{flex-direction:row;align-items:center}.event-flow-step{grid-template-columns:28px minmax(0,1fr)}.event-flow-step strong{font-size:14px}}
 </style>
 
 </body></html>
