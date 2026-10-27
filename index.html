@@ -1083,7 +1083,7 @@ $("guestSearch").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDef
 function adminJump(id){const el=$(id);if(el)el.scrollIntoView({behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});}
 
 function jumpToAdminSection(id){const el=$(id);if(el)el.scrollIntoView({behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});}
-$("flowEntry").onclick=()=>{const b=document.querySelector("#volunteerView #dedicatedScannerButton")||document.querySelector("#volunteerView [data-open-scanner]");if(b){b.click();return;}status("Use the QR Scanner button in the Check-in desk. Volunteer access is required.","");jumpToAdminSection("volunteerView");};
+$("flowEntry").onclick=()=>{const b=document.querySelector("#volunteerView #scanModeToggle");if(b){b.click();return;}status("Use the QR Scanner button in the Check-in desk. Volunteer access is required.","");jumpToAdminSection("volunteerView");};
 $("flowStorage").onclick=()=>{const b=document.querySelector('[data-admin="storage"]');if(b)b.click();jumpToAdminSection("toolPanel");};
 $("flowFood").onclick=()=>{const b=document.querySelector("#volunteerView #dedicatedScannerButton")||document.querySelector("#volunteerView [data-open-scanner]");if(b)b.click();else{status("Open the QR Scanner from the Check-in desk to record food collection.","");jumpToAdminSection("volunteerView");}};
 $("flowExit").onclick=()=>{const d=document.querySelector(".guest-search-options");if(d)d.open=true;jumpToAdminSection("guestPassManager");setTimeout(()=> $("guestSearch").focus({preventScroll:true}),250);};
