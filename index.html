@@ -701,10 +701,8 @@ body.scan-mode #status{position:fixed!important;z-index:99992!important;top:6px!
 <div class="live-status-tile"><span>Approved guests</span><strong id="liveApproved">—</strong><small>Active guest passes</small></div>
 <div class="live-status-tile"><span>Checked in</span><strong id="liveEntry">—</strong><small id="liveEntryRate">Waiting for data</small></div>
 <div class="live-status-tile"><span>Food served</span><strong id="liveFood">—</strong><small>Recorded collections</small></div>
-<div class="live-status-tile veg-status-tile"><span>Vegetarian choices</span><strong id="liveVeg">—</strong><small id="liveVegServed">Approved guests · served: —</small></div>
-<div class="live-status-tile nonveg-status-tile"><span>Non-vegetarian choices</span><strong id="liveNonveg">—</strong><small id="liveNonvegServed">Approved guests · served: —</small></div>
-<div class="live-status-tile food-preference-tile"><span>🥗 Vegetarian</span><strong id="liveVeg">—</strong><small id="liveVegDetail">Guest records</small></div>
-<div class="live-status-tile food-preference-tile"><span>🍗 Non-vegetarian</span><strong id="liveNonVeg">—</strong><small id="liveNonVegDetail">Guest records</small></div>
+<div class="live-status-tile food-preference-tile"><span>🥗 Vegetarian · snapshot</span><strong id="liveVeg">—</strong><small id="liveVegDetail">Latest guest records only</small></div>
+<div class="live-status-tile food-preference-tile"><span>🍗 Non-vegetarian · snapshot</span><strong id="liveNonVeg">—</strong><small id="liveNonVegDetail">Latest guest records only</small></div>
 <div class="live-status-tile"><span>Pending approvals</span><strong id="livePending">—</strong><small>Registration requests</small></div>
 <div class="live-status-tile"><span>Proofs stored</span><strong id="liveStored">—</strong><small id="liveStorageCapacity">Capacity: waiting for data</small></div>
 <div class="live-status-tile"><span>Sheets queue</span><strong id="liveSheets">—</strong><small id="liveSheetsDetail">Delivery health</small></div>
@@ -1121,21 +1119,17 @@ async function refreshLiveStatus(){
   liveStatusText("liveApproved",Number.isFinite(Number(st.approvedGuests))?String(st.approvedGuests):"Unavailable");
   liveStatusText("liveEntry",Number.isFinite(Number(st.checkedIn))?String(st.checkedIn):"Unavailable");
   liveStatusText("liveFood",Number.isFinite(Number(st.mealsServed))?String(st.mealsServed):"Unavailable");
-  liveStatusText("liveVeg",st.vegetarianGuests!=null?String(st.vegetarianGuests):"Unavailable");
-  liveStatusText("liveNonveg",st.nonVegetarianGuests!=null?String(st.nonVegetarianGuests):"Unavailable");
-  liveStatusText("liveVegServed",st.vegetarianServed!=null?"Served: "+st.vegetarianServed:"Served count unavailable");
-  liveStatusText("liveNonvegServed",st.nonVegetarianServed!=null?"Served: "+st.nonVegetarianServed:"Served count unavailable");
   const approved=Number(st.approvedGuests),entry=Number(st.checkedIn);
   liveStatusText("liveEntryRate",Number.isFinite(approved)&&approved>0&&Number.isFinite(entry)?Math.round(entry/approved*100)+"% of approved guests":"Entry rate unavailable");
- }else{["liveApproved","liveEntry","liveFood","liveEntryRate","liveVeg","liveNonveg","liveVegServed","liveNonvegServed"].forEach(id=>liveStatusText(id,"Unavailable"));notes.push("Guest statistics unavailable: "+(checks[0].reason?.message||"API check failed"));}
+ }else{["liveApproved","liveEntry","liveFood","liveEntryRate"].forEach(id=>liveStatusText(id,"Unavailable"));notes.push("Guest statistics unavailable: "+(checks[0].reason?.message||"API check failed"));}
  if(checks[4].status==="fulfilled"){
   const guests=Array.isArray(checks[4].value.guests)?checks[4].value.guests:null;
   if(guests){
    const veg=guests.filter(g=>String(g.food_preference||"").trim().toLowerCase()==="vegetarian").length;
    const nonVeg=guests.filter(g=>["non-vegetarian","non vegetarian","nonveg","non-veg"].includes(String(g.food_preference||"").trim().toLowerCase())).length;
    liveStatusText("liveVeg",String(veg));liveStatusText("liveNonVeg",String(nonVeg));
-   liveStatusText("liveVegDetail","Among latest "+guests.length+" guest records");
-   liveStatusText("liveNonVegDetail","Among latest "+guests.length+" guest records");
+   liveStatusText("liveVegDetail","Among latest "+guests.length+" guest records · not full total");
+   liveStatusText("liveNonVegDetail","Among latest "+guests.length+" guest records · not full total");
    if(guests.length>=50)notes.push("Food preference counts cover the latest 50 guest records only (backend search limit); they may not represent the full event. Use them as a quick snapshot, not the final catering total.");
    if(guests.some(g=>!String(g.food_preference||"").trim()))notes.push("Some guest records have no food preference recorded; verify those before final catering.");
   }else{["liveVeg","liveNonVeg","liveVegDetail","liveNonVegDetail"].forEach(id=>liveStatusText(id,"Unavailable"));notes.push("Food preference counts unavailable: guest-search response was unexpected.");}
