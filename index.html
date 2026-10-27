@@ -701,6 +701,8 @@ body.scan-mode #status{position:fixed!important;z-index:99992!important;top:6px!
 <div class="live-status-tile"><span>Approved guests</span><strong id="liveApproved">—</strong><small>Active guest passes</small></div>
 <div class="live-status-tile"><span>Checked in</span><strong id="liveEntry">—</strong><small id="liveEntryRate">Waiting for data</small></div>
 <div class="live-status-tile"><span>Food served</span><strong id="liveFood">—</strong><small>Recorded collections</small></div>
+<div class="live-status-tile food-preference-tile"><span>🥗 Vegetarian</span><strong id="liveVeg">—</strong><small id="liveVegDetail">Guest records</small></div>
+<div class="live-status-tile food-preference-tile"><span>🍗 Non-vegetarian</span><strong id="liveNonVeg">—</strong><small id="liveNonVegDetail">Guest records</small></div>
 <div class="live-status-tile"><span>Pending approvals</span><strong id="livePending">—</strong><small>Registration requests</small></div>
 <div class="live-status-tile"><span>Proofs stored</span><strong id="liveStored">—</strong><small id="liveStorageCapacity">Capacity: waiting for data</small></div>
 <div class="live-status-tile"><span>Sheets queue</span><strong id="liveSheets">—</strong><small id="liveSheetsDetail">Delivery health</small></div>
@@ -1108,7 +1110,8 @@ async function refreshLiveStatus(){
   post("/api/admin",{action:"stats"}),
   post("/api/admin",{action:"pending_registrations"}),
   post("/api/admin",{action:"proof_storage_report"}),
-  post("/api/admin",{action:"sheets_queue_status"})
+  post("/api/admin",{action:"sheets_queue_status"}),
+  post("/api/admin",{action:"guest_search",query:"",status:"all"})
  ]);
  const notes=[];
  if(checks[0].status==="fulfilled"){
@@ -1119,6 +1122,18 @@ async function refreshLiveStatus(){
   const approved=Number(st.approvedGuests),entry=Number(st.checkedIn);
   liveStatusText("liveEntryRate",Number.isFinite(approved)&&approved>0&&Number.isFinite(entry)?Math.round(entry/approved*100)+"% of approved guests":"Entry rate unavailable");
  }else{["liveApproved","liveEntry","liveFood","liveEntryRate"].forEach(id=>liveStatusText(id,"Unavailable"));notes.push("Guest statistics unavailable: "+(checks[0].reason?.message||"API check failed"));}
+ if(checks[4].status==="fulfilled"){
+  const guests=Array.isArray(checks[4].value.guests)?checks[4].value.guests:null;
+  if(guests){
+   const veg=guests.filter(g=>String(g.food_preference||"").trim().toLowerCase()==="vegetarian").length;
+   const nonVeg=guests.filter(g=>["non-vegetarian","non vegetarian","nonveg","non-veg"].includes(String(g.food_preference||"").trim().toLowerCase())).length;
+   liveStatusText("liveVeg",String(veg));liveStatusText("liveNonVeg",String(nonVeg));
+   liveStatusText("liveVegDetail","Among latest "+guests.length+" guest records");
+   liveStatusText("liveNonVegDetail","Among latest "+guests.length+" guest records");
+   if(guests.length>=50)notes.push("Food preference counts cover the latest 50 guest records only (backend search limit); they may not represent the full event. Use them as a quick snapshot, not the final catering total.");
+   if(guests.some(g=>!String(g.food_preference||"").trim()))notes.push("Some guest records have no food preference recorded; verify those before final catering.");
+  }else{["liveVeg","liveNonVeg","liveVegDetail","liveNonVegDetail"].forEach(id=>liveStatusText(id,"Unavailable"));notes.push("Food preference counts unavailable: guest-search response was unexpected.");}
+ }else{["liveVeg","liveNonVeg","liveVegDetail","liveNonVegDetail"].forEach(id=>liveStatusText(id,"Unavailable"));notes.push("Food preference counts unavailable: "+(checks[4].reason?.message||"guest search failed"));}
  if(checks[1].status==="fulfilled"){
   const rows=checks[1].value.registrations;
   liveStatusText("livePending",Array.isArray(rows)?String(rows.length):"Unavailable");
