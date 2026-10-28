@@ -1402,37 +1402,54 @@ function scannerStartError(message){
 }
 async function startCamera(){
  if(!tg?.initData){scannerStartError("Open EventHub from the Telegram bot to authenticate.");return;}
- if(!window.isSecureContext){scannerStartError("Camera needs a secure connection. Open the HTTPS EventHub link inside Telegram.");return;}
- if(!navigator.mediaDevices?.getUserMedia){scannerStartError("This browser does not expose camera access. Update Telegram/iPadOS or open EventHub in Safari, then allow Camera access.");return;}
+ if(!window.isSecureContext){scannerStartError("Camera requires HTTPS. Open the official EventHub link.");return;}
+ if(!navigator.mediaDevices?.getUserMedia){scannerStartError("Camera access is unavailable in this browser. Use current Chrome or Edge and allow camera access.");return;}
  $("reader").classList.remove("hidden");$("startScan").classList.add("hidden");$("stopScan").classList.remove("hidden");
  lastCameraQr="";let lastError=null;
  try{
-  if(typeof Html5Qrcode==="undefined")throw new Error("QR scanner library did not load. Check your internet connection and reopen EventHub.");
+  if(typeof Html5Qrcode==="undefined")throw new Error("QR scanner library did not load. Check your internet connection.");
   scanner=new Html5Qrcode("reader",{verbose:false});
-  const isAppleTablet=/iPad|Macintosh/i.test(navigator.userAgent)&&(navigator.maxTouchPoints||0)>1;
-  const config={fps:isAppleTablet?15:12,disableFlip:false,formatsToSupport:[Html5QrcodeSupportedFormats.QR_CODE],aspectRatio:1.0,videoConstraints:{facingMode:{ideal:"environment"},width:{ideal:1920},height:{ideal:1080}}};
-  if(!isAppleTablet)config.qrbox=(w,h)=>{const side=Math.max(220,Math.min(320,w-20,h-20));return {width:side,height:side};};
+  const apple=/iPad|Macintosh/i.test(navigator.userAgent)&&(navigator.maxTouchPoints||0)>1;
+  const mobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)||apple;
+  const config={fps:apple?15:12,disableFlip:false,formatsToSupport:[Html5QrcodeSupportedFormats.QR_CODE],videoConstraints:{width:{ideal:1280},height:{ideal:720}}};
+  if(!apple)config.qrbox=(w,h)=>{const side=Math.max(220,Math.min(360,w-20,h-20));return {width:side,height:side};};
   const onDecoded=text=>{const decoded=String(text||"").trim();if(decoded&&decoded!==lastCameraQr&&!busy)checkQr(decoded,"camera");};
-  try{await scanner.start({facingMode:"environment"},config,onDecoded,()=>{});}
-  catch(firstError){
-   lastError=firstError;
-   const cameras=await Html5Qrcode.getCameras();
-   if(!cameras||!cameras.length)throw firstError;
-   const backCamera=cameras.find(c=>/back|rear|environment|world/i.test(c.label||""))||cameras[cameras.length-1];
-   await scanner.start(backCamera.id,{...config,videoConstraints:{deviceId:{exact:backCamera.id}}},onDecoded,()=>{});
+  let started=false;
+  // Desktop webcams: enumerate devices and use a concrete camera ID.
+  if(!mobile){
+   try{
+    const cameras=await Html5Qrcode.getCameras();
+    if(cameras&&cameras.length){
+     const cam=cameras.find(c=>/webcam|integrated|usb|camera/i.test(c.label||""))||cameras[0];
+     await scanner.start(cam.id,{...config,videoConstraints:{deviceId:{exact:cam.id},width:{ideal:1280},height:{ideal:720}}},onDecoded,()=>{});
+     started=true;
+    }
+   }catch(err){lastError=err;console.warn("Desktop camera selection failed:",err);}
+  }
+  if(!started){
+   try{
+    await scanner.start({facingMode:{ideal:mobile?"environment":"user"}},{...config,videoConstraints:{facingMode:{ideal:mobile?"environment":"user"},width:{ideal:1280},height:{ideal:720}}},onDecoded,()=>{});
+   }catch(firstError){
+    lastError=firstError;
+    const cameras=await Html5Qrcode.getCameras();
+    if(!cameras||!cameras.length)throw firstError;
+    const cam=mobile?(cameras.find(c=>/back|rear|environment|world/i.test(c.label||""))||cameras[cameras.length-1]):cameras[0];
+    await scanner.start(cam.id,{...config,videoConstraints:{deviceId:{exact:cam.id},width:{ideal:1280},height:{ideal:720}}},onDecoded,()=>{});
+   }
   }
   const video=$("reader").querySelector("video");
-  if(video){video.setAttribute("playsinline","true");video.setAttribute("webkit-playsinline","true");video.muted=true;video.autoplay=true;video.style.width="100%";video.style.objectFit="cover";}
+  if(video){video.setAttribute("playsinline","true");video.setAttribute("webkit-playsinline","true");video.muted=true;video.autoplay=true;video.style.width="100%";video.style.maxWidth="100%";video.style.objectFit="cover";}
   $("scanModeToggle").textContent="📷 Open QR Scanner";
-  status("Camera active. Keep this page open and point the iPad camera at a QR pass. If prompted, tap Allow Camera.","good");
+  status(mobile?"Camera active. Point it at a guest QR pass.":"Desktop webcam active. Point the webcam at a guest QR pass.", "good");
   if($("scannerBadge"))$("scannerBadge").textContent="● CAMERA LIVE";
  }catch(e){
   const message=String(e?.message||e||lastError||"Unknown camera error");
   if(scanner){try{if(scanner.isScanning)await scanner.stop();await scanner.clear();}catch(_){}scanner=null;}
-  let help="Camera could not start. On iPad, allow Camera for Telegram/Safari in Settings, close other apps using the camera, then try again.";
-  if(/permission|denied|notallowed/i.test(message))help="Camera permission was denied. On iPad, enable Camera access for Telegram or Safari in Settings, then reopen EventHub.";
-  else if(/notfound|no camera|device not found/i.test(message))help="No available camera was found. Close other camera apps and retry.";
-  else if(/secure|https/i.test(message))help="Camera requires HTTPS. Reopen the official HTTPS EventHub link inside Telegram.";
+  let help="Camera could not start. Allow camera access for this site, close other camera apps, and retry.";
+  if(/permission|denied|notallowed/i.test(message))help="Camera permission blocked. In Chrome/Edge, click the site icon by the address bar → Site settings → Camera → Allow, then reload.";
+  else if(/notfound|no camera|device not found/i.test(message))help="No webcam found. Connect or enable a camera and retry.";
+  else if(/notreadable|could not start video source|track start/i.test(message))help="Camera may be in use by Zoom, Teams, or another app. Close it and retry.";
+  else if(/secure|https/i.test(message))help="Camera requires HTTPS. Reopen the official HTTPS EventHub link.";
   scannerStartError(help+" ("+message.slice(0,150)+")");
  }
 }
