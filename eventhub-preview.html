@@ -781,6 +781,16 @@ async function loadEvents(){
    const title=document.createElement("strong");title.textContent=ev.name+" · "+ev.status;
    const meta=document.createElement("p");meta.className="small event-card-meta";meta.textContent=[ev.event_date,ev.event_time,ev.venue,ev.description].filter(Boolean).join(" · ");card.append(title,meta);
    const eventIdRow=document.createElement("div");eventIdRow.className="event-id-row";const eventIdLabel=document.createElement("span");eventIdLabel.className="small";eventIdLabel.textContent="Event ID";const eventIdValue=document.createElement("code");eventIdValue.className="event-id-value";eventIdValue.textContent=String(ev.id);const copyEventId=document.createElement("button");copyEventId.type="button";copyEventId.className="secondary compact-button";copyEventId.textContent="Copy ID";copyEventId.setAttribute("aria-label","Copy event ID "+String(ev.id));copyEventId.onclick=async()=>{try{await navigator.clipboard.writeText(String(ev.id));copyEventId.textContent="Copied ✓";setTimeout(()=>{copyEventId.textContent="Copy ID";},1400);}catch(e){window.prompt("Copy this Event ID:",String(ev.id));}};eventIdRow.append(eventIdLabel,eventIdValue,copyEventId);card.append(eventIdRow);
+   if(ev.status==="draft"){
+    const activate=document.createElement("button");activate.type="button";activate.textContent="🚀 Activate event";
+    activate.onclick=async()=>{
+     if(!confirm("Activate "+ev.name+"? This will make the event available for registration and event-day operations."))return;
+     activate.disabled=true;activate.textContent="Activating…";
+     try{const result=await post("/api/admin",{action:"activate_event",event_id:ev.id});status(result.message||"Event activated.", "good");await loadEvents();}
+     catch(e){status(e.message,"bad");activate.disabled=false;activate.textContent="🚀 Activate event";}
+    };
+    card.append(activate);
+   }
    if(ev.status!=="archived"){
     const edit=document.createElement("button");edit.className="secondary";edit.type="button";edit.setAttribute("aria-expanded","false");edit.textContent="✏️ Edit details";
     const editPanel=document.createElement("div");editPanel.className="event-edit-panel hidden";editPanel.setAttribute("aria-label","Edit event details");
