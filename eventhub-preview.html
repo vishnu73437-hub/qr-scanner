@@ -505,6 +505,45 @@
         ['operation_success','Generic operation success','✅ {kind} successfully recorded for {name}.'],
         ['entry_success','Entry success','✅ Entry recorded for {name}.'],
         ['food_success','Food collection success','✅ Food collection recorded for {name}\\nFood type: {food}\\n\\nServed so far — Vegetarian: {veg_served} | Non-vegetarian: {nonveg_served}']
+      ]},
+      {title:'Admin commands, access and Google Sheets',fields:[
+        ['choose_event_first','Select event before command','Choose an event first. This command will only operate on the event you select.'],
+        ['event_scope_no_active','No active event for command','There are no active events right now. Please contact an event admin.'],
+        ['admin_only','Admin-only response','⛔ Admin only.'],
+        ['stats_summary','Guest and food statistics','📊 Guest & Food Summary\\nActive guests: {total}\\nEntry recorded: {entered}\\n\\n🥗 Vegetarian registrations: {veg}\\n🥗 Vegetarian meals served: {veg_served}\\n🍗 Non-vegetarian registrations: {nonveg}\\n🍗 Non-vegetarian meals served: {nonveg_served}\\nMeals still to collect: {remaining}'],
+        ['addadmin_usage','Add admin usage','Usage: /addadmin TELEGRAM_ID\\nExample: /addadmin 123456789'],
+        ['addadmin_done','Admin added confirmation','✅ Telegram ID {telegram_id} is now an admin.\\nThe change is saved in the database and will survive bot restarts.'],
+        ['admins_empty','No admins found','No admins found.'],['admins_title','Admin list heading','👑 Bot admins\\n{list}'],
+        ['removeadmin_usage','Remove admin usage','Usage: /removeadmin TELEGRAM_ID'],
+        ['removeadmin_protected','Protected admin notice','⚠️ This admin is configured in Botkeep ADMIN_IDS and cannot be removed by command. Keep at least one permanent recovery admin.'],
+        ['removeadmin_self','Self-removal blocked','⚠️ You cannot remove yourself with this command.'],
+        ['removeadmin_done','Admin removed confirmation','✅ Admin {telegram_id} removed.'],
+        ['removeadmin_missing','Admin ID not found','That ID is not a command-added admin.'],
+        ['addvol_usage','Add volunteer usage','Usage: /addvolunteer TELEGRAM_ID'],['addvol_done','Volunteer added confirmation','Volunteer {telegram_id} added.'],
+        ['removevol_usage','Remove volunteer usage','Usage: /removevolunteer TELEGRAM_ID'],['removevol_done','Volunteer removed confirmation','Volunteer {telegram_id} removed; staff QR badge invalidated.'],
+        ['volunteers_empty','No volunteers found','No volunteers yet.'],['volunteers_heading','Volunteer list heading','Volunteers:\\n{list}'],
+        ['guest_usage','Guest lookup usage','Usage: /guest PASSCODE'],['reissue_usage','Reissue pass usage / error','Active guest not found. Usage: /reissue PASSCODE'],
+        ['reissue_done','Pass reissued confirmation','✅ New pass delivered to {name}. The old QR/pass code is invalid. Entry and food history preserved.'],
+        ['reissue_failed','Pass reissue delivery failed','⚠️ New pass created, and the old pass is invalid, but Telegram could not deliver it to {name}. Ask them to open the bot and press Start, then run /mypass.'],
+        ['revoke_usage','Revoke pass usage','Usage: /revoke PASSCODE'],['revoke_done','Pass revoked confirmation','🚫 Pass revoked for {name}.'],
+        ['sheets_not_configured','Google Sheets not configured','Google Sheets sync is not configured. Check SHEETS_SYNC_URL and SHEETS_SYNC_SECRET in Botkeep.'],
+        ['sheets_empty','No guests for Sheets sync','No guest records found in the bot database.'],
+        ['sheets_queued','Google Sheets sync queued','Queued {count} guest record(s) for durable Google Sheets sync.\\nDelivery retries in the background. Check the EventHub admin Sheets queue status for pending/retrying items.'],
+        ['reset_usage','Reset entry/food status usage','Usage: /resetstatus PASSCODE entry|food|both'],['reset_missing','Reset guest not found','Guest/pass not found.'],
+        ['reset_done','Reset confirmation','✅ Reset {target} status for {name}. Reset recorded in audit log.']
+      ]},
+      {title:'Announcements and broadcast replies',fields:[
+        ['announce_prompt','Announcement prompt','📢 Send the announcement as text, a photo with caption, or a document with caption. Nothing is broadcast until you confirm with /announceconfirm.'],
+        ['announce_cancelled','Announcement cancelled','Announcement cancelled. No broadcast was sent.'],
+        ['announce_invalid','Invalid announcement input','Please send text, a photo, or a document. Use /announcecancel to stop.'],
+        ['announce_preview','Announcement preview prompt','Preview ready: {kind}. Type /announceconfirm to send it to recorded bot users, or /announcecancel to cancel.\\n\\n{preview}'],
+        ['announce_not_waiting','No pending announcement','No announcement is waiting. Start with /announce.'],
+        ['announce_event_missing','No active event for announcement','No active event workspace exists. Create or activate an event before sending an announcement.'],
+        ['announce_sending','Broadcast starting status','Sending announcement #{announcement_id} to {recipients} recorded users…'],
+        ['announce_finished','Broadcast completion status','✅ Announcement #{announcement_id} finished. Sent: {sent}; failed: {failed}. Use the Mini App announcement history to attempt unsending delivered messages.'],
+        ['announcementdelete_usage','Delete announcement history usage','Usage: /announcementdelete ID\\nThis removes local history only; it does not unsend messages.'],
+        ['announcement_not_found','Announcement not found','Announcement not found in history.'],
+        ['announcement_deleted','Announcement history deleted','🗑️ Announcement #{announcement_id} removed from local history. Messages already delivered to users were not deleted.']
       ]}
     ];
     const savedBot=parseJSON(ev.bot_settings_json,{});
