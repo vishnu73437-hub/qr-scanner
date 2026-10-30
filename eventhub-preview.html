@@ -445,6 +445,92 @@
   async function renderSettings(host) {
     const ev=state.event||{};let theme=parseJSON(ev.theme_json,{});const schema=parseJSON(ev.registration_schema,defaultSchema());
     const isDiwali=/deepotsav|deepostav|diwali/i.test(String(ev.name||''));
+    const botMessageGroups=[
+      {title:'Start, event selection and event details',fields:[
+        ['no_active_admin','No active events — admin','There are no active events. Open EventHub to create the next event or review archived workspaces.'],
+        ['no_active_guest','No active events — guest','No active events are available right now. Please contact the organizer.'],
+        ['choose_event','Choose event message','🎪 Choose an event\\n\\nEach event has its own page, registration, QR passes and scanner records. Choose one to continue.'],
+        ['choose_event_register','Choose event for registration','Choose which event you want to register for:'],
+        ['choose_event_menu','Choose event from menu','Choose the event you want to open:'],
+        ['choose_event_command','/events command message','Choose the event you want to open. Each event has a separate page and separate records:'],
+        ['event_unavailable','Event unavailable','This event is not available for registration. Please choose another active event.'],
+        ['selected_event_message','After selecting an event','Welcome! This page is for this event only.'],
+        ['event_details_footer','Event details footer','Keep your personal QR pass ready.']
+      ]},
+      {title:'Registration messages and prompts',fields:[
+        ['register_unavailable','Registration closed','This event is not accepting registrations. Choose another active event.'],
+        ['register_active_pass','Already registered','You already have an active pass for this event. Use /mypass to resend it.'],
+        ['register_revoked','Pass revoked message','A previous pass for this event was revoked. Please contact an admin to reactivate it; do not submit a duplicate registration.'],
+        ['register_pending','Awaiting approval','Your registration for this event is already awaiting admin approval. Your QR pass will be sent after approval.'],
+        ['register_open_form','Open registration message','Registration for {event} uses its own event form. Open the button below to complete it.'],
+        ['name_prompt','Name prompt','Enter your full name:'],
+        ['name_invalid','Invalid name','Enter a valid full name.'],
+        ['phone_prompt','Phone prompt','Enter your phone number (required, include country code if possible):'],
+        ['phone_invalid','Invalid phone','Please enter a valid phone number (7–15 digits, optional leading +). Phone number is required.'],
+        ['residence_prompt','Residence prompt','Choose your residence type:'],
+        ['residence_invalid','Invalid residence','Please choose Hostel or Apartment.'],
+        ['hostel_prompt','Hostel prompt','Please enter your hostel (for example, hostel 5):'],
+        ['hostel_invalid','Invalid hostel','Please enter a valid hostel number, such as 5.'],
+        ['room_prompt','Room prompt','Please enter your room number:'],
+        ['room_invalid','Invalid room','Please enter a valid room number, such as 203.'],
+        ['food_prompt','Food prompt','Choose food preference:'],
+        ['food_invalid','Invalid food choice','Choose Vegetarian or Non-vegetarian.'],
+        ['registration_submitted','Registration submitted','🕯️ Registration submitted successfully!\\n\\nYour request is awaiting admin approval. Your QR pass will be sent after approval.\\n\\nNeed help? Tap Telegram Support below.'],
+        ['registration_use_menu','After registration menu prompt','You can use these options anytime:'],
+        ['cancelled','Cancel message','Cancelled. Use /register when ready.']
+      ]},
+      {title:'Admin notifications and approval messages',fields:[
+        ['registration_admin_notice','New registration alert to admins','📝 New guest registration\\n\\nName: {name}\\nPhone: {phone}\\nResidence: {residence}{hostel_line}{room_line}\\nFood preference: {food}\\nTelegram ID: {telegram_id}\\nRequest: #{request_id}'],
+        ['registration_admin_failed','Admin notification failed','⚠️ Your request is saved, but admins could not be notified. Please contact event admin.'],
+        ['approved_guest','Approval message to guest','🎉 Your registration has been approved! Your personal QR pass is attached.'],
+        ['rejected_guest','Rejection message to guest','Your event registration was not approved. Please contact an event admin if you think this is an error.'],
+        ['approval_failed_admin','Failed pass delivery alert to admins','⚠️ Approved pass for {name} could not be delivered. Ask the guest to start the bot and use /mypass. Telegram ID: {telegram_id}']
+      ]},
+      {title:'Pass delivery and help',fields:[
+        ['no_pass_guest','No pass message — guest','No active pass found. Use /register.'],
+        ['no_pass_staff','No pass message — staff','Your staff account does not have a pass yet. Open EventHub → My QR Pass, choose your food preference, then tap Show my pass. It will use the same QR system as guest passes.'],
+        ['pass_caption','QR pass image caption','🎟 {event}\\n{role}: {name}\\n{room_line}Food: {food}\\nPass: {pass_code}\\nKeep this pass private.'],
+        ['help','/help command message','Guest: /start /register /mypass /event\\nVolunteer: /scan PASSCODE /entry PASSCODE /food PASSCODE\\nAdmin: /stats /export /addvolunteer ID /removevolunteer ID /volunteers /guest PASSCODE /reissue PASSCODE /revoke PASSCODE /resetstatus PASSCODE entry|food|both']
+      ]},
+      {title:'Scanner and event-day messages',fields:[
+        ['scan_access_denied','Scanner access denied','⛔ Volunteer/admin access required.'],
+        ['scan_usage','Scanner command usage','Usage: /scan PASSCODE'],
+        ['scan_not_found','Pass not found','❌ Pass not found.'],
+        ['scan_revoked','Revoked pass scanned','🚫 Pass revoked.'],
+        ['scan_valid_heading','Valid pass heading','✅ PASS VALID'],
+        ['operation_usage','Entry/food command usage','Usage: /{command} PASSCODE'],
+        ['operation_not_found','Entry/food pass not found','❌ Pass not found.'],
+        ['operation_revoked','Entry/food revoked pass','🚫 Pass revoked.'],
+        ['operation_already_done','Duplicate scan message','⚠️ This action has already been recorded.'],
+        ['operation_success','Generic operation success','✅ {kind} successfully recorded for {name}.'],
+        ['entry_success','Entry success','✅ Entry recorded for {name}.'],
+        ['food_success','Food collection success','✅ Food collection recorded for {name}\\nFood type: {food}\\n\\nServed so far — Vegetarian: {veg_served} | Non-vegetarian: {nonveg_served}']
+      ]}
+    ];
+    const savedBot=parseJSON(ev.bot_settings_json,{});
+    const botMessages={};botMessageGroups.forEach(g=>g.fields.forEach(([k,l,d])=>botMessages[k]=savedBot.messages?.[k]??d));
+    const botButtonFields=[
+      ['register','Register / Get Pass','🎟 Register / Get Pass'],['mypass','My Pass','🎫 My Pass'],['event','Event Details','📅 Event Details'],
+      ['open_eventhub','Open EventHub','🧭 Open EventHub'],['manage_eventhub','Manage EventHub','🧭 Manage EventHub'],
+      ['switch_event','Switch Event','🔄 Switch Event'],['support','Telegram Support','💬 Telegram Support'],
+      ['open_registration','Open registration','🎟 Open event registration'],['approve','Approve registration','✅ Approve'],['reject','Reject registration','❌ Reject']
+    ];
+    const botButtons={};botButtonFields.forEach(([k,l,d])=>botButtons[k]=savedBot.buttons?.[k]??d);
+    const botFeatureFields=[
+      ['show_register','Show Register / Get Pass',true],['show_mypass','Show My Pass',true],['show_event','Show Event Details',true],
+      ['show_eventhub','Show EventHub button',true],['show_switch_event','Show Switch Event',true],['show_support','Show Telegram Support',true]
+    ];
+    const botSettingsMarkup=`<section class="section card" id="botChatSettings">
+      <div class="section-title"><h2>Telegram bot chat and menu editor</h2><span class="status active">Event-specific</span></div>
+      <p class="muted">Edit the messages sent by the bot, image captions, approval alerts, scanner replies, button names and menu visibility for this event. Changes do not modify commands, permissions, pass tokens or QR verification.</p>
+      ${botMessageGroups.map((g,i)=>`<details ${i===0?'open':''} style="margin:12px 0"><summary style="cursor:pointer;font-weight:700;padding:10px 0">${safe(g.title)}</summary><div class="grid cols2">${g.fields.map(([k,l,d])=>`<div class="field"><label for="botMsg_${k}">${safe(l)}</label><textarea id="botMsg_${k}" rows="3" maxlength="1800">${safe(botMessages[k])}</textarea></div>`).join('')}</div></details>`).join('')}
+      <div class="divider"></div><h3>Telegram menu button labels</h3><div class="grid cols2">${botButtonFields.map(([k,l,d])=>`<div class="field"><label for="botBtn_${k}">${safe(l)}</label><input id="botBtn_${k}" maxlength="64" value="${safe(botButtons[k])}"></div>`).join('')}</div>
+      <div class="divider"></div><h3>Show or hide menu buttons</h3><div class="grid cols2">${botFeatureFields.map(([k,l,d])=>`<label><input id="botFeature_${k}" type="checkbox" style="width:auto;min-height:0" ${savedBot.features?.[k]!==false?'checked':''}> ${safe(l)}</label>`).join('')}</div>
+      <div class="field"><label for="botSupportUrl">Telegram Support link (https://)</label><input id="botSupportUrl" maxlength="500" value="${safe(savedBot.support_url||'')}" placeholder="Leave blank to use the existing bot support link"></div>
+      <p class="muted">Template fields you can use: {event}, {name}, {phone}, {food}, {role}, {room_line}, {pass_code}, {telegram_id}, {request_id}, {hostel_line}, {room_line}, {veg_served}, {nonveg_served}, {command}, {kind}.</p>
+      <div class="actions"><button class="btn primary" type="button" id="saveBotSettings">Save Telegram bot settings</button></div><div id="botSettingsMessage"></div>
+    </section>`;
+
     if(ev.status==='archived'){host.innerHTML='<section class="card"><div class="section-title"><h2>Archived event settings</h2><span class="status archived">Read only</span></div><p>Archived event settings are preserved and read-only.</p><h3>'+safe(ev.name)+'</h3><p>'+safe(ev.description||'')+'</p><div class="actions"><button class="btn" id="backToEvents">Back to all events</button></div></section>'; $('backToEvents').addEventListener('click',clearEvent);return;}
     host.innerHTML=`
       <section class="section card"><h2>🔐 Admin event QR</h2><p class="muted">This signed QR opens this event's settings only for an authenticated admin. It does not grant access by itself.</p><div class="actions"><button class="btn primary" type="button" id="generateEventAdminQr">Generate / refresh event QR</button><a class="btn" id="downloadEventAdminQr" hidden download="eventhub-admin-qr.png">Download QR</a></div><div id="eventAdminQrResult"></div></section>
@@ -505,7 +591,7 @@
         </form><div id="settingsMessage"></div><div id="qrPassPreview"></div>
       </section>
       <section class="section card"><h2>Registration form builder</h2><p class="muted">Add, remove, rename, reorder and configure fields for this event. Keep Full name required.</p>${schemaEditor(Array.isArray(schema)&&schema.length?schema:defaultSchema())}<div class="actions"><button class="btn primary" id="saveSchema">Save registration form</button></div><div id="schemaMessage"></div></section>
-      <section class="section card"><h2>Event lifecycle</h2><p class="muted">Draft events are private to admins until activated. Archiving closes an active event while retaining history.</p><div class="actions">${ev.status==='draft'?'<button class="btn success" id="activateEvent">Activate event</button>':''}${ev.status==='active'?'<button class="btn danger" id="archiveEvent">Archive this event</button>':''}<button class="btn" id="backToEvents">Back to all events</button></div><div id="archiveMessage"></div></section>`;
+      ${botSettingsMarkup}\n      <section class="section card"><h2>Event lifecycle</h2><p class="muted">Draft events are private to admins until activated. Archiving closes an active event while retaining history.</p><div class="actions">${ev.status==='draft'?'<button class="btn success" id="activateEvent">Activate event</button>':''}${ev.status==='active'?'<button class="btn danger" id="archiveEvent">Archive this event</button>':''}<button class="btn" id="backToEvents">Back to all events</button></div><div id="archiveMessage"></div></section>`;
     function collectTheme(){return {
       primary:$('editPrimary').value,accent:$('editAccent').value,background:$('editBackground').value,gold:$('editGold').value,
       pass_background:$('editPassBackground').value,pass_accent:$('editPassAccent').value,pass_gold:$('editPassGold').value,
@@ -563,6 +649,19 @@
     $('saveSchema').addEventListener('click',async()=>{try{const arr=readSchemaEditor();const r=await adminCall('update_event',{name:$('editName').value,description:$('editDescription').value,event_date:$('editDate').value,event_time:$('editTime').value,venue:$('editVenue').value,theme:collectTheme(),registration_schema:arr});$('schemaMessage').innerHTML=showNotice(r.message||'Registration form saved.','good');const d=await post('/api/event_details',{event_id:state.eventId});state.event=d.event;toast('Registration form saved');}catch(err){$('schemaMessage').innerHTML=showNotice(err.message,'error');}});
     $('activateEvent')?.addEventListener('click',async()=>{if(!confirm(`Activate ${ev.name}? It will become visible to guests and registration/scanning will open.`))return;const btn=$('activateEvent');btn.disabled=true;try{const r=await adminCall('activate_event');$('archiveMessage').innerHTML=showNotice(r.message||'Event activated.','good');await loadRole();await loadEvent();toast('Event activated');}catch(err){$('archiveMessage').innerHTML=showNotice(err.message,'error');btn.disabled=false;}});
     $('archiveEvent')?.addEventListener('click',async()=>{if(!confirm(`Archive ${ev.name}? New registrations and scans will stop.`))return;const btn=$('archiveEvent');btn.disabled=true;try{const r=await post('/api/admin',{action:'archive_event',event_id:state.eventId});$('archiveMessage').innerHTML=showNotice(r.message,'good');await loadRole();setTimeout(clearEvent,800);}catch(err){$('archiveMessage').innerHTML=showNotice(err.message,'error');btn.disabled=false;}});
+    $('saveBotSettings').addEventListener('click',async()=>{
+      const button=$('saveBotSettings'),target=$('botSettingsMessage');button.disabled=true;const original=button.textContent;button.textContent='Saving bot settings…';
+      try{
+        const messages={};botMessageGroups.forEach(g=>g.fields.forEach(([key])=>messages[key]=$('botMsg_'+key).value));
+        const buttons={};botButtonFields.forEach(([key])=>buttons[key]=$('botBtn_'+key).value);
+        const features={};botFeatureFields.forEach(([key])=>features[key]=$('botFeature_'+key).checked);
+        const bot_settings={messages,buttons,features,support_url:$('botSupportUrl').value};
+        const result=await adminCall('save_bot_settings',{bot_settings});
+        state.event.bot_settings_json=JSON.stringify(result.bot_settings||bot_settings);
+        target.innerHTML=showNotice(result.message||'Telegram bot settings saved.','good');toast('Telegram bot settings saved');
+      }catch(err){target.innerHTML=showNotice(err.message,'error');}
+      finally{button.disabled=false;button.textContent=original;}
+    });
     $('backToEvents').addEventListener('click',clearEvent);
   }
   function bindSchemaEditorButtons(){
