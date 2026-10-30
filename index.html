@@ -455,7 +455,6 @@
             <label><input id="editPassShowPrivacy" type="checkbox" style="width:auto;min-height:0" ${theme.pass_show_privacy!==false?'checked':''}> Show privacy note</label>
           </div>
 
-          <div class="inline-fields"><div class="field"><label>Pass guest heading (use {role})</label><input id="editPassGuestLabel" maxlength="60" value="${safe(theme.pass_guest_label||'{role} PASS')}"></div><div class="field"><label>Pass food label</label><input id="editPassFoodLabel" maxlength="60" value="${safe(theme.pass_food_label||'FOOD PREFERENCE')}"></div></div>
           <div class="field"><label>Pass instruction</label><input id="editPassInstruction" maxlength="160" value="${safe(theme.pass_instruction||'Use this QR for event entry and checkpoints')}"></div>
           <div class="field"><label>Pass privacy note</label><input id="editPassPrivacy" maxlength="160" value="${safe(theme.pass_privacy||'Keep your pass private • One guest per pass')}"></div>
           <div class="actions"><button class="btn" type="button" id="previewQrPass">Preview saved QR pass design</button><button class="btn primary" type="submit">Save event, Mini App and pass design</button></div>
