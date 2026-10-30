@@ -69,7 +69,7 @@
     if(!API_BASE) throw new Error('API address is not configured. Ask the EventHub admin to configure the Botkeep API URL.');
     if(!initData) throw new Error('Open this page from the EventHub Telegram bot so Telegram can authenticate you.');
     const controller=typeof AbortController!=='undefined'?new AbortController():null;
-    const slowAction=path==='/api/admin' && ['announcement_send','announcement_unsend','sheets_sync'].includes(String(payload.action||'')), timer=controller?setTimeout(()=>controller.abort(),slowAction?120000:30000):null;
+    const slowAction=path==='/api/admin' && ['announcement_send','announcement_unsend','sheets_sync','refresh_event_passes'].includes(String(payload.action||'')), timer=controller?setTimeout(()=>controller.abort(),slowAction?120000:30000):null;
     let res;
     try {
       res=await fetch(API_BASE+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({initData,...payload}),signal:controller?.signal});
@@ -495,7 +495,7 @@
 
           <div class="field"><label>Pass instruction</label><input id="editPassInstruction" maxlength="160" value="${safe(theme.pass_instruction||'Use this QR for event entry and checkpoints')}"></div>
           <div class="field"><label>Pass privacy note</label><input id="editPassPrivacy" maxlength="160" value="${safe(theme.pass_privacy||'Keep your pass private • One guest per pass')}"></div>
-          <div class="actions"><button class="btn" type="button" id="previewQrPass">Preview saved QR pass design</button><button class="btn primary" type="submit">Save event, Mini App and pass design</button></div>
+          <div class="actions"><button class="btn" type="button" id="previewQrPass">Preview saved QR pass design</button><button class="btn warning" type="button" id="refreshExistingPasses">Send updated pass to approved guests</button><button class="btn primary" type="submit">Save event, Mini App and pass design</button></div>
         </form><div id="settingsMessage"></div><div id="qrPassPreview"></div>
       </section>
       <section class="section card"><h2>Registration form builder</h2><p class="muted">Add, remove, rename, reorder and configure fields for this event. Keep Full name required.</p>${schemaEditor(Array.isArray(schema)&&schema.length?schema:defaultSchema())}<div class="actions"><button class="btn primary" id="saveSchema">Save registration form</button></div><div id="schemaMessage"></div></section>
@@ -520,6 +520,16 @@
       pass_show_venue:$('editPassShowVenue').checked,pass_show_instruction:$('editPassShowInstruction').checked,pass_show_privacy:$('editPassShowPrivacy').checked,
       pass_instruction:$('editPassInstruction').value,pass_privacy:$('editPassPrivacy').value
     };}
+    $('refreshExistingPasses').addEventListener('click',async()=>{
+      const button=$('refreshExistingPasses');
+      if(!confirm('Send the newly saved QR pass design to every approved guest in this event? This sends a new pass image to each guest, but preserves their existing QR token and pass code.'))return;
+      button.disabled=true;const original=button.textContent;button.textContent='Sending updated passes…';
+      try{const result=await adminCall('refresh_event_passes',{confirm:true});
+        $('settingsMessage').innerHTML=showNotice(result.message+(result.failed?' Failed deliveries: '+result.failed+'. You can retry after checking Botkeep logs.':''),'good');
+        toast(result.message);
+      }catch(err){$('settingsMessage').innerHTML=showNotice(err.message,'error');}
+      finally{button.disabled=false;button.textContent=original;}
+    });
     $('previewQrPass').addEventListener('click',async()=>{
       const button=$('previewQrPass'),target=$('qrPassPreview');
       button.disabled=true;target.innerHTML='<div class="notice">Generating a preview-only pass using the last saved design…</div>';
