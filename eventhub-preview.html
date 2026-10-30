@@ -458,8 +458,8 @@
           <div class="inline-fields"><div class="field"><label>Pass guest heading (use {role})</label><input id="editPassGuestLabel" maxlength="60" value="${safe(theme.pass_guest_label||'{role} PASS')}"></div><div class="field"><label>Pass food label</label><input id="editPassFoodLabel" maxlength="60" value="${safe(theme.pass_food_label||'FOOD PREFERENCE')}"></div></div>
           <div class="field"><label>Pass instruction</label><input id="editPassInstruction" maxlength="160" value="${safe(theme.pass_instruction||'Use this QR for event entry and checkpoints')}"></div>
           <div class="field"><label>Pass privacy note</label><input id="editPassPrivacy" maxlength="160" value="${safe(theme.pass_privacy||'Keep your pass private • One guest per pass')}"></div>
-          <div class="actions"><button class="btn primary" type="submit">Save event, Mini App and pass design</button></div>
-        </form><div id="settingsMessage"></div>
+          <div class="actions"><button class="btn" type="button" id="previewQrPass">Preview saved QR pass design</button><button class="btn primary" type="submit">Save event, Mini App and pass design</button></div>
+        </form><div id="settingsMessage"></div><div id="qrPassPreview"></div>
       </section>
       <section class="section card"><h2>Registration form builder</h2><p class="muted">Add, remove, rename, reorder and configure fields for this event. Keep Full name required.</p>${schemaEditor(Array.isArray(schema)&&schema.length?schema:defaultSchema())}<div class="actions"><button class="btn primary" id="saveSchema">Save registration form</button></div><div id="schemaMessage"></div></section>
       <section class="section card"><h2>Event lifecycle</h2><p class="muted">Draft events are private to admins until activated. Archiving closes an active event while retaining history.</p><div class="actions">${ev.status==='draft'?'<button class="btn success" id="activateEvent">Activate event</button>':''}${ev.status==='active'?'<button class="btn danger" id="archiveEvent">Archive this event</button>':''}<button class="btn" id="backToEvents">Back to all events</button></div><div id="archiveMessage"></div></section>`;
@@ -483,6 +483,13 @@
       pass_show_venue:$('editPassShowVenue').checked,pass_show_instruction:$('editPassShowInstruction').checked,pass_show_privacy:$('editPassShowPrivacy').checked,
       pass_instruction:$('editPassInstruction').value,pass_privacy:$('editPassPrivacy').value
     };}
+    $('previewQrPass').addEventListener('click',async()=>{
+      const button=$('previewQrPass'),target=$('qrPassPreview');
+      button.disabled=true;target.innerHTML='<div class="notice">Generating a preview-only pass using the last saved design…</div>';
+      try{const result=await adminCall('preview_pass',{preview_name:'Sample Guest',preview_phone:'+7 900 000 00 00',preview_residence:'Hostel',preview_hostel:'5',preview_room:'392',preview_food:'Vegetarian'});
+        target.innerHTML='<div class="notice good">Preview only. This QR is not a real guest pass and cannot be used for entry.</div><img class="pass-image" alt="QR pass design preview" src="data:image/png;base64,'+result.pass.image+'">';
+      }catch(err){target.innerHTML=showNotice(err.message,'error');}finally{button.disabled=false;}
+    });
     $('settingsForm').addEventListener('submit',async e=>{e.preventDefault();const btn=e.currentTarget.querySelector('button[type="submit"]');btn.disabled=true;theme=collectTheme();
       try{const r=await adminCall('update_event',{name:$('editName').value,description:$('editDescription').value,event_date:$('editDate').value,event_time:$('editTime').value,venue:$('editVenue').value,theme});
         await loadEvent();await renderAdminPage('settings');toast('Event, Mini App branding and QR pass design saved');
