@@ -551,7 +551,7 @@ button.tool-tile{display:flex;flex-direction:column;align-items:flex-start;text-
 .pending-list-actions{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0 2px;border-top:1px solid #ffd45b33}
 .pending-list-actions .row{display:flex;gap:7px;margin:0;flex-wrap:wrap}
 .pending-list-actions button{margin:0}
-</style><style>
+.new-event-schema{display:grid;gap:10px;margin:12px 0}.new-event-field{border:1px solid #f5cf7855;border-radius:13px;padding:12px;background:#ffffff08;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.new-event-field .wide{grid-column:1/-1}.new-event-field label{margin:0}.new-event-field .remove-field{grid-column:1/-1;margin:0}.new-event-field input,.new-event-field select{margin:4px 0 0}.new-event-field .required-wrap{display:flex;align-items:center;gap:8px}.new-event-field .required-wrap input{width:20px;min-height:20px;margin:0}@media(max-width:520px){.new-event-field{grid-template-columns:1fr}.new-event-field .wide,.new-event-field .remove-field{grid-column:1}}\n</style><style>
 /* Accessible touch-friendly layout for phones, tablets and desktop */
 .admin-panel,.record-card,.adminView,.volunteer-shell{min-width:0;overflow-wrap:anywhere}
 button,.record-actions-admin button,.manual-row button{min-height:48px;touch-action:manipulation;white-space:normal;overflow-wrap:anywhere}
@@ -663,7 +663,16 @@ body.scan-mode #status{position:fixed!important;z-index:99992!important;top:6px!
 </section><section id="adminView" class="hidden role-shell admin-shell">
 <section class="role-hero admin-hero"><div class="role-hero-copy"><div class="eyebrow">EVENTHUB · COMMAND CENTER</div><h2>Admin workspace</h2><p>Manage event details, registration approvals, guest QR passes, volunteers, reporting and announcements from this dashboard.</p></div><div class="role-hero-side"><span class="role-chip admin-chip">👑 ADMIN ONLY</span><span class="scanner-badge">● CONTROL PANEL</span></div></section>
 <section class="card kpi-card"><div class="section-heading"><div><div class="eyebrow">LIVE OVERVIEW</div><h3>Event operations</h3></div><div class="row"><button id="refreshStats" class="secondary compact-button" type="button">↻ Refresh</button><button id="runAdminDiagnostics" class="secondary compact-button" type="button">🧪 Test controls</button></div></div><div class="ops-kpis admin-kpis"><div class="ops-kpi"><span>GUESTS</span><strong id="statGuests">—</strong><small>Approved passes</small></div><div class="ops-kpi"><span>ENTRY</span><strong id="statEntry">—</strong><small>Checked in</small></div><div class="ops-kpi"><span>FOOD</span><strong id="statMeals">—</strong><small>Meals served</small></div><div class="ops-kpi"><span>TEAM</span><strong id="statVols">—</strong><small>Volunteers</small></div></div><div id="adminDiagnostics" class="small" aria-live="polite"></div></section>
-<section class="card admin-panel"><div class="section-heading"><div><div class="eyebrow">01 · EVENT SETTINGS</div><h3>📅 Event workspaces</h3></div><span class="panel-index">01</span></div><p class="small">Edit name, description, date, time and venue here. Changes update the guest Event Details screen; new workspaces remain drafts until an event-specific registration workflow is configured.</p><div id="eventsList" class="events-list">Loading events…</div><div class="form-divider"></div><h4>Create an event workspace</h4><label for="eventName">Event name</label><input id="eventName" placeholder="e.g. Medical Conference 2027" maxlength="120"><label for="eventDesc">Description</label><textarea id="eventDesc" rows="2" placeholder="Purpose, theme and important details"></textarea><div class="row form-row"><div><label for="eventDate">Date</label><input id="eventDate" type="date"></div><div><label for="eventTime">Time</label><input id="eventTime" placeholder="e.g. 5:30 PM" maxlength="40"></div></div><label for="eventVenue">Venue</label><input id="eventVenue" placeholder="Venue" maxlength="200"><button id="createEvent" type="button">＋ Create event workspace</button></section>
+<section class="card admin-panel"><div class="section-heading"><div><div class="eyebrow">01 · EVENT SETTINGS</div><h3>📅 Event workspaces</h3></div><span class="panel-index">01</span></div><p class="small">Edit name, description, date, time and venue here. Changes update the guest Event Details screen; new workspaces remain drafts until an event-specific registration workflow is configured.</p><div id="eventsList" class="events-list">Loading events…</div><div class="form-divider"></div><h4>Create an event workspace</h4><label for="eventName">Event name</label><input id="eventName" placeholder="e.g. Medical Conference 2027" maxlength="120"><label for="eventDesc">Description</label><textarea id="eventDesc" rows="2" placeholder="Purpose, theme and important details"></textarea><div class="row form-row"><div><label for="eventDate">Date</label><input id="eventDate" type="date"></div><div><label for="eventTime">Time</label><input id="eventTime" placeholder="e.g. 5:30 PM" maxlength="40"></div></div><label for="eventVenue">Venue</label><input id="eventVenue" placeholder="Venue" maxlength="200">
+<div class="form-divider"></div><h4>🎨 Event appearance</h4>
+<div class="row form-row"><div><label for="eventPrimary">Primary colour</label><input id="eventPrimary" type="color" value="#32104d"></div><div><label for="eventAccent">Accent colour</label><input id="eventAccent" type="color" value="#d9b15f"></div></div>
+<div class="row form-row"><div><label for="eventBackground">Background colour</label><input id="eventBackground" type="color" value="#160b08"></div><div><label for="eventGold">Highlight colour</label><input id="eventGold" type="color" value="#ffd45b"></div></div>
+<div class="form-divider"></div><h4>📝 Registration form builder</h4>
+<p class="small">Configure the fields guests will complete for this event. Full name is required by EventHub. You can add, remove and reorder fields before creating the event.</p>
+<div id="newEventSchema" class="new-event-schema"></div>
+<div class="row"><button id="addNewEventField" class="secondary" type="button">＋ Add form field</button><button id="resetNewEventSchema" class="secondary" type="button">Reset default fields</button></div>
+<div class="small">Supported field types: text, phone, email, number, date, long text, dropdown and checkbox. Dropdown options are comma-separated.</div>
+<button id="createEvent" type="button">＋ Create event workspace</button></section>
 <section class="card admin-panel" id="announcementPanel">
 <div class="section-heading"><div><div class="eyebrow">📢 BROADCAST</div><h3>Image & file announcements</h3><p class="small">Send a text, festival poster, image, PDF, or document to your selected audience.</p></div></div>
 <details class="broadcast-compose-options">
@@ -830,9 +839,52 @@ async function loadEvents(){
   });
  }catch(e){$("eventsList").textContent=e.message;status(e.message,"bad");}
 }
+const NEW_EVENT_DEFAULT_SCHEMA=[
+ {key:"full_name",label:"Full name",type:"text",required:true},
+ {key:"phone",label:"Phone number",type:"tel",required:true},
+ {key:"residence_type",label:"Residence",type:"select",options:["Hostel","Apartment"],required:true},
+ {key:"hostel_number",label:"Hostel number",type:"text",required:false},
+ {key:"room_number",label:"Room number",type:"text",required:false},
+ {key:"food_preference",label:"Food preference",type:"select",options:["Vegetarian","Non-vegetarian"],required:true}
+];
+const NEW_EVENT_TYPES=[["text","Short text"],["tel","Phone"],["email","Email"],["number","Number"],["date","Date"],["textarea","Long text"],["select","Dropdown"],["checkbox","Checkbox"]];
+function renderNewEventSchema(schema=NEW_EVENT_DEFAULT_SCHEMA){
+ const host=$("newEventSchema");if(!host)return;host.textContent="";
+ schema.forEach((field,index)=>{
+  const card=document.createElement("div");card.className="new-event-field";card.dataset.index=String(index);
+  const add=(labelText,control,wide=false)=>{const wrap=document.createElement("label");if(wide)wrap.className="wide";wrap.textContent=labelText;wrap.append(control);card.append(wrap);return control;};
+  const key=document.createElement("input");key.value=field.key||"";key.maxLength=40;key.dataset.prop="key";add("Field key (unique)",key);
+  const label=document.createElement("input");label.value=field.label||"";label.maxLength=80;label.dataset.prop="label";add("Guest-facing label",label);
+  const type=document.createElement("select");type.dataset.prop="type";NEW_EVENT_TYPES.forEach(([value,name])=>{const o=document.createElement("option");o.value=value;o.textContent=name;type.append(o);});type.value=field.type||"text";add("Field type",type);
+  const reqWrap=document.createElement("label");reqWrap.className="required-wrap";const req=document.createElement("input");req.type="checkbox";req.checked=!!field.required;req.dataset.prop="required";reqWrap.append(req,document.createTextNode("Required field"));card.append(reqWrap);
+  const options=document.createElement("input");options.dataset.prop="options";options.value=(field.options||[]).join(", ");options.placeholder="e.g. Hostel, Apartment";add("Dropdown options (only for dropdown)",options,true);
+  const remove=document.createElement("button");remove.type="button";remove.className="secondary remove-field";remove.textContent=index===0&&field.key==="full_name"?"🔒 Required field — cannot remove":"Remove field";remove.disabled=index===0&&field.key==="full_name";remove.onclick=()=>{const current=readNewEventSchema();current.splice(index,1);renderNewEventSchema(current);};card.append(remove);
+  type.addEventListener("change",()=>{options.disabled=type.value!=="select";});options.disabled=type.value!=="select";
+  host.append(card);
+ });
+}
+function readNewEventSchema(){
+ return [...$("newEventSchema").querySelectorAll(".new-event-field")].map(card=>{
+  const val=prop=>card.querySelector('[data-prop="'+prop+'"]');
+  const type=val("type").value;
+  const item={key:val("key").value.trim(),label:val("label").value.trim(),type,required:val("required").checked};
+  if(type==="select")item.options=val("options").value.split(",").map(x=>x.trim()).filter(Boolean);
+  return item;
+ });
+}
+$("addNewEventField")?.addEventListener("click",()=>{const schema=readNewEventSchema();if(schema.length>=30){status("A registration form can contain at most 30 fields.","bad");return;}schema.push({key:"custom_"+(schema.length+1),label:"New field",type:"text",required:false});renderNewEventSchema(schema);});
+$("resetNewEventSchema")?.addEventListener("click",()=>renderNewEventSchema());
+renderNewEventSchema();
 $("createEvent").onclick=async()=>{try{
- const name=$("eventName").value.trim();if(!name)throw new Error("Enter an event name before creating the event workspace.");const d=await post("/api/admin",{action:"create_event",name,description:$("eventDesc").value.trim(),event_date:$("eventDate").value,event_time:$("eventTime").value.trim(),venue:$("eventVenue").value.trim(),registration_schema:[{key:"full_name",label:"Full name",type:"text",required:true},{key:"phone",label:"Phone",type:"tel",required:true}]});
- status(d.message,"good");$("eventName").value="";$("eventDesc").value="";$("eventDate").value="";$("eventTime").value="";$("eventVenue").value="";await loadEvents();
+ const name=$("eventName").value.trim();if(name.length<3)throw new Error("Enter an event name with at least 3 characters.");
+ const registration_schema=readNewEventSchema();if(!registration_schema.length||registration_schema.length>30)throw new Error("Add between 1 and 30 registration fields.");
+ const keys=new Set();for(const field of registration_schema){if(!/^[A-Za-z][A-Za-z0-9_]{0,39}$/.test(field.key))throw new Error("Each field key must start with a letter and use only letters, numbers or underscores.");if(keys.has(field.key))throw new Error("Duplicate field key: "+field.key);keys.add(field.key);if(!field.label)throw new Error("Every field needs a guest-facing label.");if(field.type==="select"&&!field.options?.length)throw new Error("Add dropdown options for "+field.label+".");}
+ const full=registration_schema.find(x=>x.key==="full_name");if(!full)throw new Error("The form must include a field with key full_name.");if(!["text","textarea"].includes(full.type))throw new Error("Full name must use Short text or Long text.");full.required=true;
+ const theme={primary:$("eventPrimary").value,accent:$("eventAccent").value,background:$("eventBackground").value,gold:$("eventGold").value};
+ const button=$("createEvent");button.disabled=true;button.textContent="Creating event…";
+ try{const d=await post("/api/admin",{action:"create_event",name,description:$("eventDesc").value.trim(),event_date:$("eventDate").value,event_time:$("eventTime").value.trim(),venue:$("eventVenue").value.trim(),theme,registration_schema});
+ status(d.message||"Event workspace created as draft.","good");$("eventName").value="";$("eventDesc").value="";$("eventDate").value="";$("eventTime").value="";$("eventVenue").value="";renderNewEventSchema();await loadEvents();
+ }finally{button.disabled=false;button.textContent="＋ Create event workspace";}
 }catch(e){status(e.message,"bad");}};
 $("refreshStats").onclick=refreshStats;$("runAdminDiagnostics").onclick=runAdminDiagnostics;$("addVol").onclick=()=>volAction("add_volunteer");$("removeVol").onclick=()=>volAction("remove_volunteer");$("listVols").onclick=loadVolunteers;
 async function loadVolunteers(){const box=$("volList");box.textContent="Loading volunteers…";try{const d=await post("/api/admin",{action:"volunteers"});box.textContent=d.volunteers.length?d.volunteers.map(v=>v.telegram_id+" · added "+(v.added_at||"date unavailable")).join("\n"):"No volunteers configured.";}catch(e){box.textContent=e.message;status(e.message,"bad");}}
