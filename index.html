@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#171321">
-  <title>EventHub</title>
+  <title>KSMU HOSTEL 5 EVENTS</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <style>
@@ -17,10 +17,10 @@
 <body>
 <div class="shell" id="app">
   <header class="topbar">
-    <div class="brand"><div class="brand-mark">✦</div><div>EventHub<small>One event at a time</small></div></div>
+    <div class="brand"><div class="brand-mark">✦</div><div>KSMU HOSTEL 5 EVENTS<small>EVENT MANAGEMENT</small></div></div>
     <div class="top-actions"><button class="btn ghost small hidden" id="backBtn" type="button">← All events</button><button class="btn ghost small" id="refreshBtn" type="button">↻ Refresh</button></div>
   </header>
-  <main id="main"><div class="empty">Loading EventHub…</div></main>
+  <main id="main"><div class="empty">Loading KSMU HOSTEL 5 EVENTS…</div></main>
 </div>
 <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 <script>
@@ -98,7 +98,7 @@
     catch(err) { main.innerHTML=showNotice(err.message,'error')+'<div class="actions"><button class="btn" id="returnEvents">← All events</button></div>'; $('returnEvents')?.addEventListener('click',clearEvent); throw err; }
   }
   async function clearEvent() {
-    await stopScanner(); state.eventId=0; state.event=null; state.guest=null; state.pass=null; state.page='events'; updateUrl(0,true); eventTheme(null); document.title='EventHub';
+    await stopScanner(); state.eventId=0; state.event=null; state.guest=null; state.pass=null; state.page='events'; updateUrl(0,true); eventTheme(null); document.title='KSMU HOSTEL 5 EVENTS';
     try { await loadRole(); } catch(err) { toast(err.message,true); }
     renderEventList(); $('backBtn').classList.add('hidden');
   }
@@ -112,7 +112,7 @@
     const requestedId=state.eventId;
     const data=await post('/api/event_details',{event_id:requestedId});
     if(!data.event || Number(data.event.id)!==requestedId) throw new Error('EventHub returned a different event than the one selected. No event details were displayed.');
-    state.event=data.event; eventTheme(state.event); document.title=`${state.event.name} | EventHub`; $('backBtn').classList.remove('hidden');
+    state.event=data.event; eventTheme(state.event); document.title=`${state.event.name} | KSMU HOSTEL 5 EVENTS`; $('backBtn').classList.remove('hidden');
     await renderHome();
   }
   async function boot() {
@@ -235,12 +235,21 @@
     host.innerHTML=`<section class="section card"><div class="section-title"><h2>${preview?'Preview registration —':'Register —'} ${safe(state.event.name)}</h2></div><p class="muted">${preview?'Admin preview only. Fields are disabled and no registration can be submitted.':'Your registration is linked only to this event. Required fields are marked with an asterisk.'}</p><form id="registrationForm">${state.formSchema.map(fieldHTML).join('')}${preview?'':'<button class="btn primary" type="submit">Submit registration</button>'}</form>${preview?'<div class="notice">Preview mode · No guest record will be created.</div>':'<div id="registerMessage"></div>'}</section>`;
     if(preview){$('registrationForm').querySelectorAll('input,select,textarea,button').forEach(el=>el.disabled=true);return;}
     $('registrationForm').addEventListener('submit',async e=>{
-      e.preventDefault();const values={};
-      for(const field of state.formSchema){const el=Array.from(e.currentTarget.elements).find(node=>node.name===field.key);if(!el)continue;values[field.key]=field.type==='checkbox'?el.checked:el.value;}
-      const button=e.currentTarget.querySelector('button[type=submit]');button.disabled=true;
-      try{const r=await post('/api/register',{event_id:state.eventId,fields:values});$('registerMessage').innerHTML=showNotice(r.message||'Registration submitted.','good');e.currentTarget.reset();}
-      catch(err){$('registerMessage').innerHTML=showNotice(err.message,'error');}
-      finally{button.disabled=false;}
+      e.preventDefault();
+      const form=e.currentTarget;
+      const values={};
+      for(const field of state.formSchema){const el=Array.from(form.elements).find(node=>node.name===field.key);if(!el)continue;values[field.key]=field.type==='checkbox'?el.checked:el.value;}
+      const button=form.querySelector('button[type=submit]');
+      if(button)button.disabled=true;
+      try{
+        const result=await post('/api/register',{event_id:state.eventId,fields:values});
+        $('registerMessage').innerHTML=showNotice(result.message||'Registration submitted.','good');
+        form.reset();
+      }catch(err){
+        $('registerMessage').innerHTML=showNotice(err.message,'error');
+      }finally{
+        if(button)button.disabled=false;
+      }
     });
   }
   function fieldHTML(f) {
@@ -370,7 +379,7 @@
       $('backToEvents').addEventListener('click',clearEvent); return;
     }
     host.innerHTML=`<section class="card"><div class="section-title"><h2>Event details and branding</h2><span class="status ${safe(ev.status||'active')}">${safe(ev.status||'active')} · Event #${state.eventId}</span></div><form id="settingsForm"><div class="field"><label>Event name</label><input id="editName" required maxlength="120" value="${safe(ev.name)}"></div><div class="field"><label>Description</label><textarea id="editDescription" maxlength="1000">${safe(ev.description||'')}</textarea></div><div class="inline-fields"><div class="field"><label>Date</label><input id="editDate" type="date" value="${safe((ev.event_date||'').slice(0,10))}"></div><div class="field"><label>Time</label><input id="editTime" value="${safe(ev.event_time||'')}"></div></div><div class="field"><label>Venue</label><input id="editVenue" maxlength="200" value="${safe(ev.venue||'')}"></div><div class="inline-fields"><div class="field"><label>Primary colour</label><input id="editPrimary" type="color" value="${safe(theme.primary||'#25113b')}"></div><div class="field"><label>Accent colour</label><input id="editAccent" type="color" value="${safe(theme.accent||'#ff7518')}"></div><div class="field"><label>Background colour</label><input id="editBackground" type="color" value="${safe(theme.background||'#171321')}"></div><div class="field"><label>Gold / highlight</label><input id="editGold" type="color" value="${safe(theme.gold||'#ffd166')}"></div></div><button class="btn primary" type="submit">Save event settings</button></form><div id="settingsMessage"></div></section><section class="section card"><h2>Registration form builder</h2><p class="muted">This form belongs to this event only. Future events can use a different form without editing bot.py.</p>${schemaEditor(Array.isArray(schema)&&schema.length?schema:defaultSchema())}<div class="actions"><button class="btn primary" id="saveSchema">Save registration form</button></div><div id="schemaMessage"></div></section><section class="section card"><h2>Event lifecycle</h2><p class="muted">Draft events are private to admins until activated. Activating makes the event available to guests and enables registration and scanning. Archiving closes an active event while retaining its history.</p><div class="actions">${ev.status==='draft'?'<button class="btn success" id="activateEvent">Activate event</button>':''}${ev.status==='active'?'<button class="btn danger" id="archiveEvent">Archive this event</button>':''}<button class="btn" id="backToEvents">Back to all events</button></div><div id="archiveMessage"></div></section>`;
-    $('settingsForm').addEventListener('submit',async e=>{e.preventDefault();try{const r=await adminCall('update_event',{name:$('editName').value,description:$('editDescription').value,event_date:$('editDate').value,event_time:$('editTime').value,venue:$('editVenue').value,theme:{primary:$('editPrimary').value,accent:$('editAccent').value,background:$('editBackground').value,gold:$('editGold').value},registration_schema:Array.isArray(schema)?schema:defaultSchema()});$('settingsMessage').innerHTML=showNotice(r.message,'good');const d=await post('/api/event_details',{event_id:state.eventId});state.event=d.event;eventTheme(state.event);document.title=`${state.event.name} | EventHub`;const oldHero=main.querySelector('.hero');if(oldHero){oldHero.outerHTML=eventHero();}toast('Event settings saved');}catch(err){$('settingsMessage').innerHTML=showNotice(err.message,'error');}});
+    $('settingsForm').addEventListener('submit',async e=>{e.preventDefault();try{const r=await adminCall('update_event',{name:$('editName').value,description:$('editDescription').value,event_date:$('editDate').value,event_time:$('editTime').value,venue:$('editVenue').value,theme:{primary:$('editPrimary').value,accent:$('editAccent').value,background:$('editBackground').value,gold:$('editGold').value},registration_schema:Array.isArray(schema)?schema:defaultSchema()});$('settingsMessage').innerHTML=showNotice(r.message,'good');const d=await post('/api/event_details',{event_id:state.eventId});state.event=d.event;eventTheme(state.event);document.title=`${state.event.name} | KSMU HOSTEL 5 EVENTS`;const oldHero=main.querySelector('.hero');if(oldHero){oldHero.outerHTML=eventHero();}toast('Event settings saved');}catch(err){$('settingsMessage').innerHTML=showNotice(err.message,'error');}});
     if(host.dataset.schemaAddBound!=='1'){host.dataset.schemaAddBound='1';host.addEventListener('click',e=>{if(!e.target.closest('#addSchemaField'))return;try{const arr=readSchemaEditor();if(arr.length>=30)throw new Error('A registration form can have at most 30 fields.');arr.push({key:'custom_'+(arr.length+1),label:'New field',type:'text',required:false,options:[]});$('schemaBuilder').outerHTML=schemaEditor(arr);bindSchemaEditorButtons();}catch(err){toast(err.message,true);}});}
     bindSchemaEditorButtons();
     $('saveSchema').addEventListener('click',async()=>{try{const arr=readSchemaEditor();const r=await adminCall('update_event',{name:ev.name,description:ev.description||'',event_date:ev.event_date||'',event_time:ev.event_time||'',venue:ev.venue||'',theme,registration_schema:arr});$('schemaMessage').innerHTML=showNotice(r.message,'good');const d=await post('/api/event_details',{event_id:state.eventId});state.event=d.event;toast('Registration form saved');}catch(e){$('schemaMessage').innerHTML=showNotice(e.message,'error');}});
