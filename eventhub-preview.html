@@ -235,12 +235,21 @@
     host.innerHTML=`<section class="section card"><div class="section-title"><h2>${preview?'Preview registration —':'Register —'} ${safe(state.event.name)}</h2></div><p class="muted">${preview?'Admin preview only. Fields are disabled and no registration can be submitted.':'Your registration is linked only to this event. Required fields are marked with an asterisk.'}</p><form id="registrationForm">${state.formSchema.map(fieldHTML).join('')}${preview?'':'<button class="btn primary" type="submit">Submit registration</button>'}</form>${preview?'<div class="notice">Preview mode · No guest record will be created.</div>':'<div id="registerMessage"></div>'}</section>`;
     if(preview){$('registrationForm').querySelectorAll('input,select,textarea,button').forEach(el=>el.disabled=true);return;}
     $('registrationForm').addEventListener('submit',async e=>{
-      e.preventDefault();const values={};
-      for(const field of state.formSchema){const el=Array.from(e.currentTarget.elements).find(node=>node.name===field.key);if(!el)continue;values[field.key]=field.type==='checkbox'?el.checked:el.value;}
-      const button=e.currentTarget.querySelector('button[type=submit]');button.disabled=true;
-      try{const r=await post('/api/register',{event_id:state.eventId,fields:values});$('registerMessage').innerHTML=showNotice(r.message||'Registration submitted.','good');e.currentTarget.reset();}
-      catch(err){$('registerMessage').innerHTML=showNotice(err.message,'error');}
-      finally{button.disabled=false;}
+      e.preventDefault();
+      const form=e.currentTarget;
+      const values={};
+      for(const field of state.formSchema){const el=Array.from(form.elements).find(node=>node.name===field.key);if(!el)continue;values[field.key]=field.type==='checkbox'?el.checked:el.value;}
+      const button=form.querySelector('button[type=submit]');
+      if(button)button.disabled=true;
+      try{
+        const result=await post('/api/register',{event_id:state.eventId,fields:values});
+        $('registerMessage').innerHTML=showNotice(result.message||'Registration submitted.','good');
+        form.reset();
+      }catch(err){
+        $('registerMessage').innerHTML=showNotice(err.message,'error');
+      }finally{
+        if(button)button.disabled=false;
+      }
     });
   }
   function fieldHTML(f) {
