@@ -544,6 +544,17 @@
         ['announcementdelete_usage','Delete announcement history usage','Usage: /announcementdelete ID\\nThis removes local history only; it does not unsend messages.'],
         ['announcement_not_found','Announcement not found','Announcement not found in history.'],
         ['announcement_deleted','Announcement history deleted','🗑️ Announcement #{announcement_id} removed from local history. Messages already delivered to users were not deleted.']
+      ]},
+      {title:'Approval and registration decision replies',fields:[
+        ['approval_invalid','Invalid approval callback','Invalid request.'],
+        ['approval_already_handled','Registration already handled','This request has already been handled.'],
+        ['approval_decision_saved','Approval callback confirmation','Decision saved.'],
+        ['approval_admin_approved','Admin chat after approval','✅ Approved by admin {admin_id}\\nGuest: {name}{room_line}\\nFood: {food}\\nPass: {pass_code}'],
+        ['approval_admin_rejected','Admin chat after rejection','❌ Rejected by admin {admin_id}\\nGuest: {name}'],
+        ['eventhub_approved_delivered','EventHub approval delivered status','Approved {name}. QR pass was delivered.'],
+        ['eventhub_approved_failed','EventHub approval delivery failed','Approved {name}, but Telegram did not deliver the QR pass. Ask the guest to press /start and use /mypass.'],
+        ['eventhub_rejected_guest','Guest rejection message from EventHub','Your {event} registration was not approved. Please contact event support if you need help.'],
+        ['eventhub_rejected_admin','EventHub rejection confirmation','Rejected registration for {name}.']
       ]}
     ];
     const savedBot=parseJSON(ev.bot_settings_json,{});
