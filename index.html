@@ -430,11 +430,36 @@
           <div class="inline-fields"><div class="field"><label>Primary colour</label><input id="editPrimary" type="color" value="${safe(theme.primary||(isDiwali?'#32104d':'#25113b'))}"></div><div class="field"><label>Accent colour</label><input id="editAccent" type="color" value="${safe(theme.accent||(isDiwali?'#d9b15f':'#ff7518'))}"></div><div class="field"><label>Background colour</label><input id="editBackground" type="color" value="${safe(theme.background||(isDiwali?'#190d2b':'#170F24'))}"></div><div class="field"><label>Gold / highlight</label><input id="editGold" type="color" value="${safe(theme.gold||(isDiwali?'#d9b15f':'#ffd166'))}"></div></div>
           <div class="inline-fields"><div class="field"><label>Pass background</label><input id="editPassBackground" type="color" value="${safe(theme.pass_background||theme.background||(isDiwali?'#190d2b':'#170F24'))}"></div><div class="field"><label>Pass accent</label><input id="editPassAccent" type="color" value="${safe(theme.pass_accent||theme.accent||(isDiwali?'#d9b15f':'#ff7518'))}"></div><div class="field"><label>Pass highlight</label><input id="editPassGold" type="color" value="${safe(theme.pass_gold||theme.gold||(isDiwali?'#d9b15f':'#ffd166'))}"></div></div>
           <div class="field"><label>Pass subtitle (blank uses event description)</label><textarea id="editPassSubtitle" maxlength="240">${safe(theme.pass_subtitle||'')}</textarea></div>
+
+          <div class="field"><label>Pass title (use {event})</label><input id="editPassTitle" maxlength="120" value="${safe(theme.pass_title||'{event}')}"></div>
+          <div class="inline-fields"><div class="field"><label>Guest heading (use {role})</label><input id="editPassGuestLabel" maxlength="60" value="${safe(theme.pass_guest_label||'{role} PASS')}"></div><div class="field"><label>Guest-name label</label><input id="editPassNameLabel" maxlength="60" value="${safe(theme.pass_name_label||'GUEST NAME')}"></div></div>
+          <div class="inline-fields"><div class="field"><label>Food label</label><input id="editPassFoodLabel" maxlength="60" value="${safe(theme.pass_food_label||'FOOD PREFERENCE')}"></div><div class="field"><label>Phone label</label><input id="editPassPhoneLabel" maxlength="60" value="${safe(theme.pass_phone_label||'PHONE')}"></div></div>
+          <div class="inline-fields"><div class="field"><label>Residence label</label><input id="editPassResidenceLabel" maxlength="60" value="${safe(theme.pass_residence_label||'RESIDENCE')}"></div><div class="field"><label>Hostel format (use {hostel_number})</label><input id="editPassHostelLabel" maxlength="60" value="${safe(theme.pass_hostel_label||'HOSTEL {hostel_number}')}"></div></div>
+          <div class="inline-fields"><div class="field"><label>Apartment value</label><input id="editPassApartmentLabel" maxlength="60" value="${safe(theme.pass_apartment_label||'APARTMENT')}"></div><div class="field"><label>Room label</label><input id="editPassRoomLabel" maxlength="60" value="${safe(theme.pass_room_label||'ROOM')}"></div><div class="field"><label>Pass-code label</label><input id="editPassCodeLabel" maxlength="60" value="${safe(theme.pass_code_label||'PASS CODE')}"></div></div>
+          <div class="inline-fields"><div class="field"><label>Date label</label><input id="editPassDateLabel" maxlength="40" value="${safe(theme.pass_date_label||'DATE')}"></div><div class="field"><label>Time label</label><input id="editPassTimeLabel" maxlength="40" value="${safe(theme.pass_time_label||'TIME')}"></div><div class="field"><label>Venue label</label><input id="editPassVenueLabel" maxlength="40" value="${safe(theme.pass_venue_label||'VENUE')}"></div></div>
+          <div class="divider"></div><h3>QR code appearance</h3><p class="muted">The QR verification token remains protected. You can customise how the code looks.</p>
+          <div class="inline-fields"><div class="field"><label>QR foreground</label><input id="editPassQrForeground" type="color" value="${safe(theme.pass_qr_foreground||'#111111')}"></div><div class="field"><label>QR background</label><input id="editPassQrBackground" type="color" value="${safe(theme.pass_qr_background||'#FFFFFF')}"></div><div class="field"><label>Pass border colour</label><input id="editPassBorderColor" type="color" value="${safe(theme.pass_border_color||theme.pass_accent||theme.accent||'#FF7518')}"></div></div>
+          <div class="inline-fields"><div class="field"><label>QR size (220–430 px)</label><input id="editPassQrSize" type="number" min="220" max="430" step="10" value="${Number(theme.pass_qr_size||360)}"></div><div class="field"><label>QR quiet-zone border (1–8)</label><input id="editPassQrBorder" type="number" min="1" max="8" value="${Number(theme.pass_qr_border||4)}"></div><div class="field"><label>Pass border width (2–12)</label><input id="editPassBorderWidth" type="number" min="2" max="12" value="${Number(theme.pass_border_width||5)}"></div><div class="field"><label>QR error correction</label><select id="editPassQrError"><option value="H" ${(theme.pass_qr_error_correction||'H')==='H'?'selected':''}>H — highest (recommended)</option><option value="Q" ${theme.pass_qr_error_correction==='Q'?'selected':''}>Q — high</option><option value="M" ${theme.pass_qr_error_correction==='M'?'selected':''}>M — medium</option><option value="L" ${theme.pass_qr_error_correction==='L'?'selected':''}>L — low</option></select></div></div>
+          <div class="divider"></div><h3>Pass information visibility</h3><div class="grid cols3">
+            <label><input id="editPassShowRole" type="checkbox" style="width:auto;min-height:0" ${theme.pass_show_role!==false?'checked':''}> Show Guest/Admin/Volunteer heading</label>
+            <label><input id="editPassShowNameLabel" type="checkbox" style="width:auto;min-height:0" ${theme.pass_show_name_label?'checked':''}> Show guest-name label</label>
+            <label><input id="editPassShowPhone" type="checkbox" style="width:auto;min-height:0" ${theme.pass_show_phone?'checked':''}> Show phone number</label>
+            <label><input id="editPassShowFood" type="checkbox" style="width:auto;min-height:0" ${theme.pass_show_food!==false?'checked':''}> Show food preference</label>
+            <label><input id="editPassShowResidence" type="checkbox" style="width:auto;min-height:0" ${theme.pass_show_residence!==false?'checked':''}> Show residence</label>
+            <label><input id="editPassShowRoom" type="checkbox" style="width:auto;min-height:0" ${theme.pass_show_room!==false?'checked':''}> Show room number</label>
+            <label><input id="editPassShowCode" type="checkbox" style="width:auto;min-height:0" ${theme.pass_show_pass_code!==false?'checked':''}> Show pass code</label>
+            <label><input id="editPassShowDate" type="checkbox" style="width:auto;min-height:0" ${theme.pass_show_date?'checked':''}> Show event date</label>
+            <label><input id="editPassShowTime" type="checkbox" style="width:auto;min-height:0" ${theme.pass_show_time?'checked':''}> Show event time</label>
+            <label><input id="editPassShowVenue" type="checkbox" style="width:auto;min-height:0" ${theme.pass_show_venue?'checked':''}> Show event venue</label>
+            <label><input id="editPassShowInstruction" type="checkbox" style="width:auto;min-height:0" ${theme.pass_show_instruction!==false?'checked':''}> Show instruction</label>
+            <label><input id="editPassShowPrivacy" type="checkbox" style="width:auto;min-height:0" ${theme.pass_show_privacy!==false?'checked':''}> Show privacy note</label>
+          </div>
+
           <div class="inline-fields"><div class="field"><label>Pass guest heading (use {role})</label><input id="editPassGuestLabel" maxlength="60" value="${safe(theme.pass_guest_label||'{role} PASS')}"></div><div class="field"><label>Pass food label</label><input id="editPassFoodLabel" maxlength="60" value="${safe(theme.pass_food_label||'FOOD PREFERENCE')}"></div></div>
           <div class="field"><label>Pass instruction</label><input id="editPassInstruction" maxlength="160" value="${safe(theme.pass_instruction||'Use this QR for event entry and checkpoints')}"></div>
           <div class="field"><label>Pass privacy note</label><input id="editPassPrivacy" maxlength="160" value="${safe(theme.pass_privacy||'Keep your pass private • One guest per pass')}"></div>
-          <div class="actions"><button class="btn primary" type="submit">Save event, Mini App and pass design</button></div>
-        </form><div id="settingsMessage"></div>
+          <div class="actions"><button class="btn" type="button" id="previewQrPass">Preview saved QR pass design</button><button class="btn primary" type="submit">Save event, Mini App and pass design</button></div>
+        </form><div id="settingsMessage"></div><div id="qrPassPreview"></div>
       </section>
       <section class="section card"><h2>Registration form builder</h2><p class="muted">Add, remove, rename, reorder and configure fields for this event. Keep Full name required.</p>${schemaEditor(Array.isArray(schema)&&schema.length?schema:defaultSchema())}<div class="actions"><button class="btn primary" id="saveSchema">Save registration form</button></div><div id="schemaMessage"></div></section>
       <section class="section card"><h2>Event lifecycle</h2><p class="muted">Draft events are private to admins until activated. Archiving closes an active event while retaining history.</p><div class="actions">${ev.status==='draft'?'<button class="btn success" id="activateEvent">Activate event</button>':''}${ev.status==='active'?'<button class="btn danger" id="archiveEvent">Archive this event</button>':''}<button class="btn" id="backToEvents">Back to all events</button></div><div id="archiveMessage"></div></section>`;
@@ -444,8 +469,27 @@
       app_title:$('editAppTitle').value,app_subtitle:$('editAppSubtitle').value,brand_logo_url:$('editBrandLogo').value,
       hero_banner_url:$('editHeroBanner').value,hero_badge:$('editHeroBadge').value,
       sponsor_enabled:$('editSponsorEnabled').checked,sponsor_label:$('editSponsorLabel').value,sponsor_logo_url:$('editSponsorLogo').value,sponsor_alt:$('editSponsorAlt').value,
-      pass_subtitle:$('editPassSubtitle').value,pass_guest_label:$('editPassGuestLabel').value,pass_food_label:$('editPassFoodLabel').value,pass_instruction:$('editPassInstruction').value,pass_privacy:$('editPassPrivacy').value
+      pass_title:$('editPassTitle').value,pass_subtitle:$('editPassSubtitle').value,pass_guest_label:$('editPassGuestLabel').value,
+      pass_name_label:$('editPassNameLabel').value,pass_phone_label:$('editPassPhoneLabel').value,pass_food_label:$('editPassFoodLabel').value,
+      pass_residence_label:$('editPassResidenceLabel').value,pass_hostel_label:$('editPassHostelLabel').value,pass_apartment_label:$('editPassApartmentLabel').value,
+      pass_room_label:$('editPassRoomLabel').value,pass_code_label:$('editPassCodeLabel').value,pass_date_label:$('editPassDateLabel').value,
+      pass_time_label:$('editPassTimeLabel').value,pass_venue_label:$('editPassVenueLabel').value,
+      pass_qr_foreground:$('editPassQrForeground').value,pass_qr_background:$('editPassQrBackground').value,pass_border_color:$('editPassBorderColor').value,
+      pass_qr_size:Number($('editPassQrSize').value),pass_qr_border:Number($('editPassQrBorder').value),pass_border_width:Number($('editPassBorderWidth').value),
+      pass_qr_error_correction:$('editPassQrError').value,
+      pass_show_role:$('editPassShowRole').checked,pass_show_name_label:$('editPassShowNameLabel').checked,pass_show_phone:$('editPassShowPhone').checked,
+      pass_show_food:$('editPassShowFood').checked,pass_show_residence:$('editPassShowResidence').checked,pass_show_room:$('editPassShowRoom').checked,
+      pass_show_pass_code:$('editPassShowCode').checked,pass_show_date:$('editPassShowDate').checked,pass_show_time:$('editPassShowTime').checked,
+      pass_show_venue:$('editPassShowVenue').checked,pass_show_instruction:$('editPassShowInstruction').checked,pass_show_privacy:$('editPassShowPrivacy').checked,
+      pass_instruction:$('editPassInstruction').value,pass_privacy:$('editPassPrivacy').value
     };}
+    $('previewQrPass').addEventListener('click',async()=>{
+      const button=$('previewQrPass'),target=$('qrPassPreview');
+      button.disabled=true;target.innerHTML='<div class="notice">Generating a preview-only pass using the last saved design…</div>';
+      try{const result=await adminCall('preview_pass',{preview_name:'Sample Guest',preview_phone:'+7 900 000 00 00',preview_residence:'Hostel',preview_hostel:'5',preview_room:'392',preview_food:'Vegetarian'});
+        target.innerHTML='<div class="notice good">Preview only. This QR is not a real guest pass and cannot be used for entry.</div><img class="pass-image" alt="QR pass design preview" src="data:image/png;base64,'+result.pass.image+'">';
+      }catch(err){target.innerHTML=showNotice(err.message,'error');}finally{button.disabled=false;}
+    });
     $('settingsForm').addEventListener('submit',async e=>{e.preventDefault();const btn=e.currentTarget.querySelector('button[type="submit"]');btn.disabled=true;theme=collectTheme();
       try{const r=await adminCall('update_event',{name:$('editName').value,description:$('editDescription').value,event_date:$('editDate').value,event_time:$('editTime').value,venue:$('editVenue').value,theme});
         await loadEvent();await renderAdminPage('settings');toast('Event, Mini App branding and QR pass design saved');
