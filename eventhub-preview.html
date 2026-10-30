@@ -197,7 +197,7 @@
     }
   }
   function workspaceNav() {
-    const tabs=[['overview','Overview'],['registration','Registration preview'],['scanner','QR Scanner'],['approvals','Approvals'],['guests','Guests'],['storage','Proof storage'],['announcements','Announcements'],['settings','Event settings'],['staff','Volunteers'],['pass','My QR pass']];
+    const tabs=[['overview','Overview'],['registration','Registration preview'],['scanner','QR Scanner'],['approvals','Approvals'],['guests','Guests'],['storage','Proof storage'],['announcements','Announcements'],['settings','Event settings'],['staff','Volunteers'],['checkpoints','Checkpoints'],['admins','Admin access'],['pass','My QR pass']];
     return `<nav class="tabs" aria-label="Event workspace">${tabs.map(([k,l])=>`<button class="tab ${state.page===k?'active':''}" data-admin-page="${k}">${l}</button>`).join('')}</nav>`;
   }
   function bindNavigation() {
@@ -235,6 +235,8 @@
     else if(page==='announcements') await renderAnnouncements(host);
     else if(page==='settings') await renderSettings(host);
     else if(page==='staff') await renderStaff(host);
+    else if(page==='checkpoints') await renderCheckpoints(host);
+    else if(page==='admins') await renderAdmins(host);
     else if(page==='pass') await renderPass(host);
   }
   function bindAdminNavInPanel(){hostButtons('[data-admin-page]');}
