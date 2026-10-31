@@ -565,7 +565,7 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
   }
   function eventHero() {
     const e=state.event||{}, t=parseJSON(e.theme_json,{});
-    const guestActions=state.role==='guest'?guestRegistrationStatusMarkup():'';
+    const guestActions=''; // Guest status and actions are shown once in the dedicated guest cards below.
     const adminActions=state.role==='admin'?'<button class="btn ghost" data-copy-event-link>Copy this event Telegram link</button>':'';
     const isDiwali=/deepotsav|deepostav|diwali/i.test(String(e.name||''));
     const sponsorEnabled=Object.prototype.hasOwnProperty.call(t,'sponsor_enabled')?!!t.sponsor_enabled:isDiwali;
