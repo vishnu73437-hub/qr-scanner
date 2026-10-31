@@ -33,7 +33,7 @@
   const initData = tg?.initData || '';
   const API_BASE = (params.get('api_base') || window.EVENTHUB_API_BASE || (location.protocol.startsWith('http') && !/github\.io$/.test(location.hostname) ? location.origin : '')).replace(/\/$/, '');
   const initialEventId = Number(params.get('event_id') || 0);
-  const state = { role:'guest', user:null, activeEvents:[], workspaces:[], eventId:initialEventId, event:null, stats:null, page:'home', guest:null, scanner:null, formSchema:[], pass:null, checkpoints:[] };
+  const state = { role:'guest', user:null, activeEvents:[], workspaces:[], eventId:initialEventId, event:null, stats:null, page:'home', guest:null, scanner:null, formSchema:[], pass:null, checkpoints:[], myRegistration:null };
   const $ = (id) => document.getElementById(id);
   const main = $('main');
   const safe = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -97,13 +97,13 @@
     const eid=Number(id);
     if(!Number.isSafeInteger(eid)||eid<=0) throw new Error('Invalid event selection. Refresh the event list and try again.');
     await stopScanner();
-    state.eventId=eid; state.event=null; state.guest=null; state.pass=null; state.page='home'; updateUrl(eid,true);
+    state.eventId=eid; state.event=null; state.guest=null; state.pass=null; state.myRegistration=null; state.page='home'; updateUrl(eid,true);
     main.innerHTML='<div class="empty">Opening this event…</div>';
     try { await loadEvent(); }
     catch(err) { main.innerHTML=showNotice(err.message,'error')+'<div class="actions"><button class="btn" id="returnEvents">← All events</button></div>'; $('returnEvents')?.addEventListener('click',clearEvent); throw err; }
   }
   async function clearEvent() {
-    await stopScanner(); state.eventId=0; state.event=null; state.guest=null; state.pass=null; state.page='events'; updateUrl(0,true); eventTheme(null); document.title='KSMU HOSTEL 5 EVENTS';
+    await stopScanner(); state.eventId=0; state.event=null; state.guest=null; state.pass=null; state.myRegistration=null; state.page='events'; updateUrl(0,true); eventTheme(null); document.title='KSMU HOSTEL 5 EVENTS';
     try { await loadRole(); } catch(err) { toast(err.message,true); }
     renderEventList(); $('backBtn').classList.add('hidden');
   }
@@ -118,6 +118,11 @@
     const data=await post('/api/event_details',{event_id:requestedId});
     if(!data.event || Number(data.event.id)!==requestedId) throw new Error('EventHub returned a different event than the one selected. No event details were displayed.');
     state.event=data.event; eventTheme(state.event); document.title=`${state.event.name} | KSMU HOSTEL 5 EVENTS`; $('backBtn').classList.remove('hidden');
+    state.myRegistration=null;
+    if(state.role==='guest'){
+      try{state.myRegistration=await post('/api/my_registration_status',{event_id:requestedId});}
+      catch(err){state.myRegistration={registered:false,status:'unknown',error:err.message};}
+    }
     await renderHome();
   }
   async function boot() {
@@ -171,9 +176,16 @@
       } catch(err){toast(err.message,true);submit.disabled=false;submit.textContent='Create event workspace';}
     });
   }
+  function guestRegistrationStatusMarkup(){
+    const r=state.myRegistration||{},status=String(r.status||'unknown');
+    if(status==='approved')return '<button class="btn" data-page="pass">My QR pass</button>';
+    if(status==='pending')return '<span class="status pending">Registration awaiting approval</span>';
+    if(status==='revoked')return '<span class="status revoked">Pass revoked · Contact admin</span>';
+    return '<button class="btn primary" data-page="register">Register for this event</button><button class="btn" data-page="pass">My QR pass</button>';
+  }
   function eventHero() {
     const e=state.event||{}, t=parseJSON(e.theme_json,{});
-    const guestActions=state.role==='guest'?'<button class="btn primary" data-page="register">Register for this event</button><button class="btn" data-page="pass">My QR pass</button>':'';
+    const guestActions=state.role==='guest'?guestRegistrationStatusMarkup():'';
     const adminActions=state.role==='admin'?'<button class="btn ghost" data-copy-event-link>Copy this event Telegram link</button>':'';
     const isDiwali=/deepotsav|deepostav|diwali/i.test(String(e.name||''));
     const sponsorEnabled=Object.prototype.hasOwnProperty.call(t,'sponsor_enabled')?!!t.sponsor_enabled:isDiwali;
@@ -192,7 +204,13 @@
       main.innerHTML=eventHero()+`<section class="section grid"><article class="card"><h3>📷 QR Scanner</h3><p>Scan a pass and record entry, proof storage, food collection and exit for this event only.</p><div class="actions"><button class="btn primary" data-page="scanner">Open QR Scanner</button></div></article><article class="card"><h3>🎫 Staff QR pass</h3><p>Use the same event QR pass format as guests.</p><div class="actions"><button class="btn" data-page="pass">My QR pass</button></div></article></section><section id="workspaceContent"></section>`;
       bindNavigation();
     } else {
-      main.innerHTML=eventHero()+`<section class="section grid"><article class="card"><h3>🎟 Registration</h3><p>Complete this event's registration form. Your pass is sent after approval.</p><div class="actions"><button class="btn primary" data-page="register">Register now</button></div></article><article class="card"><h3>🎫 My QR pass</h3><p>View your pass after your registration is approved.</p><div class="actions"><button class="btn" data-page="pass">Open my pass</button></div></article></section><section id="workspaceContent"></section>`;
+      const regStatus=String(state.myRegistration?.status||'unknown');
+      let guestCards='';
+      if(regStatus==='approved')guestCards='<article class="card"><h3>✅ Already registered</h3><p>Your registration for this event is approved. You do not need to register again.</p><div class="actions"><button class="btn primary" data-page="pass">Open my QR pass</button></div></article>';
+      else if(regStatus==='pending')guestCards='<article class="card"><h3>🕒 Registration received</h3><p>Your registration is awaiting admin approval. The Register option is hidden for this event.</p></article>';
+      else if(regStatus==='revoked')guestCards='<article class="card"><h3>⚠️ Pass revoked</h3><p>Your previous pass for this event was revoked. Please contact an event admin. A duplicate registration is not available.</p></article>';
+      else guestCards='<article class="card"><h3>🎟 Registration</h3><p>'+(regStatus==='rejected'?'Your previous registration was rejected. You may submit a new registration.':"Complete this event's registration form. Your pass is sent after approval.")+'</p><div class="actions"><button class="btn primary" data-page="register">Register now</button></div></article><article class="card"><h3>🎫 My QR pass</h3><p>View your pass after your registration is approved.</p><div class="actions"><button class="btn" data-page="pass">Open my pass</button></div></article>';
+      main.innerHTML=eventHero()+`<section class="section grid">${guestCards}</section><section id="workspaceContent"></section>`;
       bindNavigation();
     }
   }
@@ -243,6 +261,14 @@
   function hostButtons(selector){document.querySelectorAll(selector).forEach(b=>{if(!b.dataset.bound){b.dataset.bound='1';b.addEventListener('click',()=>renderAdminPage(b.dataset.adminPage));}});}
   async function renderRegistration(host, preview=false) {
     if(!state.event) return;
+    const savedStatus=String(state.myRegistration?.status||'unknown');
+    if(!preview&&state.role==='guest'&&state.myRegistration?.registered){
+      const title=savedStatus==='approved'?'You are already registered':savedStatus==='pending'?'Registration awaiting approval':'Your previous pass was revoked';
+      const copy=savedStatus==='approved'?'Your registration for this event is approved. Open your existing QR pass below.':savedStatus==='pending'?'Your registration for this event has already been submitted and is waiting for admin approval. You cannot submit another registration.':'Your previous pass for this event was revoked. Please contact an event admin; duplicate registration is disabled.';
+      host.innerHTML='<section class="section card"><h2>'+safe(title)+'</h2><p>'+safe(copy)+'</p>'+(savedStatus==='approved'?'<div class="actions"><button class="btn primary" id="openExistingPass">Open my QR pass</button></div>':'')+'</section>';
+      $('openExistingPass')?.addEventListener('click',()=>openPage('pass'));
+      return;
+    }
     const schema=parseJSON(state.event.registration_schema,defaultSchema()); state.formSchema=Array.isArray(schema)&&schema.length?schema:defaultSchema();
     host.innerHTML=`<section class="section card"><div class="section-title"><h2>${preview?'Preview registration —':'Register —'} ${safe(state.event.name)}</h2></div><p class="muted">${preview?'Admin preview only. Fields are disabled and no registration can be submitted.':'Your registration is linked only to this event. Required fields are marked with an asterisk.'}</p><form id="registrationForm">${state.formSchema.map(fieldHTML).join('')}${preview?'':'<button class="btn primary" type="submit">Submit registration</button>'}</form>${preview?'<div class="notice">Preview mode · No guest record will be created.</div>':'<div id="registerMessage"></div>'}</section>`;
     if(preview){$('registrationForm').querySelectorAll('input,select,textarea,button').forEach(el=>el.disabled=true);return;}
@@ -255,8 +281,8 @@
       if(button)button.disabled=true;
       try{
         const result=await post('/api/register',{event_id:state.eventId,fields:values});
-        $('registerMessage').innerHTML=showNotice(result.message||'Registration submitted.','good');
-        form.reset();
+        state.myRegistration={ok:true,registered:true,status:'pending',message:result.message||'Registration submitted.'};
+        host.innerHTML='<section class="section card"><h2>Registration received</h2><p>Your registration for '+safe(state.event.name)+' is awaiting admin approval. The Register option is now hidden for this event.</p></section>';
       }catch(err){
         $('registerMessage').innerHTML=showNotice(err.message,'error');
       }finally{
