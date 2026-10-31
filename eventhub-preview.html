@@ -152,8 +152,8 @@
       {key:'full_name',label:'Full name',type:'text',required:true},
       {key:'phone',label:'Phone number',type:'tel',required:true},
       {key:'residence_type',label:'Residence',type:'select',options:['Hostel','Apartment'],required:true},
-      {key:'hostel_number',label:'Hostel number',type:'text',required:false},
-      {key:'room_number',label:'Room number',type:'text',required:false},
+      {key:'hostel_number',label:'Hostel number',type:'text',required:true},
+      {key:'room_number',label:'Room number',type:'text',required:true},
       {key:'food_preference',label:'Food preference',type:'select',options:['Vegetarian','Non-vegetarian'],required:true}
     ];
   }
@@ -274,6 +274,7 @@
     const schema=parseJSON(state.event.registration_schema,defaultSchema()); state.formSchema=Array.isArray(schema)&&schema.length?schema:defaultSchema();
     host.innerHTML=`<section class="section card"><div class="section-title"><h2>${preview?'Preview registration —':'Register —'} ${safe(state.event.name)}</h2></div><p class="muted">${preview?'Admin preview only. Fields are disabled and no registration can be submitted.':'Your registration is linked only to this event. Required fields are marked with an asterisk.'}</p><form id="registrationForm">${state.formSchema.map(fieldHTML).join('')}${preview?'':'<button class="btn primary" type="submit">Submit registration</button>'}</form>${preview?'<div class="notice">Preview mode · No guest record will be created.</div>':'<div id="registerMessage"></div>'}</section>`;
     if(preview){$('registrationForm').querySelectorAll('input,select,textarea,button').forEach(el=>el.disabled=true);return;}
+    bindResidenceFields($('registrationForm'));
     $('registrationForm').addEventListener('submit',async e=>{
       e.preventDefault();
       const form=e.currentTarget;
@@ -292,12 +293,29 @@
       }
     });
   }
+  function bindResidenceFields(form) {
+    const residence=form.elements.namedItem('residence_type');
+    const update=()=>{
+      const isHostel=String(residence?.value||'')==='Hostel';
+      form.querySelectorAll('[data-residence-field]').forEach(wrapper=>{
+        wrapper.hidden=!isHostel;
+        const input=wrapper.querySelector('input,select,textarea');
+        if(!input)return;
+        input.required=isHostel && wrapper.dataset.required==='true';
+        if(!isHostel)input.value='';
+      });
+    };
+    residence?.addEventListener('change',update);
+    update();
+  }
   function fieldHTML(f) {
     const key=String(f.key||''), id='registration-'+key, label=safe(f.label||key), type=f.type||'text', required=f.required?'required':'';
+    const residenceField=['hostel_number','room_number'].includes(key);
+    const wrapperAttr=residenceField?` data-residence-field="true" data-required="${f.required?'true':'false'}"`:'';
     if(type==='select') return `<div class="field"><label for="${safe(id)}">${label}${f.required?' *':''}</label><select id="${safe(id)}" name="${safe(key)}" ${required}><option value="">Choose…</option>${(Array.isArray(f.options)?f.options:[]).map(x=>`<option value="${safe(x)}">${safe(x)}</option>`).join('')}</select></div>`;
     if(type==='textarea') return `<div class="field"><label for="${safe(id)}">${label}${f.required?' *':''}</label><textarea id="${safe(id)}" name="${safe(key)}" ${required} maxlength="1000"></textarea></div>`;
     if(type==='checkbox') return `<div class="field"><label><input id="${safe(id)}" type="checkbox" name="${safe(key)}" ${required} style="width:auto;min-height:0"> ${label}${f.required?' *':''}</label></div>`;
-    return `<div class="field"><label for="${safe(id)}">${label}${f.required?' *':''}</label><input id="${safe(id)}" name="${safe(key)}" type="${['text','tel','email','number','date'].includes(type)?type:'text'}" ${required} maxlength="1000"></div>`;
+    return `<div class="field"${wrapperAttr}><label for="${safe(id)}">${label}${f.required?' *':''}</label><input id="${safe(id)}" name="${safe(key)}" type="${['text','tel','email','number','date'].includes(type)?type:'text'}" ${required} maxlength="1000"></div>`;
   }
   async function renderPass(host) {
     host.innerHTML=`<section class="section card"><h2>My QR pass</h2><p class="muted">This pass is valid only for ${safe(state.event.name)}.</p><div id="passArea">Loading pass…</div></section>`;
