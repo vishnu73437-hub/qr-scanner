@@ -227,6 +227,11 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
 }
 @media(max-width:650px){body.theme-halloween .topbar{padding:8px;border-radius:18px}body.theme-halloween .hero{border-radius:24px}body.theme-halloween .hero::before{inset:6px;border-radius:18px}}
 
+
+/* Graceful fallback for unavailable event banner URLs */
+.hero-banner.banner-fallback{min-height:112px;display:grid;place-items:center;text-align:center;padding:22px 16px;background:linear-gradient(125deg,#25142d,#40203c 52%,#241322);border:1px solid #d9854e88;box-shadow:0 10px 28px #0006}
+.hero-banner.banner-fallback::before{content:"🎃  ✦  🦇  ✦  🎃";font-size:clamp(25px,6vw,42px);letter-spacing:clamp(4px,2vw,14px);filter:drop-shadow(0 0 12px #f07828)}
+.hero-banner.banner-fallback::after{content:"HALLOWEEN NIGHT";display:block;color:#ffd09a;font-size:11px;font-weight:900;letter-spacing:3px;margin-top:-18px}
   </style>
 </head>
 <body>
@@ -405,7 +410,7 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
     const isDiwali=/deepotsav|deepostav|diwali/i.test(String(e.name||''));
     const sponsorEnabled=Object.prototype.hasOwnProperty.call(t,'sponsor_enabled')?!!t.sponsor_enabled:isDiwali;
     const sponsorUrl=t.sponsor_logo_url||(isDiwali?'./doc-tutorials-original.jpg':'');
-    const banner=t.hero_banner_url?'<div class="hero-banner"><img src="'+safe(t.hero_banner_url)+'" alt="'+safe(e.name)+' banner" loading="lazy"></div>':'';
+    const banner=t.hero_banner_url?'<div class="hero-banner"><img src="'+safe(t.hero_banner_url)+'" alt="'+safe(e.name)+' banner" loading="lazy" onerror="this.parentElement.classList.add(\'banner-fallback\');this.remove()"></div>':'';
     const sponsor=sponsorEnabled&&sponsorUrl?'<section class="sponsor-card" aria-label="'+safe(t.sponsor_label||'Proud sponsor')+'"><span class="sponsor-label">'+safe(t.sponsor_label||'PROUD SPONSOR')+'</span><img src="'+safe(sponsorUrl)+'" alt="'+safe(t.sponsor_alt||'Event sponsor')+'" loading="lazy"></section>':'';
     return banner+'<section class="hero"><div class="eyebrow">'+safe(t.hero_badge||(state.role==='admin'?'Event workspace':state.role==='volunteer'?'Volunteer workspace':'Event information'))+'</div><h1>'+safe(e.name)+'</h1><p>'+safe(e.description||'Event details will be announced soon.')+'</p><div class="meta-grid"><div class="meta"><b>Date</b><span>'+safe(e.event_date||'To be announced')+'</span></div><div class="meta"><b>Time</b><span>'+safe(e.event_time||'To be announced')+'</span></div><div class="meta"><b>Venue</b><span>'+safe(e.venue||'To be announced')+'</span></div></div><div class="actions">'+guestActions+adminActions+'</div></section>'+sponsor;
   }
