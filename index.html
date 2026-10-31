@@ -514,7 +514,6 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
   async function renderHome() {
     state.page='home';
     if(state.role==='admin') {
-      let stat={}; try { const r=await adminCall('stats'); stat=r.stats||{}; state.stats=stat; } catch(_){}
       main.innerHTML=eventHero()+`<section class="section"><div class="section-title"><h2>Event overview</h2><span class="status ${safe(state.event.status||'active')}">${safe(state.event.status||'active')} · Selected event only</span></div><div class="stat-grid">${[['Approved guests','approvedGuests'],['Checked in','checkedIn'],['Meals served','mealsServed'],['Volunteers','volunteers']].map(([l,k])=>`<div class="stat"><strong>${Number(stat[k]||0)}</strong><span>${l}</span></div>`).join('')}</div></section>${workspaceNav()}<section class="section" id="workspaceContent"></section>`;
       bindNavigation(); await renderAdminPage('overview');
     } else if(state.role==='volunteer') {
@@ -576,9 +575,10 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
     document.querySelectorAll('[data-admin-page]').forEach(b=>b.classList.toggle('active',b.dataset.adminPage===page));
     if(page==='scanner') { await openScannerStandalone(); return; }
     if(page==='overview') {
-      const r=await adminCall('stats').catch(()=>({stats:{}})); const s=r.stats||{};
+      let statsError='';const r=await adminCall('stats').catch(e=>{statsError=e.message;return {stats:{}};}); const s=r.stats||{};
       host.innerHTML=`<div class="section-title"><h2>Event-day control centre</h2><span class="status ${safe(state.event.status||'active')}">${safe(state.event.status||'active')} · This event</span></div>
         <div class="stat-grid">${[['Approved guests','approvedGuests'],['Checked in','checkedIn'],['Meals served','mealsServed'],['Volunteers','volunteers']].map(([l,k])=>`<div class="stat"><strong>${Number(s[k]||0)}</strong><span>${l}</span></div>`).join('')}</div>
+        ${statsError?showNotice('Live statistics are unavailable: '+statsError,'error'):''}
         <div class="eventday-actions">
           <article class="eventday-primary"><div class="eyebrow">Main event-day action</div><h2 style="margin:7px 0">QR Scanner</h2><p class="muted">Open a dedicated full-screen scanner for entry, proof handling, food collection and exit.</p><div class="actions"><button class="btn primary" data-admin-page="scanner">Open QR Scanner →</button></div></article>
           <article class="card"><h3>Google Sheets sync</h3><p id="sheetsStatus">Sync queue status has not been checked.</p><div class="actions"><button class="btn small" id="refreshSheetsStatus">Check sync status</button></div></article>
