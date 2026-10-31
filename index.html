@@ -354,6 +354,11 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
   function toast(message, bad=false) { const el=$('toast'); el.textContent=message; el.style.background=bad?'#ff626d':'#f8f5fb'; el.classList.remove('hidden'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.add('hidden'),3500); }
   function showNotice(message, kind='') { return `<div class="notice ${kind}">${safe(message)}</div>`; }
   function themeColour(value, fallback) { return /^#[0-9a-f]{6}$/i.test(String(value||'')) ? String(value) : fallback; }
+  function foodCollectionIsEnabled(ev=state.event) {
+    const t=parseJSON(ev?.theme_json,{});
+    if(Object.prototype.hasOwnProperty.call(t,'food_collection_enabled')) return t.food_collection_enabled!==false;
+    return ev?.food_collection_enabled!==false;
+  }
   function eventTheme(ev) {
     const t=parseJSON(ev?.theme_json,{});
     const eventName=String(ev?.name||'').toLowerCase();
@@ -371,7 +376,7 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
     document.querySelector('meta[name="theme-color"]').content=background;
     const title=document.getElementById('brandTitle'), subtitle=document.getElementById('brandSubtitle'), mark=document.getElementById('brandMark');
     if(title)title.textContent=t.app_title||'KSMU HOSTEL 5 EVENTS';if(subtitle)subtitle.textContent=t.app_subtitle||'EVENT MANAGEMENT';
-    if(mark){if(t.brand_logo_url)mark.innerHTML='<img src="'+safe(t.brand_logo_url)+'" alt="" loading="lazy">';else mark.textContent=isHalloween?'🎃':(isDiwali?'🪔':'✦');}
+    if(mark){const logo=t.brand_logo_image||t.brand_logo_url;if(logo)mark.innerHTML='<img src="'+safe(logo)+'" alt="" loading="lazy">';else mark.textContent=isHalloween?'🎃':(isDiwali?'🪔':'✦');}
   }
 
   let deepotsavFxFrame=0,deepotsavFxResize=null;
@@ -582,8 +587,9 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
     const adminActions=state.role==='admin'?'<button class="btn ghost" data-copy-event-link>Copy this event Telegram link</button>':'';
     const isDiwali=/deepotsav|deepostav|diwali/i.test(String(e.name||''));
     const sponsorEnabled=Object.prototype.hasOwnProperty.call(t,'sponsor_enabled')?!!t.sponsor_enabled:isDiwali;
-    const sponsorUrl=t.sponsor_logo_url||(isDiwali?'./doc-tutorials-original.jpg':'');
-    const banner=t.hero_banner_url?'<div class="hero-banner"><img src="'+safe(t.hero_banner_url)+'" alt="'+safe(e.name)+' banner" loading="lazy" onerror="this.parentElement.classList.add(\'banner-fallback\');this.remove()"></div>':'';
+    const sponsorUrl=t.sponsor_logo_image||t.sponsor_logo_url||(isDiwali?'./doc-tutorials-original.jpg':'');
+    const bannerUrl=t.hero_banner_image||t.hero_banner_url||'';
+    const banner=bannerUrl?'<div class="hero-banner"><img src="'+safe(bannerUrl)+'" alt="'+safe(e.name)+' banner" loading="lazy" onerror="this.parentElement.classList.add(\'banner-fallback\');this.remove()"></div>':'';
     const sponsor=sponsorEnabled&&sponsorUrl?'<section class="sponsor-card" aria-label="'+safe(t.sponsor_label||'Proud sponsor')+'"><span class="sponsor-label">'+safe(t.sponsor_label||'PROUD SPONSOR')+'</span><img src="'+safe(sponsorUrl)+'" alt="'+safe(t.sponsor_alt||'Event sponsor')+'" loading="lazy"></section>':'';
     return banner+'<section class="hero"><div class="eyebrow">'+safe(t.hero_badge||(state.role==='admin'?'Event workspace':state.role==='volunteer'?'Volunteer workspace':'Event information'))+'</div><h1>'+safe(e.name)+'</h1><p>'+safe(e.description||'Event details will be announced soon.')+'</p><div class="meta-grid"><div class="meta"><b>Date</b><span>'+safe(e.event_date||'To be announced')+'</span></div><div class="meta"><b>Time</b><span>'+safe(e.event_time||'To be announced')+'</span></div><div class="meta"><b>Venue</b><span>'+safe(e.venue||'To be announced')+'</span></div></div><div class="actions">'+guestActions+adminActions+'</div></section>'+sponsor;
   }
@@ -653,10 +659,10 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
     if(page==='overview') {
       let statsError='';const r=await adminCall('stats').catch(e=>{statsError=e.message;return {stats:{}};}); const s=r.stats||{};
       host.innerHTML=`<div class="section-title"><h2>Event-day control centre</h2><span class="status ${safe(state.event.status||'active')}">${safe(state.event.status||'active')} · This event</span></div>
-        <div class="stat-grid">${[['Approved guests','approvedGuests'],['Checked in','checkedIn'],['Meals served','mealsServed'],['Volunteers','volunteers']].map(([l,k])=>`<div class="stat"><strong>${Number(s[k]||0)}</strong><span>${l}</span></div>`).join('')}</div>
+        <div class="stat-grid">${[['Approved guests','approvedGuests'],['Checked in','checkedIn'],[foodCollectionIsEnabled()?'Meals served':'Food collection',foodCollectionIsEnabled()?'mealsServed':'foodNA'],['Volunteers','volunteers']].map(([l,k])=>`<div class="stat"><strong>${k==='foodNA'?'Not applicable':Number(s[k]||0)}</strong><span>${l}</span></div>`).join('')}</div>
         ${statsError?showNotice('Live statistics are unavailable: '+statsError,'error'):''}
         <div class="eventday-actions">
-          <article class="eventday-primary"><div class="eyebrow">Main event-day action</div><h2 style="margin:7px 0">QR Scanner</h2><p class="muted">Open a dedicated full-screen scanner for entry, proof handling, food collection and exit.</p><div class="actions"><button class="btn primary" data-admin-page="scanner">Open QR Scanner →</button></div></article>
+          <article class="eventday-primary"><div class="eyebrow">Main event-day action</div><h2 style="margin:7px 0">QR Scanner</h2><p class="muted">Open a dedicated full-screen scanner for entry, proof handling, ${foodCollectionIsEnabled()?'food collection and ':''}exit.</p><div class="actions"><button class="btn primary" data-admin-page="scanner">Open QR Scanner →</button></div></article>
           <article class="card"><h3>Google Sheets sync</h3><p id="sheetsStatus">Sync queue status has not been checked.</p><div class="actions"><button class="btn primary small" id="syncSheetsNow">Queue guest sync</button><button class="btn small" id="refreshSheetsStatus">Check sync status</button></div></article>
         </div>
         <div class="admin-launchpad">
@@ -862,12 +868,12 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
       actions.push(['proof_deposit','Store proof','']);
       actions.push(['proof_no_proof','No proof provided','']);
     }
-    if(activePass&&g.entryUsed&&!g.exitRecorded&&!g.foodUsed&&proofResolved)actions.push(['food','Record food collection','success']);
+    if(foodCollectionIsEnabled()&&activePass&&g.entryUsed&&!g.exitRecorded&&!g.foodUsed&&proofResolved)actions.push(['food','Record food collection','success']);
     if(activePass&&g.entryUsed&&!g.exitRecorded&&g.proofStatus==='Stored')actions.push(['proof_return','Return stored proof','']);
     if(activePass&&g.entryUsed&&(g.proofStatus==='Returned'||g.proofStatus==='No proof')&&!g.exitRecorded)actions.push(['exit','Record exit','']);
     const customCheckpointHtml=activePass&&!g.exitRecorded&&(state.checkpoints||[]).length?`<section class='guest-edit'><strong>Additional event checkpoints</strong><div class='field'><label>Choose checkpoint</label><select id='customCheckpoint'>${state.checkpoints.map(c=>`<option value='${Number(c.id)}'>${safe(c.name)} · ${safe(c.checkpoint_type)}</option>`).join('')}</select></div><button class='btn primary' id='recordCustomCheckpoint' type='button'>Record checkpoint scan</button></section>`:'';
     const checkpointHistory=(g.checkpointScans||[]).map(c=>`<div class='sub'>✓ ${safe(c.name)} · ${safe(c.scannedAt||'')}</div>`).join('');
-    $('scanResult').innerHTML=`${message?showNotice(message,'good'):''}<div class="guest-result"><div class="row"><strong>${safe(g.name)}</strong><span class="pill ${g.status==='approved'?'good':'warn'}">${safe(g.status)}</span></div><p class="muted">${safe(g.residence)}${g.roomNumber?' · Room '+safe(g.roomNumber):''} · ${safe(g.food)}</p><div class="wrap"><span class="pill ${g.entryUsed?'good':'warn'}">Entry: ${g.entryUsed?'Recorded':'Pending'}</span><span class="pill ${g.foodUsed?'good':'warn'}">Food: ${g.foodUsed?'Collected':'Pending'}</span><span class="pill">Proof: ${safe(g.proofStatus||'Not collected')}</span><span class="pill">Exit: ${g.exitRecorded?'Recorded':'Pending'}</span></div>${g.storageLabel?`<p><strong>Storage:</strong> ${safe(g.storageLabel)}</p>`:''}${checkpointHistory?`<div class='section'><strong>Additional checkpoint history</strong>${checkpointHistory}</div>`:''}${customCheckpointHtml}${guestAdminEditor(g)}${!activePass?'<div class="notice error">This pass is not active. Event-day actions are disabled.</div>':g.exitRecorded?'<div class="notice good">Exit has already been recorded. No further event-day actions are available.</div>':g.entryUsed&&!proofResolved?'<div class="notice">Next step: store the guest’s proof or confirm that no proof was provided. Food collection becomes available after this step.</div>':''}<p class="muted">Pass code: ${safe(g.passCode)}</p><div class="actions">${actions.map(([a,l,cl])=>`<button class="btn ${cl}" data-scan-action="${a}">${l}</button>`).join('')||'<span class="pill good">No further actions available</span>'}</div></div>`;
+    $('scanResult').innerHTML=`${message?showNotice(message,'good'):''}<div class="guest-result"><div class="row"><strong>${safe(g.name)}</strong><span class="pill ${g.status==='approved'?'good':'warn'}">${safe(g.status)}</span></div><p class="muted">${safe(g.residence)}${g.roomNumber?' · Room '+safe(g.roomNumber):''} · ${safe(g.food)}</p><div class="wrap"><span class="pill ${g.entryUsed?'good':'warn'}">Entry: ${g.entryUsed?'Recorded':'Pending'}</span><span class="pill ${!foodCollectionIsEnabled()?'':(g.foodUsed?'good':'warn')}">Food: ${foodCollectionIsEnabled()?(g.foodUsed?'Collected':'Pending'):'Not applicable'}</span><span class="pill">Proof: ${safe(g.proofStatus||'Not collected')}</span><span class="pill">Exit: ${g.exitRecorded?'Recorded':'Pending'}</span></div>${g.storageLabel?`<p><strong>Storage:</strong> ${safe(g.storageLabel)}</p>`:''}${checkpointHistory?`<div class='section'><strong>Additional checkpoint history</strong>${checkpointHistory}</div>`:''}${customCheckpointHtml}${guestAdminEditor(g)}${!activePass?'<div class="notice error">This pass is not active. Event-day actions are disabled.</div>':g.exitRecorded?'<div class="notice good">Exit has already been recorded. No further event-day actions are available.</div>':g.entryUsed&&!proofResolved?'<div class="notice">Next step: store the guest’s proof or confirm that no proof was provided. Continue with the proof workflow before exit.</div>':''}<p class="muted">Pass code: ${safe(g.passCode)}</p><div class="actions">${actions.map(([a,l,cl])=>`<button class="btn ${cl}" data-scan-action="${a}">${l}</button>`).join('')||'<span class="pill good">No further actions available</span>'}</div></div>`;
     document.querySelectorAll('[data-scan-action]').forEach(b=>b.addEventListener('click',()=>recordAction(b.dataset.scanAction,b)));
     $('recordCustomCheckpoint')?.addEventListener('click',recordCustomCheckpoint);
     $('scanGuestEditForm')?.addEventListener('submit',saveScannedGuest);
@@ -884,6 +890,7 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
     catch(err){toast(err.message,true);button.disabled=false;}
   }
   async function recordAction(action,button) {
+    if(action==='food'&&!foodCollectionIsEnabled()){toast('Food collection is disabled for this event.',true);return;}
     if(!state.guest || state.guest.status!=='approved' || state.guest.exitRecorded) { toast('This pass is no longer eligible for event-day actions.',true); return; }
     button.disabled=true;
     try{const r=await post('/api/action',{event_id:state.eventId,action,qr:state.guest.passCode});const g=r.guest||{};await lookupGuest(state.guest.passCode);toast(r.message||`${action.replaceAll('_',' ')} recorded`);}
@@ -906,9 +913,9 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
     const search=async()=>{
       try{
         const r=await adminCall('guest_search',{query:$('guestQuery').value,status:$('guestStatus').value});
-        $('guestList').innerHTML=(r.guests||[]).map(g=>`<article class="list-item" data-guest-id="${Number(g.id)}"><div class="row"><strong>${safe(g.full_name)}</strong><span class="pill ${g.status==='approved'?'good':'warn'}">${safe(g.status)}</span></div><div class="sub">${safe(g.phone||'')} · ${safe(g.pass_code)} · ${safe(g.food_preference)}</div><div class="sub">Entry ${g.entry_used?'✓':'—'} · Food ${g.food_used?'✓':'—'}</div>
+        $('guestList').innerHTML=(r.guests||[]).map(g=>`<article class="list-item" data-guest-id="${Number(g.id)}"><div class="row"><strong>${safe(g.full_name)}</strong><span class="pill ${g.status==='approved'?'good':'warn'}">${safe(g.status)}</span></div><div class="sub">${safe(g.phone||'')} · ${safe(g.pass_code)} · ${safe(g.food_preference)}</div><div class="sub">Entry ${g.entry_used?'✓':'—'} · Food ${foodCollectionIsEnabled()?(g.food_used?'✓':'—'):'Not applicable'}</div>
           ${readOnly?'':`<details class="guest-edit"><summary>Edit guest details</summary><form data-edit-guest="${Number(g.id)}"><div class="field"><label>Full name</label><input name="full_name" required maxlength="100" value="${safe(g.full_name)}"></div><div class="field"><label>Phone</label><input name="phone" required value="${safe(g.phone||'')}"></div><div class="field"><label>Residence</label><select name="residence_type"><option value="Hostel" ${g.residence_type==='Hostel'?'selected':''}>Hostel</option><option value="Apartment" ${g.residence_type==='Apartment'?'selected':''}>Apartment</option></select></div><div class="inline-fields"><div class="field"><label>Hostel number</label><input name="hostel_number" maxlength="20" value="${safe(g.hostel_number||'')}"></div><div class="field"><label>Room number</label><input name="room_number" maxlength="20" value="${safe(g.room_number||'')}"></div></div><div class="field"><label>Food preference</label><select name="food_preference"><option value="" ${!(['Vegetarian','Non-vegetarian'].includes(g.food_preference))?'selected':''}>Choose…</option><option ${g.food_preference==='Vegetarian'?'selected':''}>Vegetarian</option><option ${g.food_preference==='Non-vegetarian'?'selected':''}>Non-vegetarian</option></select></div><div class="field"><label>Extra registration fields (JSON)</label><textarea name="registration_data" rows="5">${safe(JSON.stringify(parseJSON(g.registration_data,{}),null,2))}</textarea></div><button class="btn primary" type="submit">Save guest details</button></form></details>
-          <div class="actions">${g.status==='approved'?'<button class="btn small" data-guest-op="reissue_pass">Reissue QR</button><button class="btn danger small" data-guest-op="revoke_pass">Revoke</button>':'<button class="btn success small" data-guest-op="reactivate_pass">Reactivate</button>'}<button class="btn small" data-guest-op="reset_entry_and_storage" data-confirm="Reset entry and proof-storage tracking? Any physical proof must already be returned. Food status will stay unchanged.">Reset entry + proof storage</button><button class="btn small" data-guest-op="reset_status" data-target="food" data-confirm="Reset this guest’s food collection status?">Reset food status</button></div>`}
+          <div class="actions">${g.status==='approved'?'<button class="btn small" data-guest-op="reissue_pass">Reissue QR</button><button class="btn danger small" data-guest-op="revoke_pass">Revoke</button>':'<button class="btn success small" data-guest-op="reactivate_pass">Reactivate</button>'}<button class="btn small" data-guest-op="reset_entry_and_storage" data-confirm="Reset entry and proof-storage tracking? Any physical proof must already be returned. Food status will stay unchanged.">Reset entry + proof storage</button>${foodCollectionIsEnabled()?'<button class="btn small" data-guest-op="reset_status" data-target="food" data-confirm="Reset this guest’s food collection status?">Reset food status</button>':''}</div>`}
         </article>`).join('')||'<div class="empty">No matching guests.</div>';
         if(!readOnly){
           document.querySelectorAll('form[data-edit-guest]').forEach(form=>form.addEventListener('submit',async e=>{e.preventDefault();const btn=form.querySelector('button[type="submit"]');btn.disabled=true;const data=new FormData(form);try{const rr=await adminCall('guest_update',{guest_id:Number(form.dataset.editGuest),full_name:data.get('full_name'),phone:data.get('phone'),residence_type:data.get('residence_type'),hostel_number:data.get('hostel_number'),room_number:data.get('room_number'),food_preference:data.get('food_preference'),registration_data:data.get('registration_data')});toast(rr.message||'Guest details saved');await search();}catch(err){toast(err.message,true);btn.disabled=false;}}));
@@ -1097,15 +1104,20 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
           <div class="field"><label>Event description</label><textarea id="editDescription" maxlength="1000">${safe(ev.description||'')}</textarea></div>
           <div class="inline-fields"><div class="field"><label>Date</label><input id="editDate" type="date" value="${safe((ev.event_date||'').slice(0,10))}"></div><div class="field"><label>Time</label><input id="editTime" value="${safe(ev.event_time||'')}"></div></div>
           <div class="field"><label>Venue</label><input id="editVenue" maxlength="200" value="${safe(ev.venue||'')}"></div>
+          <div class="divider"></div><h3>Event-day workflow</h3>
+          <div class="field"><label><input id="editFoodCollectionEnabled" type="checkbox" style="width:auto;min-height:0" ${theme.food_collection_enabled!==false?'checked':''}> Enable food collection for this event</label><p class="muted">Turn this off when the event has no food service. Food scan actions, food checkpoints and meal statistics will be disabled. Entry, proof storage and exit continue normally. Existing registrations and scan history will be preserved.</p></div>
           <div class="divider"></div><h3>Mini App branding</h3><p class="muted">Settings are event-specific. Use an https image URL or a relative asset path such as ./banner.jpg.</p>
           <div class="inline-fields"><div class="field"><label>Mini App title</label><input id="editAppTitle" maxlength="80" value="${safe(theme.app_title||'KSMU HOSTEL 5 EVENTS')}"></div><div class="field"><label>Mini App subtitle</label><input id="editAppSubtitle" maxlength="120" value="${safe(theme.app_subtitle||'EVENT MANAGEMENT')}"></div></div>
-          <div class="field"><label>Header logo URL / file path</label><input id="editBrandLogo" maxlength="500" value="${safe(theme.brand_logo_url||'')}" placeholder="./logo.png or https://…"></div>
-          <div class="field"><label>Event banner URL / file path</label><input id="editHeroBanner" maxlength="500" value="${safe(theme.hero_banner_url||'')}" placeholder="./event-banner.jpg or https://…"></div>
+          <div class="field"><label>Header logo URL (optional)</label><input id="editBrandLogo" maxlength="500" value="${safe(theme.brand_logo_url||'')}" placeholder="./logo.png or https://…"></div>
+          <div class="field"><label>Or upload header logo from your device</label><input id="editBrandLogoUpload" type="file" accept="image/png,image/jpeg,image/webp"><input id="editBrandLogoImage" type="hidden" value="${safe(theme.brand_logo_image||'')}"><div id="brandLogoPreview"></div><button class="btn small" type="button" id="removeBrandLogoImage">Remove uploaded logo</button></div>
+          <div class="field"><label>Event banner URL (optional)</label><input id="editHeroBanner" maxlength="500" value="${safe(theme.hero_banner_url||'')}" placeholder="./event-banner.jpg or https://…"></div>
+          <div class="field"><label>Or upload event banner from your device</label><input id="editHeroBannerUpload" type="file" accept="image/png,image/jpeg,image/webp"><input id="editHeroBannerImage" type="hidden" value="${safe(theme.hero_banner_image||'')}"><div id="heroBannerPreview"></div><button class="btn small" type="button" id="removeHeroBannerImage">Remove uploaded banner</button></div>
           <div class="field"><label>Hero label</label><input id="editHeroBadge" maxlength="60" value="${safe(theme.hero_badge||'')}" placeholder="EVENT INFORMATION"></div>
           <div class="divider"></div><h3>Sponsor branding</h3>
           <label><input id="editSponsorEnabled" type="checkbox" style="width:auto;min-height:0" ${(Object.prototype.hasOwnProperty.call(theme,'sponsor_enabled')?theme.sponsor_enabled:isDiwali)?'checked':''}> Show sponsor card on this event</label>
           <div class="field"><label>Sponsor label</label><input id="editSponsorLabel" maxlength="60" value="${safe(theme.sponsor_label||'PROUD SPONSOR')}"></div>
-          <div class="field"><label>Sponsor logo URL / file path</label><input id="editSponsorLogo" maxlength="500" value="${safe(theme.sponsor_logo_url||(isDiwali?'./doc-tutorials-original.jpg':''))}" placeholder="./sponsor-logo.jpg or https://…"></div>
+          <div class="field"><label>Sponsor logo URL (optional)</label><input id="editSponsorLogo" maxlength="500" value="${safe(theme.sponsor_logo_url||(isDiwali?'./doc-tutorials-original.jpg':''))}" placeholder="./sponsor-logo.jpg or https://…"></div>
+          <div class="field"><label>Or upload sponsor logo from your device</label><input id="editSponsorLogoUpload" type="file" accept="image/png,image/jpeg,image/webp"><input id="editSponsorLogoImage" type="hidden" value="${safe(theme.sponsor_logo_image||'')}"><div id="sponsorLogoPreview"></div><button class="btn small" type="button" id="removeSponsorLogoImage">Remove uploaded sponsor logo</button></div>
           <div class="field"><label>Sponsor image description</label><input id="editSponsorAlt" maxlength="120" value="${safe(theme.sponsor_alt||'Doc Tutorials')}"></div>
           <div class="divider"></div><h3>Mini App colours and QR pass design</h3>
           <div class="inline-fields"><div class="field"><label>Primary colour</label><input id="editPrimary" type="color" value="${safe(theme.primary||(isDiwali?'#32104d':'#25113b'))}"></div><div class="field"><label>Accent colour</label><input id="editAccent" type="color" value="${safe(theme.accent||(isDiwali?'#d9b15f':'#ff7518'))}"></div><div class="field"><label>Background colour</label><input id="editBackground" type="color" value="${safe(theme.background||(isDiwali?'#190d2b':'#170F24'))}"></div><div class="field"><label>Gold / highlight</label><input id="editGold" type="color" value="${safe(theme.gold||(isDiwali?'#d9b15f':'#ffd166'))}"></div></div>
@@ -1154,8 +1166,9 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
       primary:$('editPrimary').value,accent:$('editAccent').value,background:$('editBackground').value,gold:$('editGold').value,
       pass_background:$('editPassBackground').value,pass_accent:$('editPassAccent').value,pass_gold:$('editPassGold').value,
       app_title:$('editAppTitle').value,app_subtitle:$('editAppSubtitle').value,brand_logo_url:$('editBrandLogo').value,
-      hero_banner_url:$('editHeroBanner').value,hero_badge:$('editHeroBadge').value,
-      sponsor_enabled:$('editSponsorEnabled').checked,sponsor_label:$('editSponsorLabel').value,sponsor_logo_url:$('editSponsorLogo').value,sponsor_alt:$('editSponsorAlt').value,
+      brand_logo_image:$('editBrandLogoImage').value,hero_banner_url:$('editHeroBanner').value,hero_banner_image:$('editHeroBannerImage').value,hero_badge:$('editHeroBadge').value,
+      sponsor_enabled:$('editSponsorEnabled').checked,sponsor_label:$('editSponsorLabel').value,sponsor_logo_url:$('editSponsorLogo').value,sponsor_logo_image:$('editSponsorLogoImage').value,sponsor_alt:$('editSponsorAlt').value,
+      food_collection_enabled:$('editFoodCollectionEnabled').checked,
       pass_background_image:$('editPassBackgroundImage').value,pass_title:$('editPassTitle').value,pass_subtitle:$('editPassSubtitle').value,pass_guest_label:$('editPassGuestLabel').value,
       pass_name_label:$('editPassNameLabel').value,pass_phone_label:$('editPassPhoneLabel').value,pass_food_label:$('editPassFoodLabel').value,
       pass_residence_label:$('editPassResidenceLabel').value,pass_hostel_label:$('editPassHostelLabel').value,pass_apartment_label:$('editPassApartmentLabel').value,
@@ -1179,6 +1192,46 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
         toast(result.message);
       }catch(err){$('settingsMessage').innerHTML=showNotice(err.message,'error');}
       finally{button.disabled=false;button.textContent=original;}
+    });
+    const artworkSlots=[
+      {input:$('editBrandLogoUpload'),value:$('editBrandLogoImage'),preview:$('brandLogoPreview'),remove:$('removeBrandLogoImage'),label:'Header logo',width:600,height:600,maxBytes:280*1024,fit:'contain'},
+      {input:$('editHeroBannerUpload'),value:$('editHeroBannerImage'),preview:$('heroBannerPreview'),remove:$('removeHeroBannerImage'),label:'Event banner',width:1600,height:600,maxBytes:680*1024,fit:'cover'},
+      {input:$('editSponsorLogoUpload'),value:$('editSponsorLogoImage'),preview:$('sponsorLogoPreview'),remove:$('removeSponsorLogoImage'),label:'Sponsor logo',width:900,height:460,maxBytes:280*1024,fit:'contain'}
+    ];
+    const renderArtworkPreview=(slot,note='')=>{
+      const value=slot.value.value;
+      slot.preview.innerHTML=(value?'<img alt="'+safe(slot.label)+' preview" src="'+safe(value)+'" style="display:block;max-width:100%;max-height:190px;object-fit:contain;border:1px solid var(--line);border-radius:10px;background:#fff;padding:6px">':'<p class="muted">No file uploaded. The URL field above will be used if provided.</p>')+(note?'<p class="muted">'+safe(note)+'</p>':'');
+    };
+    const compressEventArtwork=async(file,slot)=>{
+      if(!file||!['image/png','image/jpeg','image/webp'].includes(file.type))throw new Error('Choose a PNG, JPG or WebP image.');
+      const sourceUrl=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result||''));reader.onerror=()=>reject(new Error('Could not read this image.'));reader.readAsDataURL(file);});
+      const img=await new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=()=>reject(new Error('This image could not be decoded.'));image.src=sourceUrl;});
+      if(img.naturalWidth*img.naturalHeight>80000000)throw new Error('This image is too large to process. Choose a smaller original image.');
+      const canvas=document.createElement('canvas');canvas.width=slot.width;canvas.height=slot.height;
+      const ctx=canvas.getContext('2d');if(!ctx)throw new Error('Your browser could not process this image.');
+      ctx.fillStyle='#ffffff';ctx.fillRect(0,0,canvas.width,canvas.height);
+      const scale=slot.fit==='cover'?Math.max(canvas.width/img.naturalWidth,canvas.height/img.naturalHeight):Math.min(canvas.width/img.naturalWidth,canvas.height/img.naturalHeight);
+      const dw=img.naturalWidth*scale,dh=img.naturalHeight*scale;
+      ctx.drawImage(img,(canvas.width-dw)/2,(canvas.height-dh)/2,dw,dh);
+      let blob=null;
+      for(const quality of [0.88,0.82,0.76,0.70,0.64,0.58,0.52,0.46,0.40]){
+        blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',quality));
+        if(blob&&blob.size<=slot.maxBytes)break;
+      }
+      if(!blob||blob.size>slot.maxBytes)throw new Error(slot.label+' could not be compressed below '+Math.round(slot.maxBytes/1024)+' KB. Choose a simpler or smaller image.');
+      const dataUrl=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result||''));reader.onerror=()=>reject(new Error('Could not prepare the compressed image.'));reader.readAsDataURL(blob);});
+      return {dataUrl,blob,original:file.size};
+    };
+    artworkSlots.forEach(slot=>{
+      renderArtworkPreview(slot);
+      slot.input.addEventListener('change',async()=>{
+        const file=slot.input.files&&slot.input.files[0];if(!file)return;
+        const previous=slot.value.value;renderArtworkPreview(slot,'Compressing image…');slot.input.disabled=true;
+        try{const result=await compressEventArtwork(file,slot);slot.value.value=result.dataUrl;renderArtworkPreview(slot,'Auto-compressed '+Math.round(result.original/1024)+' KB → '+Math.round(result.blob.size/1024)+' KB. Save event settings to apply.');toast(slot.label+' uploaded and compressed.');}
+        catch(err){slot.value.value=previous;renderArtworkPreview(slot);toast(err.message||'Image upload failed.',true);slot.input.value='';}
+        finally{slot.input.disabled=false;}
+      });
+      slot.remove.addEventListener('click',()=>{slot.value.value='';slot.input.value='';renderArtworkPreview(slot);toast(slot.label+' upload removed. Save event settings to apply.');});
     });
     const backgroundInput=$('editPassBackgroundUpload'),backgroundValue=$('editPassBackgroundImage'),backgroundPreview=$('passBackgroundPreview');
     const showPassBackground=(note='')=>{const value=backgroundValue.value;backgroundPreview.innerHTML=(value?'<img alt="QR pass background preview" style="display:block;width:min(100%,260px);max-height:220px;object-fit:cover;border-radius:12px;border:1px solid var(--line)" src="'+safe(value)+'">':'<p class="muted">No custom background uploaded. Event colour will be used.</p>')+(note?'<p class="muted" style="margin-top:8px">'+safe(note)+'</p>':'');};
