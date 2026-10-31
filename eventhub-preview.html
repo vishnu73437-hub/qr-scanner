@@ -545,7 +545,29 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
     if(!res.ok || data.ok===false) throw new Error(data.error || `Request failed (${res.status}).`);
     return data;
   }
-  const adminCall = (action, extra={}) => post('/api/admin',{action,event_id:state.eventId,...extra});
+  // Keep recently fetched, read-only admin data in memory while navigating the
+  // workspace. Mutations invalidate the selected event's cache immediately.
+  const adminReadCache = new Map();
+  const adminReadActions = new Set([
+    'stats','guest_search','pending_registrations','storage_config',
+    'proof_storage_report','announcement_history','sheets_queue_status',
+    'volunteers','admins','checkpoints'
+  ]);
+  const ADMIN_READ_CACHE_MS = 8000;
+  const adminCall = async (action, extra={}) => {
+    const cacheKey = String(state.eventId)+':'+action+':'+JSON.stringify(extra);
+    if(adminReadActions.has(action)) {
+      const cached=adminReadCache.get(cacheKey);
+      if(cached && Date.now()-cached.time<ADMIN_READ_CACHE_MS) return cached.data;
+    }
+    const data=await post('/api/admin',{action,event_id:state.eventId,...extra});
+    if(adminReadActions.has(action)) adminReadCache.set(cacheKey,{time:Date.now(),data});
+    else {
+      const prefix=String(state.eventId)+':';
+      for(const key of adminReadCache.keys()) if(key.startsWith(prefix)) adminReadCache.delete(key);
+    }
+    return data;
+  };
   function updateUrl(eid, push=false) {
     const u=new URL(location.href);
     if(eid) u.searchParams.set('event_id',String(eid)); else u.searchParams.delete('event_id');
