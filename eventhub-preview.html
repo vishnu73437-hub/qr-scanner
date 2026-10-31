@@ -364,6 +364,10 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
     if(Object.prototype.hasOwnProperty.call(t,'food_collection_enabled')) return t.food_collection_enabled!==false;
     return ev?.food_collection_enabled!==false;
   }
+  function foodCollectionEnabledInEditor() {
+    const toggle=$('editFoodCollectionEnabled');
+    return toggle ? !!toggle.checked : foodCollectionIsEnabled();
+  }
   function eventTheme(ev) {
     const t=parseJSON(ev?.theme_json,{});
     const eventName=String(ev?.name||'').toLowerCase();
@@ -952,11 +956,14 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
     $('refreshAnn').addEventListener('click',historyLoad);await historyLoad();
   }
   function schemaEditor(schema) {
-    return `<div id="schemaBuilder"><div id="schemaEditor">${schema.map((f,i)=>schemaFieldEditor(f,i,schema.length)).join('')}</div><div class="actions"><button class="btn small" type="button" id="addSchemaField">＋ Add form field</button></div><p class="footnote">The six system fields (Full name, Phone, Residence, Hostel number, Room number and Food preference) are protected because registrations depend on them. You can edit their labels and add, remove or reorder custom fields.</p></div>`;
+    const systemNote=foodCollectionEnabledInEditor()
+      ?'The six system fields (Full name, Phone, Residence, Hostel number, Room number and Food preference) are protected because this event collects food preferences.'
+      :'Food preference is omitted because food collection is disabled for this event. The remaining system fields stay protected. You can add, remove or reorder custom fields.';
+    return `<div id="schemaBuilder"><div id="schemaEditor">${schema.map((f,i)=>schemaFieldEditor(f,i,schema.length)).join('')}</div><div class="actions"><button class="btn small" type="button" id="addSchemaField">＋ Add form field</button></div><p class="footnote">${systemNote}</p></div>`;
   }
   function schemaFieldEditor(f,i,total) {
-    const fixedKeys=['full_name','phone','residence_type','hostel_number','room_number','food_preference'];
-    const fixed=fixedKeys.includes(f.key),choiceFixed=['residence_type','food_preference'].includes(f.key);
+    const fixedKeys=['full_name','phone','residence_type','hostel_number','room_number',...(foodCollectionEnabledInEditor()?['food_preference']:[])];
+    const fixed=fixedKeys.includes(f.key),choiceFixed=['residence_type',...(foodCollectionEnabledInEditor()?['food_preference']:[])].includes(f.key);
     const typeOptions=f.key==='full_name'?['text','textarea']:f.key==='phone'?['tel']:f.key==='residence_type'||f.key==='food_preference'?['select']:f.key==='hostel_number'||f.key==='room_number'?['text']:['text','tel','email','number','date','textarea','select','checkbox'];
     const removeTitle=fixed?'This is a required EventHub system field':'';
     return `<div class="schema-field" data-schema-index="${i}"><div class="row"><strong>Field ${i+1}</strong><div class="wrap"><button type="button" class="btn small" data-move-schema="up" ${i===0?'disabled':''}>↑</button><button type="button" class="btn small" data-move-schema="down" ${i===total-1?'disabled':''}>↓</button><button type="button" class="btn danger small" data-remove-schema="${i}" ${fixed?'disabled title="'+removeTitle+'"':''}>Remove</button></div></div><div class="inline-fields"><div class="field"><label>Key (unique)</label><input data-schema-key value="${safe(f.key||'field_'+(i+1))}" maxlength="40" ${fixed?'disabled title="Required system key cannot be renamed"':''}></div><div class="field"><label>Label</label><input data-schema-label value="${safe(f.label||'')}" maxlength="80"></div><div class="field"><label>Type</label><select data-schema-type ${fixed?'disabled':''}>${typeOptions.map(type=>`<option ${f.type===type?'selected':''}>${type}</option>`).join('')}</select></div><div class="field"><label>Required</label><select data-schema-required ${fixed?'disabled':''}><option value="false" ${!f.required?'selected':''}>No</option><option value="true" ${f.required?'selected':''}>Yes</option></select></div></div><div class="field"><label>Options (for select, comma separated)</label><input data-schema-options value="${safe((Array.isArray(f.options)?f.options:[]).join(', '))}" ${choiceFixed?'disabled title="Residence and food options are fixed by EventHub"':''}></div></div>`;
@@ -966,13 +973,15 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
       key:el.querySelector('[data-schema-key]').value.trim(),label:el.querySelector('[data-schema-label]').value.trim(),type:el.querySelector('[data-schema-type]').value,required:el.querySelector('[data-schema-required]').value==='true',options:el.querySelector('[data-schema-options]').value.split(',').map(x=>x.trim()).filter(Boolean)
     }));
     fields=ensureRegistrationSystemFields(fields);
-    if(fields.length<1||fields.length>30)throw new Error('A registration form must contain between 1 and 30 fields, including the six required system fields.');
+    if(!foodCollectionEnabledInEditor()) fields=fields.filter(field=>field.key!=='food_preference');
+    if(fields.length<1||fields.length>30)throw new Error('A registration form must contain between 1 and 30 fields, including the required system fields.');
     const keys=new Set();for(const f of fields){if(!/^[a-zA-Z][a-zA-Z0-9_]{0,39}$/.test(f.key))throw new Error('Each field needs a valid key beginning with a letter.');if(keys.has(f.key))throw new Error('Duplicate field key: '+f.key);keys.add(f.key);if(!f.label)throw new Error('Every form field needs a label.');if(f.type==='select'&&f.options.length===0)throw new Error('Add at least one option for '+f.label+'.');}
     const full=fields.find(f=>f.key==='full_name');if(!full||!['text','textarea'].includes(full.type))throw new Error('The Full name field must use text or textarea.');full.required=true;
     return fields;
   }
   async function renderSettings(host) {
-    const ev=state.event||{};let theme=parseJSON(ev.theme_json,{});const schema=ensureRegistrationSystemFields(parseJSON(ev.registration_schema,defaultSchema()));
+    const ev=state.event||{};let theme=parseJSON(ev.theme_json,{});let schema=ensureRegistrationSystemFields(parseJSON(ev.registration_schema,defaultSchema()));
+    if(!foodCollectionIsEnabled(ev)) schema=schema.filter(field=>field.key!=='food_preference');
     const isDiwali=/deepotsav|deepostav|diwali/i.test(String(ev.name||''));
     const botMessageGroups=[
       {title:'Start, event selection and event details',fields:[
