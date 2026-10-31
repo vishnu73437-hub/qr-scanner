@@ -718,17 +718,18 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
     host.innerHTML=standalone?`<section class="scanner-screen"><section class="card"><div class="section-title"><h2>📷 Event QR Scanner</h2><span class="status active">${safe(state.event.name)}</span></div><p class="muted">The camera starts when this dedicated page opens and is released when you leave.</p><div class="scanner-hint">Camera access is requested whenever you start scanning. Android or Telegram may remember a previous Allow choice, so it might not display a new prompt every time. You can revoke permission in your device/app settings. If access was previously granted, your browser may start the camera without showing the system prompt again.</div><div class="scanner-box"><div id="reader"><div class="empty">Camera preview appears here after access is granted.</div></div></div><div class="scanner-actions"><button class="btn primary" id="startCamera">Allow camera & start scanning</button><button class="btn" id="stopCamera" disabled>Stop camera</button></div><div id="scanResult"></div></section><div class="actions"><button class="btn ghost" id="scannerBack">← Back to event workspace</button></div></section>`:`<section class="section card"><div class="section-title"><h2>📷 QR Scanner</h2><span class="status active">${safe(state.event.name)}</span></div><p class="muted">Open the dedicated scanner screen before scanning passes.</p><div class="actions"><button class="btn primary" id="openDedicatedScanner">Open full-screen QR Scanner →</button></div></section>`;
     $('startCamera')?.addEventListener('click',startScanner);$('stopCamera')?.addEventListener('click',stopScanner);
     $('openDedicatedScanner')?.addEventListener('click',()=>openScannerStandalone());$('scannerBack')?.addEventListener('click',()=>closeScannerStandalone());
-    state.checkpoints=[];try{const cp=await post('/api/checkpoints',{event_id:state.eventId});state.checkpoints=cp.checkpoints||[];}catch(err){toast('Additional checkpoints could not be loaded: '+err.message,true);}
+    state.checkpoints=[];
     if(standalone)startScanner();
+    try{const cp=await post('/api/checkpoints',{event_id:state.eventId});state.checkpoints=cp.checkpoints||[];}catch(err){toast('Additional checkpoints could not be loaded: '+err.message,true);}
   }
   async function startScanner() {
-    if(!window.Html5Qrcode){toast('QR camera library did not load. Use manual pass verification.',true);return;}
+    if(!window.Html5Qrcode){toast('QR camera library did not load. Reload the Mini App or use a device with a working camera.',true);return;}
     try {
       if(!state.scanner) state.scanner=new Html5Qrcode('reader');
       $('startCamera').disabled=true; $('stopCamera').disabled=false;
       if(!navigator.mediaDevices?.getUserMedia)throw new Error('CAMERA_UNAVAILABLE');
       await state.scanner.start({facingMode:'environment'},{fps:10,qrbox:{width:250,height:250},aspectRatio:1.0},async text=>{await stopScanner();await lookupGuest(text);},()=>{});
-    } catch(e){$('startCamera').disabled=false;$('stopCamera').disabled=true;const msg=e?.name==='NotAllowedError'?'Camera permission was denied. Allow camera access for Telegram or your browser, then tap Start again.':e?.name==='NotFoundError'?'No camera was found on this device. Use manual pass verification.':e?.message==='CAMERA_UNAVAILABLE'?'This browser does not support camera access. Open the Mini App in updated Telegram or Chrome.':'Camera could not start. Check permissions and make sure another app is not using the camera.';toast(msg,true);}
+    } catch(e){$('startCamera').disabled=false;$('stopCamera').disabled=true;const msg=e?.name==='NotAllowedError'?'Camera permission was denied. Allow camera access for Telegram or your browser, then tap Start again.':e?.name==='NotFoundError'?'No camera was found on this device. Please use a device with a working camera.':e?.message==='CAMERA_UNAVAILABLE'?'This browser does not support camera access. Open the Mini App in updated Telegram or Chrome.':'Camera could not start. Check permissions and make sure another app is not using the camera.';toast(msg,true);}
   }
   async function stopScanner() {
     if(state.scanner){try{if(state.scanner.isScanning)await state.scanner.stop();}catch(_){}try{await state.scanner.clear();}catch(_){}state.scanner=null;}
