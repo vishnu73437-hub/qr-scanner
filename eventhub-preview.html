@@ -31,7 +31,7 @@
   try { tg?.ready(); tg?.expand(); } catch (_) {}
   const params = new URLSearchParams(location.search);
   const initData = tg?.initData || '';
-  const API_BASE = (params.get('api_base') || window.EVENTHUB_API_BASE || (location.protocol.startsWith('http') && !/github\.io$/.test(location.hostname) ? location.origin : '')).replace(/\/$/, '');
+  const API_BASE = (params.get('api_base') || window.EVENTHUB_API_BASE || (/github\.io$/.test(location.hostname) ? 'https://unwjym.bot-keep.xyz' : location.origin)).replace(/\/$/, '');
   const initialEventId = Number(params.get('event_id') || 0);
   const state = { role:'guest', user:null, activeEvents:[], workspaces:[], eventId:initialEventId, event:null, stats:null, page:'home', guest:null, scanner:null, formSchema:[], pass:null, checkpoints:[], myRegistration:null };
   const $ = (id) => document.getElementById(id);
