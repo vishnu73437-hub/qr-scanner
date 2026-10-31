@@ -644,7 +644,7 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
         ${statsError?showNotice('Live statistics are unavailable: '+statsError,'error'):''}
         <div class="eventday-actions">
           <article class="eventday-primary"><div class="eyebrow">Main event-day action</div><h2 style="margin:7px 0">QR Scanner</h2><p class="muted">Open a dedicated full-screen scanner for entry, proof handling, food collection and exit.</p><div class="actions"><button class="btn primary" data-admin-page="scanner">Open QR Scanner →</button></div></article>
-          <article class="card"><h3>Google Sheets sync</h3><p id="sheetsStatus">Sync queue status has not been checked.</p><div class="actions"><button class="btn primary small" id="syncSheetsNow">Sync now</button><button class="btn small" id="refreshSheetsStatus">Check sync status</button></div></article>
+          <article class="card"><h3>Google Sheets sync</h3><p id="sheetsStatus">Sync queue status has not been checked.</p><div class="actions"><button class="btn primary small" id="syncSheetsNow">Queue full sync</button><button class="btn small" id="refreshSheetsStatus">Check sync status</button></div></article>
         </div>
         <div class="admin-launchpad">
           <section class="admin-launch-group"><h3>👥 Guest operations</h3><div class="admin-launch-links"><button class="btn" data-admin-page="approvals">Approvals</button><button class="btn" data-admin-page="guests">Guest list</button><button class="btn" data-admin-page="registration">Registration preview</button><button class="btn" data-admin-page="pass">Staff QR pass</button></div></section>
@@ -653,7 +653,7 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
         </div>
         <p class="footnote">All sections are scoped to the selected event. Admin-only controls remain available only to authenticated admins.</p>`;
       $('refreshStats')?.addEventListener('click',()=>renderAdminPage('overview'));
-      $('syncSheetsNow')?.addEventListener('click',async()=>{const btn=$('syncSheetsNow'),target=$('sheetsStatus');btn.disabled=true;btn.textContent='Syncing…';target.textContent='Sending queued records to Google Sheets…';try{const result=await adminCall('sheets_sync');target.textContent=result.message||'Sync request completed. Checking queue status…';const q=await adminCall('sheets_queue_status');target.textContent+=' · '+(q.configured?(Number(q.pending||0)+' queued · '+Number(q.retrying||0)+' retrying'):'Sheets is not configured');if(q.lastError)target.textContent+=' · Latest error: '+q.lastError;}catch(err){target.textContent='Sync failed: '+err.message;}finally{btn.disabled=false;btn.textContent='Sync now';}});
+      $('syncSheetsNow')?.addEventListener('click',async()=>{const btn=$('syncSheetsNow'),target=$('sheetsStatus');btn.disabled=true;btn.textContent='Syncing…';target.textContent='Queueing guest records for background sync…';try{const result=await adminCall('sheets_sync');target.textContent=result.message||'Sync request completed. Checking queue status…';const q=await adminCall('sheets_queue_status');target.textContent+=' · '+(q.configured?(Number(q.pending||0)+' queued · '+Number(q.retrying||0)+' retrying'):'Sheets is not configured');if(q.lastError)target.textContent+=' · Latest error: '+q.lastError;}catch(err){target.textContent='Sync failed: '+err.message;}finally{btn.disabled=false;btn.textContent='Queue full sync';}});
       $('refreshSheetsStatus')?.addEventListener('click',async()=>{
         const target=$('sheetsStatus'); target.textContent='Checking…';
         try { const q=await adminCall('sheets_queue_status'); target.textContent=q.configured?`Configured · ${Number(q.pending||0)} queued · ${Number(q.retrying||0)} retrying · ${q.timezone||'event timezone'}`:'Not configured. Ask the admin to check SHEETS_SYNC_URL and SHEETS_SYNC_SECRET.'; if(q.lastError) target.textContent+=` · Latest error: ${q.lastError}`; }
@@ -781,11 +781,12 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
     stopScanner();
     host.innerHTML=standalone?`<section class="scanner-screen"><section class="card"><div class="section-title"><h2>📷 Event QR Scanner</h2><span class="status active">${safe(state.event.name)}</span></div><p class="muted">The camera starts when this dedicated page opens and is released when you leave.</p><div class="scanner-hint">Camera access is requested whenever you start scanning. Android or Telegram may remember a previous Allow choice, so it might not display a new prompt every time. You can revoke permission in your device/app settings. If access was previously granted, your browser may start the camera without showing the system prompt again.</div><div class="manual-pass-entry"><div class="field"><label for="manualPassCode">Or enter pass code manually</label><input id="manualPassCode" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="120" placeholder="Enter guest pass code"></div><button class="btn primary" type="button" id="verifyManualPass">Verify pass code</button><p class="footnote">Use this if the guest cannot display their QR code or the camera is unavailable.</p></div><div class="scanner-box"><div id="reader"><div class="empty">Camera preview appears here after access is granted.</div></div></div><div class="scanner-actions"><button class="btn primary" id="startCamera">Allow camera & start scanning</button><button class="btn" id="stopCamera" disabled>Stop camera</button></div><div id="scanResult"></div></section><div class="actions"><button class="btn ghost" id="scannerBack">← Back to event workspace</button></div></section>`:`<section class="section card"><div class="section-title"><h2>📷 QR Scanner</h2><span class="status active">${safe(state.event.name)}</span></div><p class="muted">Open the dedicated scanner screen before scanning passes.</p><div class="actions"><button class="btn primary" id="openDedicatedScanner">Open full-screen QR Scanner →</button></div></section>`;
     $('verifyManualPass')?.addEventListener('click',async()=>{const input=$('manualPassCode'),button=$('verifyManualPass'),code=String(input?.value||'').trim();if(!code){toast('Enter a pass code first.',true);input?.focus();return;}await stopScanner();button.disabled=true;button.textContent='Verifying…';try{await lookupGuest(code);}finally{button.disabled=false;button.textContent='Verify pass code';}});
+    $('manualPassCode')?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('verifyManualPass')?.click();}});
     $('startCamera')?.addEventListener('click',startScanner);$('stopCamera')?.addEventListener('click',stopScanner);
     $('openDedicatedScanner')?.addEventListener('click',()=>openScannerStandalone());$('scannerBack')?.addEventListener('click',()=>closeScannerStandalone());
     state.checkpoints=[];
-    if(standalone)startScanner();
     try{const cp=await post('/api/checkpoints',{event_id:state.eventId});state.checkpoints=cp.checkpoints||[];}catch(err){toast('Additional checkpoints could not be loaded: '+err.message,true);}
+    if(standalone)await startScanner();
   }
   async function startScanner() {
     if(!window.Html5Qrcode){toast('QR camera library did not load. Reload the Mini App or use a device with a working camera.',true);return;}
@@ -1062,14 +1063,9 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
       ['show_eventhub','Show EventHub button',true],['show_switch_event','Show Switch Event',true],['show_support','Show Telegram Support',true]
     ];
     const botSettingsMarkup=`<section class="section card" id="botChatSettings">
-      <div class="section-title"><h2>Telegram bot chat and menu editor</h2><span class="status active">Event-specific</span></div>
-      <p class="muted">Edit the messages sent by the bot, image captions, approval alerts, scanner replies, button names and menu visibility for this event. Changes do not modify commands, permissions, pass tokens or QR verification.</p>
-      ${botMessageGroups.map((g,i)=>`<details ${i===0?'open':''} style="margin:12px 0"><summary style="cursor:pointer;font-weight:700;padding:10px 0">${safe(g.title)}</summary><div class="grid cols2">${g.fields.map(([k,l,d])=>`<div class="field"><label for="botMsg_${k}">${safe(l)}</label><textarea id="botMsg_${k}" rows="3" maxlength="1800">${safe(botMessages[k])}</textarea></div>`).join('')}</div></details>`).join('')}
-      <div class="divider"></div><h3>Telegram menu button labels</h3><div class="grid cols2">${botButtonFields.map(([k,l,d])=>`<div class="field"><label for="botBtn_${k}">${safe(l)}</label><input id="botBtn_${k}" maxlength="64" value="${safe(botButtons[k])}"></div>`).join('')}</div>
-      <div class="divider"></div><h3>Show or hide menu buttons</h3><div class="grid cols2">${botFeatureFields.map(([k,l,d])=>`<label><input id="botFeature_${k}" type="checkbox" style="width:auto;min-height:0" ${savedBot.features?.[k]!==false?'checked':''}> ${safe(l)}</label>`).join('')}</div>
-      <div class="field"><label for="botSupportUrl">Telegram Support link (https://)</label><input id="botSupportUrl" maxlength="500" value="${safe(savedBot.support_url||'')}" placeholder="Leave blank to use the existing bot support link"></div>
-      <p class="muted">Template fields you can use: {event}, {name}, {phone}, {food}, {role}, {room_line}, {pass_code}, {telegram_id}, {request_id}, {hostel_line}, {room_line}, {veg_served}, {nonveg_served}, {command}, {kind}.</p>
-      <div class="actions"><button class="btn primary" type="button" id="saveBotSettings">Save Telegram bot settings</button></div><div id="botSettingsMessage"></div>
+      <div class="section-title"><h2>Telegram bot chat and menu editor</h2><span class="status pending">Not connected</span></div>
+      <div class="notice">This editor is temporarily unavailable because the connected Botkeep backend does not currently support saving event-specific bot messages or menu labels. Changes made here would not be saved.</div>
+      <p class="muted">Guest registration, approvals, QR passes, scanner permissions and event settings continue to work independently. This panel will be re-enabled when its backend save action is implemented and tested.</p>
     </section>`;
 
     if(ev.status==='archived'){host.innerHTML='<section class="card"><div class="section-title"><h2>Archived event settings</h2><span class="status archived">Read only</span></div><p>Archived event settings are preserved and read-only.</p><h3>'+safe(ev.name)+'</h3><p>'+safe(ev.description||'')+'</p><div class="actions"><button class="btn" id="backToEvents">Back to all events</button></div></section>'; $('backToEvents').addEventListener('click',clearEvent);return;}
@@ -1218,19 +1214,6 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
     $('saveSchema').addEventListener('click',async()=>{try{const arr=readSchemaEditor();const r=await adminCall('update_event',{name:$('editName').value,description:$('editDescription').value,event_date:$('editDate').value,event_time:$('editTime').value,venue:$('editVenue').value,theme:collectTheme(),registration_schema:arr});$('schemaMessage').innerHTML=showNotice(r.message||'Registration form saved.','good');const d=await post('/api/event_details',{event_id:state.eventId});state.event=d.event;toast('Registration form saved');}catch(err){$('schemaMessage').innerHTML=showNotice(err.message,'error');}});
     $('activateEvent')?.addEventListener('click',async()=>{if(!confirm(`Activate ${ev.name}? It will become visible to guests and registration/scanning will open.`))return;const btn=$('activateEvent');btn.disabled=true;try{const r=await adminCall('activate_event');$('archiveMessage').innerHTML=showNotice(r.message||'Event activated.','good');await loadRole();await loadEvent();toast('Event activated');}catch(err){$('archiveMessage').innerHTML=showNotice(err.message,'error');btn.disabled=false;}});
     $('archiveEvent')?.addEventListener('click',async()=>{if(!confirm(`Archive ${ev.name}? New registrations and scans will stop.`))return;const btn=$('archiveEvent');btn.disabled=true;try{const r=await post('/api/admin',{action:'archive_event',event_id:state.eventId});$('archiveMessage').innerHTML=showNotice(r.message,'good');await loadRole();setTimeout(clearEvent,800);}catch(err){$('archiveMessage').innerHTML=showNotice(err.message,'error');btn.disabled=false;}});
-    $('saveBotSettings').addEventListener('click',async()=>{
-      const button=$('saveBotSettings'),target=$('botSettingsMessage');button.disabled=true;const original=button.textContent;button.textContent='Saving bot settings…';
-      try{
-        const messages={};botMessageGroups.forEach(g=>g.fields.forEach(([key])=>messages[key]=$('botMsg_'+key).value));
-        const buttons={};botButtonFields.forEach(([key])=>buttons[key]=$('botBtn_'+key).value);
-        const features={};botFeatureFields.forEach(([key])=>features[key]=$('botFeature_'+key).checked);
-        const bot_settings={messages,buttons,features,support_url:$('botSupportUrl').value};
-        const result=await adminCall('save_bot_settings',{bot_settings});
-        state.event.bot_settings_json=JSON.stringify(result.bot_settings||bot_settings);
-        target.innerHTML=showNotice(result.message||'Telegram bot settings saved.','good');toast('Telegram bot settings saved');
-      }catch(err){target.innerHTML=showNotice(err.message,'error');}
-      finally{button.disabled=false;button.textContent=original;}
-    });
     $('backToEvents').addEventListener('click',clearEvent);
   }
   function bindSchemaEditorButtons(){
