@@ -536,6 +536,19 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
       {key:'food_preference',label:'Food preference',type:'select',options:['Vegetarian','Non-vegetarian'],required:true}
     ];
   }
+  function ensureRegistrationSystemFields(schema) {
+    const defaults=defaultSchema(),keys=defaults.map(f=>f.key);
+    const rows=Array.isArray(schema)?schema.filter(f=>f&&typeof f==='object'&&!Array.isArray(f)).map(f=>({...f})):[];
+    const system=defaults.map(base=>{
+      const existing=rows.find(f=>String(f.key||'')===base.key)||{};
+      const field={...base,...existing,key:base.key,label:String(existing.label||base.label).trim()||base.label,required:true};
+      if(base.key==='full_name') field.type=['text','textarea'].includes(existing.type)?existing.type:'text'; else field.type=base.type;
+      if(Array.isArray(base.options)) field.options=[...base.options]; else delete field.options;
+      return field;
+    });
+    const custom=rows.filter(f=>!keys.includes(String(f.key||'')));
+    return [...system,...custom];
+  }
   function createEventForm() {
     return `<section class="section card" id="createEventForm"><div class="section-title"><h2>Create an event</h2><span class="status active">No code changes needed</span></div><form id="newEventForm"><div class="field"><label>Event name *</label><input name="name" required maxlength="120" placeholder="e.g. Halloween Night 2027"></div><div class="field"><label>Description</label><textarea name="description" maxlength="1000" placeholder="Describe this event"></textarea></div><div class="inline-fields"><div class="field"><label>Date</label><input name="event_date" type="date"></div><div class="field"><label>Time</label><input name="event_time" placeholder="e.g. 6:00 PM"></div></div><div class="field"><label>Venue</label><input name="venue" maxlength="200" placeholder="Event venue"></div><div class="inline-fields"><div class="field"><label>Primary colour</label><input name="primary" type="color" value="#25113b"></div><div class="field"><label>Accent colour</label><input name="accent" type="color" value="#ff7518"></div></div><div class="inline-fields"><div class="field"><label>Background colour</label><input name="background" type="color" value="#171321"></div><div class="field"><label>Gold / highlight</label><input name="gold" type="color" value="#ffd166"></div></div><p class="footnote">A separate event workspace and QR prefix are created automatically. You can edit the form fields after creation.</p><button class="btn primary" type="submit">Create event workspace</button></form></section>`;
   }
@@ -684,7 +697,7 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
       $('openExistingPass')?.addEventListener('click',()=>openPage('pass'));
       return;
     }
-    const schema=parseJSON(state.event.registration_schema,defaultSchema()); state.formSchema=Array.isArray(schema)&&schema.length?schema:defaultSchema();
+    const schema=ensureRegistrationSystemFields(parseJSON(state.event.registration_schema,defaultSchema())); if(schema.length>30){host.innerHTML=showNotice('This event registration form has more than 30 fields after required system fields are restored. Please contact the organizer to simplify the form before registering.','error');return;} state.formSchema=schema;
     host.innerHTML=`<section class="section card"><div class="section-title"><h2>${preview?'Preview registration —':'Register —'} ${safe(state.event.name)}</h2></div><p class="muted">${preview?'Admin preview only. Fields are disabled and no registration can be submitted.':'Your registration is linked only to this event. Required fields are marked with an asterisk.'}</p><form id="registrationForm">${state.formSchema.map(fieldHTML).join('')}${preview?'':'<button class="btn primary" type="submit">Submit registration</button>'}</form>${preview?'<div class="notice">Preview mode · No guest record will be created.</div>':'<div id="registerMessage"></div>'}</section>`;
     if(preview){$('registrationForm').querySelectorAll('input,select,textarea,button').forEach(el=>el.disabled=true);return;}
     bindResidenceFields($('registrationForm'));
@@ -726,9 +739,9 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
     const key=String(f.key||''), id='registration-'+key, label=safe(f.label||key), type=f.type||'text', required=f.required?'required':'';
     const residenceField=['hostel_number','room_number'].includes(key);
     const wrapperAttr=residenceField?` data-residence-field="true" data-required="${f.required?'true':'false'}"`:'';
-    if(type==='select') return `<div class="field"><label for="${safe(id)}">${label}${f.required?' *':''}</label><select id="${safe(id)}" name="${safe(key)}" ${required}><option value="">Choose…</option>${(Array.isArray(f.options)?f.options:[]).map(x=>`<option value="${safe(x)}">${safe(x)}</option>`).join('')}</select></div>`;
-    if(type==='textarea') return `<div class="field"><label for="${safe(id)}">${label}${f.required?' *':''}</label><textarea id="${safe(id)}" name="${safe(key)}" ${required} maxlength="1000"></textarea></div>`;
-    if(type==='checkbox') return `<div class="field"><label><input id="${safe(id)}" type="checkbox" name="${safe(key)}" ${required} style="width:auto;min-height:0"> ${label}${f.required?' *':''}</label></div>`;
+    if(type==='select') return `<div class="field"${wrapperAttr}><label for="${safe(id)}">${label}${f.required?' *':''}</label><select id="${safe(id)}" name="${safe(key)}" ${required}><option value="">Choose…</option>${(Array.isArray(f.options)?f.options:[]).map(x=>`<option value="${safe(x)}">${safe(x)}</option>`).join('')}</select></div>`;
+    if(type==='textarea') return `<div class="field"${wrapperAttr}><label for="${safe(id)}">${label}${f.required?' *':''}</label><textarea id="${safe(id)}" name="${safe(key)}" ${required} maxlength="1000"></textarea></div>`;
+    if(type==='checkbox') return `<div class="field"${wrapperAttr}><label><input id="${safe(id)}" type="checkbox" name="${safe(key)}" ${required} style="width:auto;min-height:0"> ${label}${f.required?' *':''}</label></div>`;
     return `<div class="field"${wrapperAttr}><label for="${safe(id)}">${label}${f.required?' *':''}</label><input id="${safe(id)}" name="${safe(key)}" type="${['text','tel','email','number','date'].includes(type)?type:'text'}" ${required} maxlength="1000"></div>`;
   }
   async function renderPass(host) {
@@ -920,21 +933,27 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
     $('refreshAnn').addEventListener('click',historyLoad);await historyLoad();
   }
   function schemaEditor(schema) {
-    return `<div id="schemaBuilder"><div id="schemaEditor">${schema.map((f,i)=>schemaFieldEditor(f,i,schema.length)).join('')}</div><div class="actions"><button class="btn small" type="button" id="addSchemaField">＋ Add form field</button></div><p class="footnote">Use unique field keys. Keep <b>full_name</b> required. Supported types: text, tel, email, number, date, textarea, select, checkbox. Use ↑ / ↓ to reorder fields.</p></div>`;
+    return `<div id="schemaBuilder"><div id="schemaEditor">${schema.map((f,i)=>schemaFieldEditor(f,i,schema.length)).join('')}</div><div class="actions"><button class="btn small" type="button" id="addSchemaField">＋ Add form field</button></div><p class="footnote">The six system fields (Full name, Phone, Residence, Hostel number, Room number and Food preference) are protected because registrations depend on them. You can edit their labels and add, remove or reorder custom fields.</p></div>`;
   }
   function schemaFieldEditor(f,i,total) {
-    return `<div class="schema-field" data-schema-index="${i}"><div class="row"><strong>Field ${i+1}</strong><div class="wrap"><button type="button" class="btn small" data-move-schema="up" ${i===0?'disabled':''}>↑</button><button type="button" class="btn small" data-move-schema="down" ${i===total-1?'disabled':''}>↓</button><button type="button" class="btn danger small" data-remove-schema="${i}" ${f.key==='full_name'?'disabled title="The full name field is required"':''}>Remove</button></div></div><div class="inline-fields"><div class="field"><label>Key (unique)</label><input data-schema-key value="${safe(f.key||'field_'+(i+1))}" maxlength="40" ${f.key==='full_name'?'disabled title="The full_name key is required"':''}></div><div class="field"><label>Label</label><input data-schema-label value="${safe(f.label||'')}" maxlength="80"></div><div class="field"><label>Type</label><select data-schema-type ${f.key==='full_name'?'disabled':''}>${(f.key==='full_name'?['text','textarea']:['text','tel','email','number','date','textarea','select','checkbox']).map(t=>`<option ${f.type===t?'selected':''}>${t}</option>`).join('')}</select></div><div class="field"><label>Required</label><select data-schema-required ${f.key==='full_name'?'disabled':''}><option value="false" ${!f.required?'selected':''}>No</option><option value="true" ${f.required?'selected':''}>Yes</option></select></div></div><div class="field"><label>Options (for select, comma separated)</label><input data-schema-options value="${safe((Array.isArray(f.options)?f.options:[]).join(', '))}"></div></div>`;
+    const fixedKeys=['full_name','phone','residence_type','hostel_number','room_number','food_preference'];
+    const fixed=fixedKeys.includes(f.key),choiceFixed=['residence_type','food_preference'].includes(f.key);
+    const typeOptions=f.key==='full_name'?['text','textarea']:f.key==='phone'?['tel']:f.key==='residence_type'||f.key==='food_preference'?['select']:f.key==='hostel_number'||f.key==='room_number'?['text']:['text','tel','email','number','date','textarea','select','checkbox'];
+    const removeTitle=fixed?'This is a required EventHub system field':'';
+    return `<div class="schema-field" data-schema-index="${i}"><div class="row"><strong>Field ${i+1}</strong><div class="wrap"><button type="button" class="btn small" data-move-schema="up" ${i===0?'disabled':''}>↑</button><button type="button" class="btn small" data-move-schema="down" ${i===total-1?'disabled':''}>↓</button><button type="button" class="btn danger small" data-remove-schema="${i}" ${fixed?'disabled title="'+removeTitle+'"':''}>Remove</button></div></div><div class="inline-fields"><div class="field"><label>Key (unique)</label><input data-schema-key value="${safe(f.key||'field_'+(i+1))}" maxlength="40" ${fixed?'disabled title="Required system key cannot be renamed"':''}></div><div class="field"><label>Label</label><input data-schema-label value="${safe(f.label||'')}" maxlength="80"></div><div class="field"><label>Type</label><select data-schema-type ${fixed?'disabled':''}>${typeOptions.map(type=>`<option ${f.type===type?'selected':''}>${type}</option>`).join('')}</select></div><div class="field"><label>Required</label><select data-schema-required ${fixed?'disabled':''}><option value="false" ${!f.required?'selected':''}>No</option><option value="true" ${f.required?'selected':''}>Yes</option></select></div></div><div class="field"><label>Options (for select, comma separated)</label><input data-schema-options value="${safe((Array.isArray(f.options)?f.options:[]).join(', '))}" ${choiceFixed?'disabled title="Residence and food options are fixed by EventHub"':''}></div></div>`;
   }
   function readSchemaEditor() {
-    const fields=[...document.querySelectorAll('[data-schema-index]')].map(el=>({
+    let fields=[...document.querySelectorAll('[data-schema-index]')].map(el=>({
       key:el.querySelector('[data-schema-key]').value.trim(),label:el.querySelector('[data-schema-label]').value.trim(),type:el.querySelector('[data-schema-type]').value,required:el.querySelector('[data-schema-required]').value==='true',options:el.querySelector('[data-schema-options]').value.split(',').map(x=>x.trim()).filter(Boolean)
     }));
-    if(fields.length<1||fields.length>30)throw new Error('A registration form must contain between 1 and 30 fields.');
-    const keys=new Set();for(const f of fields){if(!/^[a-zA-Z][a-zA-Z0-9_]{0,39}$/.test(f.key))throw new Error('Each field needs a valid key beginning with a letter.');if(keys.has(f.key))throw new Error(`Duplicate field key: ${f.key}`);keys.add(f.key);if(!f.label)throw new Error('Every form field needs a label.');if(f.type==='select'&&f.options.length===0)throw new Error(`Add at least one option for ${f.label}.`);}
-    const full=fields.find(f=>f.key==='full_name');if(!full)throw new Error('The registration form must contain a full_name field.');if(!['text','textarea'].includes(full.type))throw new Error('The full_name field must use text or textarea.');full.required=true;return fields;
+    fields=ensureRegistrationSystemFields(fields);
+    if(fields.length<1||fields.length>30)throw new Error('A registration form must contain between 1 and 30 fields, including the six required system fields.');
+    const keys=new Set();for(const f of fields){if(!/^[a-zA-Z][a-zA-Z0-9_]{0,39}$/.test(f.key))throw new Error('Each field needs a valid key beginning with a letter.');if(keys.has(f.key))throw new Error('Duplicate field key: '+f.key);keys.add(f.key);if(!f.label)throw new Error('Every form field needs a label.');if(f.type==='select'&&f.options.length===0)throw new Error('Add at least one option for '+f.label+'.');}
+    const full=fields.find(f=>f.key==='full_name');if(!full||!['text','textarea'].includes(full.type))throw new Error('The Full name field must use text or textarea.');full.required=true;
+    return fields;
   }
   async function renderSettings(host) {
-    const ev=state.event||{};let theme=parseJSON(ev.theme_json,{});const schema=parseJSON(ev.registration_schema,defaultSchema());
+    const ev=state.event||{};let theme=parseJSON(ev.theme_json,{});const schema=ensureRegistrationSystemFields(parseJSON(ev.registration_schema,defaultSchema()));
     const isDiwali=/deepotsav|deepostav|diwali/i.test(String(ev.name||''));
     const botMessageGroups=[
       {title:'Start, event selection and event details',fields:[
@@ -1209,7 +1228,7 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
         await loadEvent();await renderAdminPage('settings');toast('Event, Mini App branding and QR pass design saved');
       }catch(err){$('settingsMessage').innerHTML=showNotice(err.message,'error');}finally{btn.disabled=false;}
     });
-    if(host.dataset.schemaAddBound!=='1'){host.dataset.schemaAddBound='1';host.addEventListener('click',e=>{if(!e.target.closest('#addSchemaField'))return;try{const arr=readSchemaEditor();if(arr.length>=30)throw new Error('A registration form can have at most 30 fields.');arr.push({key:'custom_'+(arr.length+1),label:'New field',type:'text',required:false,options:[]});$('schemaBuilder').outerHTML=schemaEditor(arr);bindSchemaEditorButtons();}catch(err){toast(err.message,true);}});}
+    if(host.dataset.schemaAddBound!=='1'){host.dataset.schemaAddBound='1';host.addEventListener('click',e=>{if(!e.target.closest('#addSchemaField'))return;try{const arr=readSchemaEditor();if(arr.length>=30)throw new Error('A registration form can have at most 30 fields.');let next=1;const used=new Set(arr.map(f=>f.key));while(used.has('custom_'+next))next++;arr.push({key:'custom_'+next,label:'New field',type:'text',required:false,options:[]});$('schemaBuilder').outerHTML=schemaEditor(arr);bindSchemaEditorButtons();}catch(err){toast(err.message,true);}});}
     bindSchemaEditorButtons();
     $('saveSchema').addEventListener('click',async()=>{try{const arr=readSchemaEditor();const r=await adminCall('update_event',{name:$('editName').value,description:$('editDescription').value,event_date:$('editDate').value,event_time:$('editTime').value,venue:$('editVenue').value,theme:collectTheme(),registration_schema:arr});$('schemaMessage').innerHTML=showNotice(r.message||'Registration form saved.','good');const d=await post('/api/event_details',{event_id:state.eventId});state.event=d.event;toast('Registration form saved');}catch(err){$('schemaMessage').innerHTML=showNotice(err.message,'error');}});
     $('activateEvent')?.addEventListener('click',async()=>{if(!confirm(`Activate ${ev.name}? It will become visible to guests and registration/scanning will open.`))return;const btn=$('activateEvent');btn.disabled=true;try{const r=await adminCall('activate_event');$('archiveMessage').innerHTML=showNotice(r.message||'Event activated.','good');await loadRole();await loadEvent();toast('Event activated');}catch(err){$('archiveMessage').innerHTML=showNotice(err.message,'error');btn.disabled=false;}});
