@@ -121,7 +121,7 @@
     state.myRegistration=null;
     if(state.role==='guest'){
       try{state.myRegistration=await post('/api/my_registration_status',{event_id:requestedId});}
-      catch(err){state.myRegistration={registered:false,status:'unknown',error:err.message};}
+      catch(err){state.myRegistration={registered:null,status:'check_failed',error:err.message};}
     }
     await renderHome();
   }
@@ -181,6 +181,7 @@
     if(status==='approved')return '<button class="btn" data-page="pass">My QR pass</button>';
     if(status==='pending')return '<span class="status pending">Registration awaiting approval</span>';
     if(status==='revoked')return '<span class="status revoked">Pass revoked · Contact admin</span>';
+    if(status==='check_failed'||status==='unknown')return '<span class="status pending">Checking registration unavailable · Refresh to retry</span>';
     return '<button class="btn primary" data-page="register">Register for this event</button><button class="btn" data-page="pass">My QR pass</button>';
   }
   function eventHero() {
@@ -209,6 +210,7 @@
       if(regStatus==='approved')guestCards='<article class="card"><h3>✅ Already registered</h3><p>Your registration for this event is approved. You do not need to register again.</p><div class="actions"><button class="btn primary" data-page="pass">Open my QR pass</button></div></article>';
       else if(regStatus==='pending')guestCards='<article class="card"><h3>🕒 Registration received</h3><p>Your registration is awaiting admin approval. The Register option is hidden for this event.</p></article>';
       else if(regStatus==='revoked')guestCards='<article class="card"><h3>⚠️ Pass revoked</h3><p>Your previous pass for this event was revoked. Please contact an event admin. A duplicate registration is not available.</p></article>';
+      else if(regStatus==='check_failed'||regStatus==='unknown')guestCards='<article class="card"><h3>Registration status unavailable</h3><p>EventHub could not verify your registration. Refresh the event before trying to register, so a duplicate registration is not submitted.</p></article>';
       else guestCards='<article class="card"><h3>🎟 Registration</h3><p>'+(regStatus==='rejected'?'Your previous registration was rejected. You may submit a new registration.':"Complete this event's registration form. Your pass is sent after approval.")+'</p><div class="actions"><button class="btn primary" data-page="register">Register now</button></div></article><article class="card"><h3>🎫 My QR pass</h3><p>View your pass after your registration is approved.</p><div class="actions"><button class="btn" data-page="pass">Open my pass</button></div></article>';
       main.innerHTML=eventHero()+`<section class="section grid">${guestCards}</section><section id="workspaceContent"></section>`;
       bindNavigation();
