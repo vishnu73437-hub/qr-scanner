@@ -299,6 +299,7 @@
       const isHostel=String(residence?.value||'')==='Hostel';
       form.querySelectorAll('[data-residence-field]').forEach(wrapper=>{
         wrapper.hidden=!isHostel;
+        wrapper.style.display=isHostel?'':'none';
         const input=wrapper.querySelector('input,select,textarea');
         if(!input)return;
         input.required=isHostel && wrapper.dataset.required==='true';
