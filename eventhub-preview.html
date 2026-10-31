@@ -1062,14 +1062,9 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
       ['show_eventhub','Show EventHub button',true],['show_switch_event','Show Switch Event',true],['show_support','Show Telegram Support',true]
     ];
     const botSettingsMarkup=`<section class="section card" id="botChatSettings">
-      <div class="section-title"><h2>Telegram bot chat and menu editor</h2><span class="status active">Event-specific</span></div>
-      <p class="muted">Edit the messages sent by the bot, image captions, approval alerts, scanner replies, button names and menu visibility for this event. Changes do not modify commands, permissions, pass tokens or QR verification.</p>
-      ${botMessageGroups.map((g,i)=>`<details ${i===0?'open':''} style="margin:12px 0"><summary style="cursor:pointer;font-weight:700;padding:10px 0">${safe(g.title)}</summary><div class="grid cols2">${g.fields.map(([k,l,d])=>`<div class="field"><label for="botMsg_${k}">${safe(l)}</label><textarea id="botMsg_${k}" rows="3" maxlength="1800">${safe(botMessages[k])}</textarea></div>`).join('')}</div></details>`).join('')}
-      <div class="divider"></div><h3>Telegram menu button labels</h3><div class="grid cols2">${botButtonFields.map(([k,l,d])=>`<div class="field"><label for="botBtn_${k}">${safe(l)}</label><input id="botBtn_${k}" maxlength="64" value="${safe(botButtons[k])}"></div>`).join('')}</div>
-      <div class="divider"></div><h3>Show or hide menu buttons</h3><div class="grid cols2">${botFeatureFields.map(([k,l,d])=>`<label><input id="botFeature_${k}" type="checkbox" style="width:auto;min-height:0" ${savedBot.features?.[k]!==false?'checked':''}> ${safe(l)}</label>`).join('')}</div>
-      <div class="field"><label for="botSupportUrl">Telegram Support link (https://)</label><input id="botSupportUrl" maxlength="500" value="${safe(savedBot.support_url||'')}" placeholder="Leave blank to use the existing bot support link"></div>
-      <p class="muted">Template fields you can use: {event}, {name}, {phone}, {food}, {role}, {room_line}, {pass_code}, {telegram_id}, {request_id}, {hostel_line}, {room_line}, {veg_served}, {nonveg_served}, {command}, {kind}.</p>
-      <div class="actions"><button class="btn primary" type="button" id="saveBotSettings">Save Telegram bot settings</button></div><div id="botSettingsMessage"></div>
+      <div class="section-title"><h2>Telegram bot chat and menu editor</h2><span class="status pending">Not connected</span></div>
+      <div class="notice">This editor is temporarily unavailable because the connected Botkeep backend does not currently support saving event-specific bot messages or menu labels. Changes made here would not be saved.</div>
+      <p class="muted">Guest registration, approvals, QR passes, scanner permissions and event settings continue to work independently. This panel will be re-enabled when its backend save action is implemented and tested.</p>
     </section>`;
 
     if(ev.status==='archived'){host.innerHTML='<section class="card"><div class="section-title"><h2>Archived event settings</h2><span class="status archived">Read only</span></div><p>Archived event settings are preserved and read-only.</p><h3>'+safe(ev.name)+'</h3><p>'+safe(ev.description||'')+'</p><div class="actions"><button class="btn" id="backToEvents">Back to all events</button></div></section>'; $('backToEvents').addEventListener('click',clearEvent);return;}
@@ -1218,19 +1213,6 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
     $('saveSchema').addEventListener('click',async()=>{try{const arr=readSchemaEditor();const r=await adminCall('update_event',{name:$('editName').value,description:$('editDescription').value,event_date:$('editDate').value,event_time:$('editTime').value,venue:$('editVenue').value,theme:collectTheme(),registration_schema:arr});$('schemaMessage').innerHTML=showNotice(r.message||'Registration form saved.','good');const d=await post('/api/event_details',{event_id:state.eventId});state.event=d.event;toast('Registration form saved');}catch(err){$('schemaMessage').innerHTML=showNotice(err.message,'error');}});
     $('activateEvent')?.addEventListener('click',async()=>{if(!confirm(`Activate ${ev.name}? It will become visible to guests and registration/scanning will open.`))return;const btn=$('activateEvent');btn.disabled=true;try{const r=await adminCall('activate_event');$('archiveMessage').innerHTML=showNotice(r.message||'Event activated.','good');await loadRole();await loadEvent();toast('Event activated');}catch(err){$('archiveMessage').innerHTML=showNotice(err.message,'error');btn.disabled=false;}});
     $('archiveEvent')?.addEventListener('click',async()=>{if(!confirm(`Archive ${ev.name}? New registrations and scans will stop.`))return;const btn=$('archiveEvent');btn.disabled=true;try{const r=await post('/api/admin',{action:'archive_event',event_id:state.eventId});$('archiveMessage').innerHTML=showNotice(r.message,'good');await loadRole();setTimeout(clearEvent,800);}catch(err){$('archiveMessage').innerHTML=showNotice(err.message,'error');btn.disabled=false;}});
-    $('saveBotSettings').addEventListener('click',async()=>{
-      const button=$('saveBotSettings'),target=$('botSettingsMessage');button.disabled=true;const original=button.textContent;button.textContent='Saving bot settings…';
-      try{
-        const messages={};botMessageGroups.forEach(g=>g.fields.forEach(([key])=>messages[key]=$('botMsg_'+key).value));
-        const buttons={};botButtonFields.forEach(([key])=>buttons[key]=$('botBtn_'+key).value);
-        const features={};botFeatureFields.forEach(([key])=>features[key]=$('botFeature_'+key).checked);
-        const bot_settings={messages,buttons,features,support_url:$('botSupportUrl').value};
-        const result=await adminCall('save_bot_settings',{bot_settings});
-        state.event.bot_settings_json=JSON.stringify(result.bot_settings||bot_settings);
-        target.innerHTML=showNotice(result.message||'Telegram bot settings saved.','good');toast('Telegram bot settings saved');
-      }catch(err){target.innerHTML=showNotice(err.message,'error');}
-      finally{button.disabled=false;button.textContent=original;}
-    });
     $('backToEvents').addEventListener('click',clearEvent);
   }
   function bindSchemaEditorButtons(){
