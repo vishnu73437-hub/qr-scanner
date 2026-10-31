@@ -64,6 +64,59 @@
       box-shadow:0 6px 18px #d9b15f30;
     }
     body.theme-deepotsav .tab.active{background:linear-gradient(135deg,#ffe8a8,#d9b15f);border-color:#ffe8a8}
+    /* Deepotsav motion layer: floating lights, diya flicker and distant fireworks.
+       Decorative layers never intercept taps or cover the app content. */
+    body.theme-deepotsav .shell::before,
+    body.theme-deepotsav .shell::after{
+      content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+    }
+    body.theme-deepotsav .shell::before{
+      opacity:.48;
+      background:
+        radial-gradient(circle,#ffe8a6 0 1px,transparent 2px) 8% 18%/170px 190px,
+        radial-gradient(circle,#d9b15f 0 1.5px,transparent 3px) 82% 30%/230px 210px,
+        radial-gradient(circle,#fff0c2 0 1px,transparent 2px) 56% 78%/190px 220px;
+      animation:deepotsavFloat 18s linear infinite;
+    }
+    body.theme-deepotsav .shell::after{
+      opacity:0;
+      background:
+        radial-gradient(circle at 14% 28%,#fff2c7 0 1px,transparent 3px),
+        radial-gradient(circle at 14% 28%,transparent 0 23px,#ffd978aa 24px 25px,transparent 27px),
+        radial-gradient(circle at 86% 22%,#fff2c7 0 1px,transparent 3px),
+        radial-gradient(circle at 86% 22%,transparent 0 30px,#ffd97899 31px 32px,transparent 34px),
+        radial-gradient(circle at 76% 76%,#fff2c7 0 1px,transparent 3px),
+        radial-gradient(circle at 76% 76%,transparent 0 19px,#ffd97888 20px 21px,transparent 23px);
+      background-repeat:no-repeat;
+      animation:deepotsavFireworks 8s ease-in-out infinite;
+    }
+    body.theme-deepotsav .shell>*{position:relative;z-index:1}
+    @media(prefers-reduced-motion:no-preference){
+      body.theme-deepotsav::after{animation:deepotsavDiyaFlicker 2.8s ease-in-out infinite}
+      body.theme-deepotsav .shell::before{animation:deepotsavFloat 18s linear infinite}
+      body.theme-deepotsav .shell::after{animation:deepotsavFireworks 8s ease-in-out infinite}
+      @keyframes deepotsavDiyaFlicker{
+        0%,100%{opacity:.34;filter:drop-shadow(0 0 7px #ffcf70);transform:translateY(0)}
+        45%{opacity:.62;filter:drop-shadow(0 0 17px #ffcf70);transform:translateY(-2px)}
+        58%{opacity:.48;filter:drop-shadow(0 0 10px #ffcf70)}
+      }
+      @keyframes deepotsavFloat{
+        0%{background-position:8% 18%,82% 30%,56% 78%;transform:translate3d(0,0,0)}
+        50%{background-position:12% 28%,76% 22%,62% 68%;transform:translate3d(0,-8px,0)}
+        100%{background-position:8% 18%,82% 30%,56% 78%;transform:translate3d(0,0,0)}
+      }
+      @keyframes deepotsavFireworks{
+        0%,12%,100%{opacity:0;transform:scale(.94)}
+        18%,28%{opacity:.48;transform:scale(1)}
+        36%{opacity:0;transform:scale(1.08)}
+        54%,64%{opacity:.34;transform:scale(1)}
+        72%{opacity:0;transform:scale(1.1)}
+      }
+    }
+    @media(prefers-reduced-motion:reduce){
+      body.theme-deepotsav .shell::before,
+      body.theme-deepotsav .shell::after{animation:none!important}
+    }
     @media(prefers-reduced-motion:no-preference){
       body.theme-deepotsav .hero:after{animation:deepotsavGlow 4s ease-in-out infinite}
       @keyframes deepotsavGlow{0%,100%{opacity:.42;filter:drop-shadow(0 0 5px #ffca5c)}50%{opacity:.78;filter:drop-shadow(0 0 18px #ffca5c)}}
