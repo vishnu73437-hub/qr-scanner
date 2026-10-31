@@ -703,7 +703,14 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
       $('openExistingPass')?.addEventListener('click',()=>openPage('pass'));
       return;
     }
-    const schema=ensureRegistrationSystemFields(parseJSON(state.event.registration_schema,defaultSchema())); if(schema.length>30){host.innerHTML=showNotice('This event registration form has more than 30 fields after required system fields are restored. Please contact the organizer to simplify the form before registering.','error');return;} state.formSchema=schema;
+    const schema=ensureRegistrationSystemFields(parseJSON(state.event.registration_schema,defaultSchema()));
+    if(!foodCollectionIsEnabled()) {
+      const foodIndex=schema.findIndex(field=>field.key==='food_preference');
+      if(foodIndex>=0)schema.splice(foodIndex,1);
+      const eventSchema=parseJSON(state.event.registration_schema,[]);
+      if(Array.isArray(eventSchema)) for(const field of eventSchema) if(field&&field.key==='food_preference') field.required=false;
+    }
+    if(schema.length>30){host.innerHTML=showNotice('This event registration form has more than 30 fields after required system fields are restored. Please contact the organizer to simplify the form before registering.','error');return;} state.formSchema=schema;
     host.innerHTML=`<section class="section card"><div class="section-title"><h2>${preview?'Preview registration —':'Register —'} ${safe(state.event.name)}</h2></div><p class="muted">${preview?'Admin preview only. Fields are disabled and no registration can be submitted.':'Your registration is linked only to this event. Required fields are marked with an asterisk.'}</p><form id="registrationForm">${state.formSchema.map(fieldHTML).join('')}${preview?'':'<button class="btn primary" type="submit">Submit registration</button>'}</form>${preview?'<div class="notice">Preview mode · No guest record will be created.</div>':'<div id="registerMessage"></div>'}</section>`;
     if(preview){$('registrationForm').querySelectorAll('input,select,textarea,button').forEach(el=>el.disabled=true);return;}
     bindResidenceFields($('registrationForm'));
