@@ -513,9 +513,8 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
   }
   async function renderHome() {
     state.page='home';
-    const stat={}; // Initial shell placeholders; live admin statistics load in renderAdminPage('overview').
     if(state.role==='admin') {
-      main.innerHTML=eventHero()+`<section class="section"><div class="section-title"><h2>Event overview</h2><span class="status ${safe(state.event.status||'active')}">${safe(state.event.status||'active')} · Selected event only</span></div><div class="stat-grid">${[['Approved guests','approvedGuests'],['Checked in','checkedIn'],['Meals served','mealsServed'],['Volunteers','volunteers']].map(([l,k])=>`<div class="stat"><strong>${Number(stat[k]||0)}</strong><span>${l}</span></div>`).join('')}</div></section>${workspaceNav()}<section class="section" id="workspaceContent"></section>`;
+      main.innerHTML=eventHero()+`<section class="section"><div class="section-title"><h2>Event overview</h2><span class="status ${safe(state.event.status||'active')}">${safe(state.event.status||'active')} · Selected event only</span></div><div class="stat-grid">${[['Approved guests','approvedGuests'],['Checked in','checkedIn'],['Meals served','mealsServed'],['Volunteers','volunteers']].map(([l,k])=>`<div class="stat"><strong>0</strong><span>${l}</span></div>`).join('')}</div></section>${workspaceNav()}<section class="section" id="workspaceContent"></section>`;
       bindNavigation(); await renderAdminPage('overview');
     } else if(state.role==='volunteer') {
       main.innerHTML=eventHero()+`
