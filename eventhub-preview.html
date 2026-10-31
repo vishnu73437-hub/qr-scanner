@@ -6,7 +6,6 @@
   <meta name="theme-color" content="#171321">
   <title>KSMU HOSTEL 5 EVENTS</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <style>
     :root{--bg:#171321;--panel:#211c2d;--panel2:#2b2438;--text:#f8f5fb;--muted:#bcb4c9;--accent:#ff7518;--gold:#ffd166;--line:#ffffff18;--danger:#ff626d;--ok:#47cf91;--radius:20px;--shadow:0 16px 40px #0005}
     *{box-sizing:border-box}html{min-height:100%;background:var(--bg)}body{margin:0;background:radial-gradient(ellipse at 80% -10%,color-mix(in srgb,var(--accent) 24%,transparent),transparent 42%),var(--bg);color:var(--text);font:15px/1.45 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}button,input,textarea,select{font:inherit}button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}.shell{width:min(100%,980px);margin:auto;padding:16px 16px 34px}.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}.brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.2px}.brand-mark{display:grid;place-items:center;width:40px;height:40px;border-radius:14px;background:linear-gradient(135deg,var(--accent),var(--gold));color:#1a1420;font-size:21px;box-shadow:0 8px 22px color-mix(in srgb,var(--accent) 30%,transparent)}.brand small{display:block;color:var(--muted);font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase}.top-actions{display:flex;gap:8px;align-items:center}.hero{background:linear-gradient(140deg,color-mix(in srgb,var(--accent) 26%,var(--panel)),var(--panel) 64%);border:1px solid color-mix(in srgb,var(--accent) 42%,var(--line));border-radius:26px;padding:24px;box-shadow:var(--shadow);position:relative;overflow:hidden}.hero:after{content:"✦";position:absolute;right:20px;top:10px;font-size:80px;color:color-mix(in srgb,var(--gold) 18%,transparent);pointer-events:none}.eyebrow{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);font-weight:800}.hero h1{font-size:clamp(28px,6vw,44px);line-height:1.06;margin:9px 0 12px;max-width:720px;overflow-wrap:anywhere}.hero p{color:#e0d9e8;max-width:680px;margin:0;white-space:pre-wrap}.meta-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:20px}.meta{background:#100d1b66;border:1px solid #ffffff17;border-radius:15px;padding:12px;min-width:0}.meta b{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px}.meta span{display:block;font-weight:700;overflow-wrap:anywhere}.actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:18px}.btn{border:1px solid var(--line);border-radius:13px;padding:11px 15px;background:var(--panel2);color:var(--text);font-weight:750;min-height:43px;transition:transform .12s,filter .12s}.btn:active{transform:scale(.98)}.btn.primary{border-color:transparent;background:linear-gradient(135deg,var(--accent),color-mix(in srgb,var(--accent) 75%,var(--gold)));color:#170f18}.btn.ghost{background:transparent}.btn.danger{background:#4a202b;border-color:#ff626d55}.btn.success{background:#123b32;border-color:#47cf9155}.btn.small{padding:7px 10px;min-height:34px;font-size:13px}.muted{color:var(--muted)}.section{margin-top:18px}.section-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 12px}.section-title h2{margin:0;font-size:18px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.card{background:linear-gradient(180deg,var(--panel),color-mix(in srgb,var(--panel) 78%,#100d18));border:1px solid var(--line);border-radius:var(--radius);padding:16px;min-width:0;box-shadow:0 8px 24px #0002}.card h3{margin:0 0 7px;font-size:16px}.card p{color:var(--muted);margin:6px 0 0;overflow-wrap:anywhere}.event-card{display:flex;flex-direction:column;gap:10px;min-height:150px}.event-card .actions{margin-top:auto}.status{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;border:1px solid var(--line);padding:5px 8px;border-radius:30px;color:var(--muted);width:max-content}.status.active{color:var(--ok);border-color:#47cf9144}.status.draft{color:var(--gold)}.status.archived{color:#f49aa2}.tabs{display:flex;flex-wrap:wrap;gap:7px;overflow:visible;padding:2px 0 10px;margin:14px 0 4px;scrollbar-width:thin}
@@ -370,6 +369,39 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
   const safe = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const parseJSON = (v, fallback) => { try { const x = typeof v === 'string' ? JSON.parse(v || '') : v; return x ?? fallback; } catch (_) { return fallback; } };
   let toastTimer;
+  let qrLibraryPromise=null;
+  function loadQrLibrary(){
+    if(window.Html5Qrcode)return Promise.resolve();
+    if(qrLibraryPromise)return qrLibraryPromise;
+    const sources=[
+      'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js',
+      'https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js'
+    ];
+    qrLibraryPromise=new Promise((resolve,reject)=>{
+      let index=0;
+      const tryNext=()=>{
+        if(index>=sources.length){
+          qrLibraryPromise=null;
+          reject(new Error('QR_LIBRARY_UNAVAILABLE'));
+          return;
+        }
+        const script=document.createElement('script');
+        script.src=sources[index++];
+        script.async=true;
+        script.crossOrigin='anonymous';
+        const timeout=setTimeout(()=>{script.remove();tryNext();},12000);
+        script.onload=()=>{
+          clearTimeout(timeout);
+          if(window.Html5Qrcode)resolve();
+          else{script.remove();tryNext();}
+        };
+        script.onerror=()=>{clearTimeout(timeout);script.remove();tryNext();};
+        document.head.appendChild(script);
+      };
+      tryNext();
+    });
+    return qrLibraryPromise;
+  }
   function toast(message, bad=false) { const el=$('toast'); el.textContent=message; el.style.background=bad?'#ff626d':'#f8f5fb'; el.classList.remove('hidden'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.add('hidden'),3500); }
   function showNotice(message, kind='') { return `<div class="notice ${kind}">${safe(message)}</div>`; }
   function themeColour(value, fallback) { return /^#[0-9a-f]{6}$/i.test(String(value||'')) ? String(value) : fallback; }
@@ -544,14 +576,17 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
   async function loadEvent() {
     if(!state.eventId) { renderEventList(); return; }
     const requestedId=state.eventId;
-    const data=await post('/api/event_details',{event_id:requestedId});
+    const registrationPromise=state.role==='guest'
+      ? post('/api/my_registration_status',{event_id:requestedId}).catch(err=>({registered:null,status:'check_failed',error:err.message}))
+      : Promise.resolve(null);
+    const [data,registration]=await Promise.all([
+      post('/api/event_details',{event_id:requestedId}),
+      registrationPromise
+    ]);
     if(!data.event || Number(data.event.id)!==requestedId) throw new Error('EventHub returned a different event than the one selected. No event details were displayed.');
-    state.event=data.event; eventTheme(state.event); document.title=`${state.event.name} | KSMU HOSTEL 5 EVENTS`; $('backBtn').classList.remove('hidden');
-    state.myRegistration=null;
-    if(state.role==='guest'){
-      try{state.myRegistration=await post('/api/my_registration_status',{event_id:requestedId});}
-      catch(err){state.myRegistration={registered:null,status:'check_failed',error:err.message};}
-    }
+    state.event=data.event;
+    state.myRegistration=registration;
+    eventTheme(state.event); document.title=`${state.event.name} | KSMU HOSTEL 5 EVENTS`; $('backBtn').classList.remove('hidden');
     await renderHome();
   }
   async function boot() {
@@ -561,9 +596,10 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
         // Role and event details are independent, read-only startup requests.
         // Run them together to remove one network round-trip from direct event links.
         const requestedId=state.eventId;
-        const [roleResult,eventResult]=await Promise.allSettled([
+        const [roleResult,eventResult,registrationResult]=await Promise.allSettled([
           post('/api/role',{event_id:requestedId}),
-          post('/api/event_details',{event_id:requestedId})
+          post('/api/event_details',{event_id:requestedId}),
+          post('/api/my_registration_status',{event_id:requestedId})
         ]);
         if(roleResult.status!=='fulfilled') throw roleResult.reason;
         const roleData=roleResult.value;
@@ -579,11 +615,11 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
         const eventData=eventResult.value;
         if(!eventData.event||Number(eventData.event.id)!==requestedId) throw new Error('EventHub returned a different event than the one selected. No event details were displayed.');
         state.event=eventData.event;eventTheme(state.event);document.title=`${state.event.name} | KSMU HOSTEL 5 EVENTS`;$('backBtn').classList.remove('hidden');
-        state.myRegistration=null;
-        if(state.role==='guest') {
-          try { state.myRegistration=await post('/api/my_registration_status',{event_id:requestedId}); }
-          catch(err) { state.myRegistration={registered:null,status:'check_failed',error:err.message}; }
-        }
+        state.myRegistration=state.role==='guest'
+          ? (registrationResult.status==='fulfilled'
+              ? registrationResult.value
+              : {registered:null,status:'check_failed',error:registrationResult.reason?.message||'Registration status could not be checked.'})
+          : null;
         await renderHome();
         if(scannerView) await openScannerStandalone(false);
       } else {
@@ -887,13 +923,14 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
     if(standalone)await startScanner();
   }
   async function startScanner() {
-    if(!window.Html5Qrcode){toast('QR camera library did not load. Reload the Mini App or use a device with a working camera.',true);return;}
     try {
+      await loadQrLibrary();
+      if(!window.Html5Qrcode)throw new Error('QR_LIBRARY_UNAVAILABLE');
       if(!state.scanner) state.scanner=new Html5Qrcode('reader');
       $('startCamera').disabled=true; $('stopCamera').disabled=false;
       if(!navigator.mediaDevices?.getUserMedia)throw new Error('CAMERA_UNAVAILABLE');
       await state.scanner.start({facingMode:'environment'},{fps:10,qrbox:{width:250,height:250},aspectRatio:1.0},async text=>{await stopScanner();await lookupGuest(text);},()=>{});
-    } catch(e){try{if(state.scanner)await state.scanner.clear();}catch(_){}state.scanner=null;$('startCamera').disabled=false;$('stopCamera').disabled=true;const msg=e?.name==='NotAllowedError'?'Camera permission was denied. Allow camera access for Telegram or your browser, then tap Start again.':e?.name==='NotFoundError'?'No camera was found on this device. Please use a device with a working camera.':e?.message==='CAMERA_UNAVAILABLE'?'This browser does not support camera access. Open the Mini App in updated Telegram or Chrome.':'Camera could not start. Check permissions and make sure another app is not using the camera.';toast(msg,true);}
+    } catch(e){try{if(state.scanner)await state.scanner.clear();}catch(_){}state.scanner=null;$('startCamera').disabled=false;$('stopCamera').disabled=true;const msg=e?.message==='QR_LIBRARY_UNAVAILABLE'?'QR scanner library could not be downloaded. Check your connection or use manual pass-code verification.':e?.name==='NotAllowedError'?'Camera permission was denied. Allow camera access for Telegram or your browser, then tap Start again.':e?.name==='NotFoundError'?'No camera was found on this device. Please use a device with a working camera.':e?.message==='CAMERA_UNAVAILABLE'?'This browser does not support camera access. Open the Mini App in updated Telegram or Chrome.':'Camera could not start. Check permissions and make sure another app is not using the camera.';toast(msg,true);}
   }
   async function stopScanner() {
     if(state.scanner){try{if(state.scanner.isScanning)await state.scanner.stop();}catch(_){}try{await state.scanner.clear();}catch(_){}state.scanner=null;}
