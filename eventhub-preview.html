@@ -664,7 +664,7 @@
 
           <div class="field"><label>Pass instruction</label><input id="editPassInstruction" maxlength="160" value="${safe(theme.pass_instruction||'Use this QR for event entry and checkpoints')}"></div>
           <div class="field"><label>Pass privacy note</label><input id="editPassPrivacy" maxlength="160" value="${safe(theme.pass_privacy||'Keep your pass private • One guest per pass')}"></div>
-          <div class="actions"><button class="btn" type="button" id="previewQrPass">Preview saved QR pass design</button><button class="btn warning" type="button" id="refreshExistingPasses">Send updated pass to approved guests</button><button class="btn primary" type="submit">Save event, Mini App and pass design</button></div>
+          <div class="actions"><button class="btn" type="button" id="previewQrPass">Preview current QR changes</button><button class="btn warning" type="button" id="refreshExistingPasses">Send updated pass to approved guests</button><button class="btn primary" type="submit">Save event, Mini App and pass design</button></div>
         </form><div id="settingsMessage"></div><div id="qrPassPreview"></div>
       </section>
       <section class="section card"><h2>Registration form builder</h2><p class="muted">Add, remove, rename, reorder and configure fields for this event. Keep Full name required.</p>${schemaEditor(Array.isArray(schema)&&schema.length?schema:defaultSchema())}<div class="actions"><button class="btn primary" id="saveSchema">Save registration form</button></div><div id="schemaMessage"></div></section>
@@ -727,10 +727,15 @@
     $('removePassBackground').addEventListener('click',()=>{backgroundValue.value='';backgroundInput.value='';showPassBackground();toast('Custom background removed. Save settings to apply.');});
     $('previewQrPass').addEventListener('click',async()=>{
       const button=$('previewQrPass'),target=$('qrPassPreview');
-      button.disabled=true;target.innerHTML='<div class="notice">Generating a preview-only pass using the last saved design…</div>';
-      try{const result=await adminCall('preview_pass',{preview_name:'Sample Guest',preview_phone:'+7 900 000 00 00',preview_residence:'Hostel',preview_hostel:'5',preview_room:'392',preview_food:'Vegetarian'});
-        target.innerHTML='<div class="notice good">Preview only. This QR is not a real guest pass and cannot be used for entry.</div><img class="pass-image" alt="QR pass design preview" src="data:image/png;base64,'+result.pass.image+'">';
-      }catch(err){target.innerHTML=showNotice(err.message,'error');}finally{button.disabled=false;}
+      button.disabled=true;const original=button.textContent;button.textContent='Rendering preview…';
+      target.innerHTML='<div class="notice">Rendering a preview with your current unsaved QR design changes…</div>';
+      try{
+        const result=await adminCall('preview_pass',{preview_name:'Sample Guest',preview_phone:'+7 900 000 00 00',preview_residence:'Hostel',preview_hostel:'5',preview_room:'392',preview_food:'Vegetarian',theme:collectTheme()});
+        if(!result.pass?.image)throw new Error('The server did not return a QR preview image.');
+        const imageUrl='data:image/png;base64,'+result.pass.image;
+        target.innerHTML='<div class="notice good">Live preview of your current changes. Nothing has been saved and this sample QR cannot be used for entry.</div><img class="pass-image" alt="Live QR pass design preview" src="'+imageUrl+'"><div class="actions" style="justify-content:center"><a class="btn" download="EventHub-QR-Preview.png" href="'+imageUrl+'" style="text-decoration:none;display:inline-flex;align-items:center">Download preview</a></div>';
+      }catch(err){target.innerHTML=showNotice(err.message,'error');}
+      finally{button.disabled=false;button.textContent=original;}
     });
     $('generateEventAdminQr').addEventListener('click',async()=>{
       const b=$('generateEventAdminQr'),target=$('eventAdminQrResult');b.disabled=true;target.innerHTML='<div class="notice">Generating signed event QR…</div>';
