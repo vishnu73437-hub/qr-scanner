@@ -339,7 +339,7 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
       deepotsavFxFrame=requestAnimationFrame(draw);
     }else if(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches){
       const canvas=existing||document.createElement('canvas');canvas.id='deepotsavFireworks';canvas.setAttribute('aria-hidden','true');if(!existing)document.body.appendChild(canvas);
-      const ctx=canvas.getContext('2d');if(ctx){const dpr=Math.min(window.devicePixelRatio||1,1.5);canvas.width=innerWidth*dpr;canvas.height=innerHeight*dpr;canvas.style.width=innerWidth+'px';canvas.style.height=innerHeight+'px';ctx.scale(dpr,dpr);[[.18,.22],[.82,.28],[.58,.12]].forEach(([rx,ry],n)=>{const x=innerWidth*rx,y=innerHeight*ry;for(let i=0;i<28;i++){const a=Math.PI*2*i/28,r=12+(i%4)*5;ctx.fillStyle=paletteSafe[n%paletteSafe.length];ctx.globalAlpha=.65;ctx.beginPath();ctx.arc(x+Math.cos(a)*r,y+Math.sin(a)*r,1.8,0,Math.PI*2);ctx.fill();}});ctx.globalAlpha=1;}
+      const ctx=canvas.getContext('2d');if(ctx){const dpr=Math.min(window.devicePixelRatio||1,1.5);canvas.width=innerWidth*dpr;canvas.height=innerHeight*dpr;canvas.style.width=innerWidth+'px';canvas.style.height=innerHeight+'px';ctx.scale(dpr,dpr);[[.18,.22],[.82,.28],[.58,.12]].forEach(([rx,ry],n)=>{const x=innerWidth*rx,y=innerHeight*ry;for(let i=0;i<28;i++){const a=Math.PI*2*i/28,r=12+(i%4)*5;ctx.fillStyle=['#ffe9a6','#ffd166','#ffad42'][n%3];ctx.globalAlpha=.65;ctx.beginPath();ctx.arc(x+Math.cos(a)*r,y+Math.sin(a)*r,1.8,0,Math.PI*2);ctx.fill();}});ctx.globalAlpha=1;}
     }
   }
   function shade(hex, amount) {
