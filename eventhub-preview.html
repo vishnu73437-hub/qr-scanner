@@ -15,11 +15,11 @@
     body.theme-deepotsav{
       isolation:isolate;
       background:
-        radial-gradient(ellipse at 50% -12%,#a65a9a66 0,transparent 48%),
-        radial-gradient(ellipse at 4% 38%,#d9b15f20 0,transparent 34%),
+        radial-gradient(ellipse at 50% -12%,#247f8066 0,transparent 48%),
+        radial-gradient(ellipse at 4% 38%,#e6a23c20 0,transparent 34%),
         radial-gradient(ellipse at 96% 62%,#ff8b3820 0,transparent 32%),
-        radial-gradient(circle at 50% 100%,#6d328b55 0,transparent 44%),
-        linear-gradient(145deg,#12091f 0%,#281039 38%,#32104d 70%,#160b25 100%);
+        radial-gradient(circle at 50% 100%,#17616b55 0,transparent 44%),
+        linear-gradient(145deg,#061923 0%,#0b303b 38%,#123b46 70%,#071c28 100%);
       background-attachment:fixed;
     }
     body.theme-deepotsav::before{
@@ -48,7 +48,7 @@
       background:
         radial-gradient(circle at 92% 8%,#d9b15f25 0 2px,transparent 3px),
         radial-gradient(circle at 8% 90%,#d9b15f20 0 2px,transparent 3px),
-        linear-gradient(125deg,#51246b 0%,#32104d 54%,#24102f 100%);
+        linear-gradient(125deg,#1b5960 0%,#123b46 54%,#0b2935 100%);
       border:1px solid #d9b15f99;
       box-shadow:0 18px 48px #08031199,0 0 30px #d9b15f18,inset 0 1px #fff2;
     }
@@ -81,14 +81,12 @@
     body.theme-deepotsav .shell::after{
       opacity:0;
       background:
-        radial-gradient(circle at 14% 28%,#fff2c7 0 1px,transparent 3px),
-        radial-gradient(circle at 14% 28%,transparent 0 23px,#ffd978aa 24px 25px,transparent 27px),
-        radial-gradient(circle at 86% 22%,#fff2c7 0 1px,transparent 3px),
-        radial-gradient(circle at 86% 22%,transparent 0 30px,#ffd97899 31px 32px,transparent 34px),
-        radial-gradient(circle at 76% 76%,#fff2c7 0 1px,transparent 3px),
-        radial-gradient(circle at 76% 76%,transparent 0 19px,#ffd97888 20px 21px,transparent 23px);
+        radial-gradient(circle,#fff8d8 0 2px,transparent 3px) 14% 25%/150px 150px,
+        conic-gradient(from 0deg,#ffd978 0 2deg,transparent 2deg 15deg,#fff0b5 15deg 17deg,transparent 17deg 30deg,#ffd978 30deg 32deg,transparent 32deg 45deg,#fff0b5 45deg 47deg,transparent 47deg 60deg,#ffd978 60deg 62deg,transparent 62deg 75deg,#fff0b5 75deg 77deg,transparent 77deg 90deg,#ffd978 90deg 92deg,transparent 92deg 105deg,#fff0b5 105deg 107deg,transparent 107deg 120deg,#ffd978 120deg 122deg,transparent 122deg 135deg,#fff0b5 135deg 137deg,transparent 137deg 150deg,#ffd978 150deg 152deg,transparent 152deg 165deg,#fff0b5 165deg 167deg,transparent 167deg 180deg,#ffd978 180deg 182deg,transparent 182deg 195deg,#fff0b5 195deg 197deg,transparent 197deg 210deg,#ffd978 210deg 212deg,transparent 212deg 225deg,#fff0b5 225deg 227deg,transparent 227deg 240deg,#ffd978 240deg 242deg,transparent 242deg 255deg,#fff0b5 255deg 257deg,transparent 257deg 270deg,#ffd978 270deg 272deg,transparent 272deg 285deg,#fff0b5 285deg 287deg,transparent 287deg 300deg,#ffd978 300deg 302deg,transparent 302deg 315deg,#fff0b5 315deg 317deg,transparent 317deg 330deg,#ffd978 330deg 332deg,transparent 332deg 345deg,#fff0b5 345deg 347deg,transparent 347deg 360deg) 14% 25%/110px 110px,
+        conic-gradient(from 8deg,#ffd978 0 2deg,transparent 2deg 20deg,#fff0b5 20deg 22deg,transparent 22deg 40deg,#ffd978 40deg 42deg,transparent 42deg 60deg,#fff0b5 60deg 62deg,transparent 62deg 80deg,#ffd978 80deg 82deg,transparent 82deg 100deg,#fff0b5 100deg 102deg,transparent 102deg 120deg,#ffd978 120deg 122deg,transparent 122deg 140deg,#fff0b5 140deg 142deg,transparent 142deg 160deg,#ffd978 160deg 162deg,transparent 162deg 180deg,#fff0b5 180deg 182deg,transparent 182deg 200deg,#ffd978 200deg 202deg,transparent 202deg 220deg,#fff0b5 220deg 222deg,transparent 222deg 240deg,#ffd978 240deg 242deg,transparent 242deg 260deg,#fff0b5 260deg 262deg,transparent 262deg 280deg,#ffd978 280deg 282deg,transparent 282deg 300deg,#fff0b5 300deg 302deg,transparent 302deg 320deg,#ffd978 320deg 322deg,transparent 322deg 340deg,#fff0b5 340deg 342deg,transparent 342deg 360deg) 84% 22%/86px 86px;
       background-repeat:no-repeat;
-      animation:deepotsavFireworks 8s ease-in-out infinite;
+      filter:drop-shadow(0 0 8px #ffd978);
+      animation:deepotsavFireworks 5.5s ease-in-out infinite;
     }
     body.theme-deepotsav .shell>*{position:relative;z-index:1}
     @media(prefers-reduced-motion:no-preference){
@@ -106,11 +104,11 @@
         100%{background-position:8% 18%,82% 30%,56% 78%;transform:translate3d(0,0,0)}
       }
       @keyframes deepotsavFireworks{
-        0%,12%,100%{opacity:0;transform:scale(.94)}
-        18%,28%{opacity:.48;transform:scale(1)}
-        36%{opacity:0;transform:scale(1.08)}
-        54%,64%{opacity:.34;transform:scale(1)}
-        72%{opacity:0;transform:scale(1.1)}
+        0%,8%,100%{opacity:0;transform:scale(.35)}
+        15%,31%{opacity:.92;transform:scale(1)}
+        39%{opacity:0;transform:scale(1.28)}
+        52%,68%{opacity:.72;transform:scale(.92)}
+        76%{opacity:0;transform:scale(1.25)}
       }
     }
     @media(prefers-reduced-motion:reduce){
@@ -157,10 +155,10 @@
     const eventName=String(ev?.name||'').toLowerCase();
     const isDiwali=/deepotsav|deepostav|diwali/.test(eventName);
     const isHalloween=/halloween/.test(eventName);
-    const primary=themeColour(t.primary,isDiwali?'#32104d':'#25113b');
-    const background=themeColour(t.background,isDiwali?'#190d2b':(isHalloween?'#170F24':shade(primary,-.50)));
-    const accent=themeColour(t.accent,isDiwali?'#d9b15f':'#ff7518');
-    const gold=themeColour(t.gold,isDiwali?'#d9b15f':'#ffd166');
+    const primary=themeColour(t.primary,isDiwali?'#123b46':'#25113b');
+    const background=themeColour(t.background,isDiwali?'#081f2a':(isHalloween?'#170F24':shade(primary,-.50)));
+    const accent=themeColour(t.accent,isDiwali?'#e6a23c':'#ff7518');
+    const gold=themeColour(t.gold,isDiwali?'#ffd166':'#ffd166');
     const root=document.documentElement;
     root.style.setProperty('--bg',background);root.style.setProperty('--panel',primary);root.style.setProperty('--panel2',shade(primary,.10));
     root.style.setProperty('--accent',accent);root.style.setProperty('--gold',gold);
