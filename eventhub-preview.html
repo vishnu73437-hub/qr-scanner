@@ -449,7 +449,7 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
         const permitted=(state.role==='admin'?state.workspaces:state.activeEvents).some(e=>Number(e.id)===state.eventId);
         if(!permitted) { state.eventId=0; updateUrl(0); }
       }
-      if(state.eventId) await loadEvent(); else renderEventList();
+      if(state.eventId){await loadEvent();if(scannerView)await openScannerStandalone(false);} else renderEventList();
     } catch(e) { main.innerHTML=showNotice(e.message,'error')+`<div class="actions"><button class="btn" onclick="location.reload()">Try again</button></div>`; }
   }
   function renderEventList() {
@@ -687,12 +687,37 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
       $('sendPass').addEventListener('click',async()=>{try{const r=await post('/api/send_my_pass',{event_id:state.eventId,passCode:pass.passCode});toast(r.message||'Pass sent');}catch(e){toast(e.message,true);}});
     }
   }
-  async function renderScanner(host) {
+  async function openScannerStandalone(push=true) {
+    if(state.role!=='admin'&&state.role!=='volunteer'){toast('Scanner access is restricted to event volunteers and admins.',true);return;}
+    if(!state.eventId||!state.event){toast('Open an event workspace first.',true);return;}
+    await stopScanner();
+    scannerView=true;state.page='scanner';
+    const u=new URL(location.href);u.searchParams.set('scanner','1');
+    if(push)history.pushState({scanner:true,event_id:state.eventId},'',u.pathname+u.search+u.hash);
+    document.body.classList.add('scanner-mode');
+    $('brandTitle').textContent='QR SCANNER';
+    $('brandSubtitle').textContent=state.event.name;
+    $('backBtn').textContent='← Workspace';$('backBtn').classList.remove('hidden');
+    $('refreshBtn').classList.add('hidden');
+    await renderScanner(main,true);
+  }
+  async function closeScannerStandalone(push=true) {
+    await stopScanner();
+    scannerView=false;document.body.classList.remove('scanner-mode');
+    const u=new URL(location.href);u.searchParams.delete('scanner');
+    if(push)history.replaceState({scanner:false,event_id:state.eventId},'',u.pathname+u.search+u.hash);
+    eventTheme(state.event);
+    $('backBtn').textContent='← All events';$('backBtn').classList.remove('hidden');
+    $('refreshBtn').classList.remove('hidden');
+    await renderHome();
+  }
+  async function renderScanner(host,standalone=false) {
     if(state.role!=='admin'&&state.role!=='volunteer'){host.innerHTML=showNotice('Scanner access is restricted to event volunteers and admins.','error');return;}
     if(state.event?.status!=='active'){stopScanner();host.innerHTML=showNotice('This event is not active. Its records are available for review, but QR scanning and event-day actions are disabled.','error');return;}
     stopScanner();
-    host.innerHTML=`<section class="section card"><div class="section-title"><h2>📷 QR Scanner</h2><span class="status active">${safe(state.event.name)}</span></div><p class="muted">Scan a guest's event pass. You can also enter a pass code manually when a camera is unavailable.</p><div class="scanner-box"><div id="reader"></div></div><div class="actions"><button class="btn primary" id="startCamera">Start camera</button><button class="btn" id="stopCamera" disabled>Stop camera</button></div><div class="field"><label>Manual QR / pass code</label><div class="row"><input id="manualQr" class="input" autocomplete="off" placeholder="H5-XXXXXXXX" style="flex:1;min-width:0"><button class="btn" id="lookupManual">Verify</button></div></div><div id="scanResult"></div></section>`;
+    host.innerHTML=standalone?`<section class="scanner-screen"><section class="card"><div class="section-title"><h2>📷 Event QR Scanner</h2><span class="status active">${safe(state.event.name)}</span></div><p class="muted">Camera is off until you press the button below.</p><div class="scanner-hint">Camera access is requested whenever you start scanning. Android or Telegram may remember a previous Allow choice, so it might not display a new prompt every time. You can revoke permission in your device/app settings.</div><div class="scanner-box"><div id="reader"><div class="empty">Camera preview appears here after access is granted.</div></div></div><div class="scanner-actions"><button class="btn primary" id="startCamera">Allow camera & start scanning</button><button class="btn" id="stopCamera" disabled>Stop camera</button></div><div class="field"><label>Manual QR / pass code (camera fallback)</label><div class="row"><input id="manualQr" class="input" autocomplete="off" placeholder="H5-XXXXXXXX" style="flex:1;min-width:0"><button class="btn" id="lookupManual">Verify</button></div></div><div id="scanResult"></div></section><div class="actions"><button class="btn ghost" id="scannerBack">← Back to event workspace</button></div></section>`:`<section class="section card"><div class="section-title"><h2>📷 QR Scanner</h2><span class="status active">${safe(state.event.name)}</span></div><p class="muted">Open the dedicated scanner screen before scanning passes.</p><div class="actions"><button class="btn primary" id="openDedicatedScanner">Open full-screen QR Scanner →</button></div></section>`;
     $('startCamera').addEventListener('click',startScanner);$('stopCamera').addEventListener('click',stopScanner);$('lookupManual').addEventListener('click',()=>lookupGuest($('manualQr').value));$('manualQr').addEventListener('keydown',e=>{if(e.key==='Enter')lookupGuest(e.currentTarget.value);});
+    $('openDedicatedScanner')?.addEventListener('click',()=>openScannerStandalone());$('scannerBack')?.addEventListener('click',()=>closeScannerStandalone());
     state.checkpoints=[];try{const cp=await post('/api/checkpoints',{event_id:state.eventId});state.checkpoints=cp.checkpoints||[];}catch(err){toast('Additional checkpoints could not be loaded: '+err.message,true);}
   }
   async function startScanner() {
@@ -700,8 +725,9 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
     try {
       if(!state.scanner) state.scanner=new Html5Qrcode('reader');
       $('startCamera').disabled=true; $('stopCamera').disabled=false;
+      if(!navigator.mediaDevices?.getUserMedia)throw new Error('CAMERA_UNAVAILABLE');
       await state.scanner.start({facingMode:'environment'},{fps:10,qrbox:{width:250,height:250},aspectRatio:1.0},async text=>{await stopScanner();await lookupGuest(text);},()=>{});
-    } catch(e){$('startCamera').disabled=false;$('stopCamera').disabled=true;toast('Camera could not start. Allow camera permission or use manual verification.',true);}
+    } catch(e){$('startCamera').disabled=false;$('stopCamera').disabled=true;const msg=e?.name==='NotAllowedError'?'Camera permission was denied. Allow camera access for Telegram or your browser, then tap Start again.':e?.name==='NotFoundError'?'No camera was found on this device. Use manual pass verification.':e?.message==='CAMERA_UNAVAILABLE'?'This browser does not support camera access. Open the Mini App in updated Telegram or Chrome.':'Camera could not start. Check permissions and make sure another app is not using the camera.';toast(msg,true);}
   }
   async function stopScanner() {
     if(state.scanner){try{if(state.scanner.isScanning)await state.scanner.stop();}catch(_){}try{await state.scanner.clear();}catch(_){}state.scanner=null;}
@@ -1179,11 +1205,14 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
     $('refreshStaff').addEventListener('click',load);$('addVolunteer').addEventListener('submit',async e=>{e.preventDefault();try{const r=await adminCall('add_volunteer',{telegram_id:Number($('volunteerId').value)});toast(r.message);$('volunteerId').value='';load();}catch(err){toast(err.message,true);}});await load();
   }
   async function refresh() { try{await stopScanner();await loadRole();if(state.eventId)await loadEvent();else renderEventList();toast('Updated');}catch(e){toast(e.message,true);} }
-  $('refreshBtn').addEventListener('click',refresh);$('backBtn').addEventListener('click',clearEvent);
+  $('refreshBtn').addEventListener('click',refresh);$('backBtn').addEventListener('click',()=>scannerView?closeScannerStandalone():clearEvent());
+  window.addEventListener('pagehide',()=>{if(state.scanner)stopScanner();});
   window.addEventListener('popstate',async()=>{
-    const nextId=Number(new URLSearchParams(location.search).get('event_id')||0);
+    const nextParams=new URLSearchParams(location.search);
+    const nextId=Number(nextParams.get('event_id')||0);
+    const wantsScanner=nextParams.get('scanner')==='1';
     await stopScanner(); state.eventId=Number.isSafeInteger(nextId)&&nextId>0?nextId:0; state.event=null; state.guest=null; state.pass=null;
-    try { await loadRole(); if(state.eventId){const permitted=(state.role==='admin'?state.workspaces:state.activeEvents).some(e=>Number(e.id)===state.eventId); if(permitted) await loadEvent(); else {state.eventId=0;eventTheme(null);renderEventList();}} else {eventTheme(null);renderEventList();} } catch(err){main.innerHTML=showNotice(err.message,'error');}
+    try { await loadRole(); if(state.eventId){const permitted=(state.role==='admin'?state.workspaces:state.activeEvents).some(e=>Number(e.id)===state.eventId); if(permitted){await loadEvent();if(wantsScanner)await openScannerStandalone(false);else{scannerView=false;document.body.classList.remove('scanner-mode');$('refreshBtn').classList.remove('hidden');eventTheme(state.event);}} else {scannerView=false;document.body.classList.remove('scanner-mode');state.eventId=0;eventTheme(null);renderEventList();}} else {scannerView=false;document.body.classList.remove('scanner-mode');eventTheme(null);renderEventList();} } catch(err){main.innerHTML=showNotice(err.message,'error');}
   });
   boot();
 })();
