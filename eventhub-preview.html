@@ -525,7 +525,8 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
     if(!API_BASE) throw new Error('API address is not configured. Ask the EventHub admin to configure the Botkeep API URL.');
     if(!initData) throw new Error('Open this page from the EventHub Telegram bot so Telegram can authenticate you.');
     const controller=typeof AbortController!=='undefined'?new AbortController():null;
-    const slowAction=path==='/api/admin' && ['announcement_send','announcement_unsend','sheets_sync','refresh_event_passes'].includes(String(payload.action||''));
+    const actionName=path==='/api/admin'?String(payload.action||'unknown'):'';
+    const slowAction=path==='/api/admin' && ['announcement_send','announcement_unsend','sheets_sync','refresh_event_passes'].includes(actionName);
     const timeoutMs=slowAction?120000:30000, startedAt=Date.now();
     const timer=controller?setTimeout(()=>controller.abort(),timeoutMs):null;
     let res;
@@ -533,14 +534,14 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
       res=await fetch(API_BASE+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({initData,...payload}),signal:controller?.signal});
     } catch(err) {
       const seconds=Math.round((Date.now()-startedAt)/1000);
-      if(err?.name==='AbortError') throw new Error(`EventHub API ${path} did not respond within ${seconds}s. This is a Botkeep/API response timeout, not a scrolling problem. Check Botkeep service logs and try again.`);
-      throw new Error(`Network connection to EventHub API ${path} failed. Check internet access and Botkeep service availability.`);
+      if(err?.name==='AbortError') throw new Error(`EventHub API ${path}${actionName?' (action: '+actionName+')':''} did not respond within ${seconds}s. Check Botkeep logs for this exact action.`);
+      throw new Error(`Network connection to EventHub API ${path}${actionName?' (action: '+actionName+')':''} failed. Check internet access and Botkeep service availability.`);
     } finally { if(timer) clearTimeout(timer); }
     let data;
     try { data=await res.json(); }
-    catch(_) { throw new Error(`EventHub API ${path} returned an unreadable response. Check the Botkeep service logs.`); }
+    catch(_) { throw new Error(`EventHub API ${path}${actionName?' (action: '+actionName+')':''} returned an unreadable response. Check the Botkeep service logs.`); }
     const elapsed=Date.now()-startedAt;
-    if(elapsed>1500) console.warn('[EventHub slow API]',path,elapsed+'ms','HTTP',res.status);
+    if(elapsed>1500) console.warn('[EventHub slow API]',path,'action='+actionName,elapsed+'ms','HTTP',res.status);
     if(!data || typeof data!=='object') throw new Error(`EventHub API ${path} returned an unexpected response.`);
     if(!res.ok || data.ok===false) throw new Error(data.error || `Request failed (${res.status}).`);
     return data;
@@ -1425,10 +1426,22 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
       button.disabled=true;const original=button.textContent;button.textContent='Rendering preview…';
       target.innerHTML='<div class="notice">Rendering a preview with your current unsaved QR design changes…</div>';
       try{
-        const result=await adminCall('preview_pass',{preview_name:'Sample Guest',preview_phone:'+7 900 000 00 00',preview_residence:'Hostel',preview_hostel:'5',preview_room:'392',preview_food:'Vegetarian',theme:collectTheme()});
+        const previewTheme=collectTheme();
+        const result=await adminCall('preview_pass',{
+          event_id:state.eventId,
+          preview_name:'Sample Guest',preview_phone:'+7 900 000 00 00',
+          preview_residence:'Hostel',preview_hostel:'5',preview_room:'392',
+          preview_food:'Vegetarian',theme:previewTheme
+        });
         if(!result.pass?.image)throw new Error('The server did not return a QR preview image.');
         const imageUrl='data:image/png;base64,'+result.pass.image;
-        target.innerHTML='<div class="notice good">Live preview of your current changes. Nothing has been saved and this sample QR cannot be used for entry.</div><img class="pass-image" alt="Live QR pass design preview" src="'+imageUrl+'"><div class="actions" style="justify-content:center"><a class="btn" download="EventHub-QR-Preview.png" href="'+imageUrl+'" style="text-decoration:none;display:inline-flex;align-items:center">Download preview</a></div>';
+        const applied=result.applied_theme||{};
+        const appliedColour=applied.pass_background||previewTheme.pass_background||'unknown';
+        const imageActive=applied.has_background_image===true||applied.background_source==='uploaded image';
+        const backgroundNote=imageActive
+          ? 'An uploaded pass background image is active and takes priority over the solid colour. Use “Remove background image” to preview the selected colour.'
+          : 'Solid pass background colour applied: '+appliedColour+'.';
+        target.innerHTML='<div class="notice good">Live preview of your current unsaved changes. '+safe(backgroundNote)+' Nothing has been saved; this sample QR cannot be used for entry.</div><img class="pass-image" alt="Live QR pass design preview" src="'+imageUrl+'"><div class="actions" style="justify-content:center"><a class="btn" download="EventHub-QR-Preview.png" href="'+imageUrl+'" style="text-decoration:none;display:inline-flex;align-items:center">Download preview</a></div>';
       }catch(err){target.innerHTML=showNotice(err.message,'error');}
       finally{button.disabled=false;button.textContent=original;}
     });
