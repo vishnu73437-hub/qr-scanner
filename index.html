@@ -6,7 +6,6 @@
   <meta name="theme-color" content="#171321">
   <title>KSMU HOSTEL 5 EVENTS</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <style>
     :root{--bg:#171321;--panel:#211c2d;--panel2:#2b2438;--text:#f8f5fb;--muted:#bcb4c9;--accent:#ff7518;--gold:#ffd166;--line:#ffffff18;--danger:#ff626d;--ok:#47cf91;--radius:20px;--shadow:0 16px 40px #0005}
     *{box-sizing:border-box}html{min-height:100%;background:var(--bg)}body{margin:0;background:radial-gradient(ellipse at 80% -10%,color-mix(in srgb,var(--accent) 24%,transparent),transparent 42%),var(--bg);color:var(--text);font:15px/1.45 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}button,input,textarea,select{font:inherit}button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}.shell{width:min(100%,980px);margin:auto;padding:16px 16px 34px}.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}.brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.2px}.brand-mark{display:grid;place-items:center;width:40px;height:40px;border-radius:14px;background:linear-gradient(135deg,var(--accent),var(--gold));color:#1a1420;font-size:21px;box-shadow:0 8px 22px color-mix(in srgb,var(--accent) 30%,transparent)}.brand small{display:block;color:var(--muted);font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase}.top-actions{display:flex;gap:8px;align-items:center}.hero{background:linear-gradient(140deg,color-mix(in srgb,var(--accent) 26%,var(--panel)),var(--panel) 64%);border:1px solid color-mix(in srgb,var(--accent) 42%,var(--line));border-radius:26px;padding:24px;box-shadow:var(--shadow);position:relative;overflow:hidden}.hero:after{content:"✦";position:absolute;right:20px;top:10px;font-size:80px;color:color-mix(in srgb,var(--gold) 18%,transparent);pointer-events:none}.eyebrow{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);font-weight:800}.hero h1{font-size:clamp(28px,6vw,44px);line-height:1.06;margin:9px 0 12px;max-width:720px;overflow-wrap:anywhere}.hero p{color:#e0d9e8;max-width:680px;margin:0;white-space:pre-wrap}.meta-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:20px}.meta{background:#100d1b66;border:1px solid #ffffff17;border-radius:15px;padding:12px;min-width:0}.meta b{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px}.meta span{display:block;font-weight:700;overflow-wrap:anywhere}.actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:18px}.btn{border:1px solid var(--line);border-radius:13px;padding:11px 15px;background:var(--panel2);color:var(--text);font-weight:750;min-height:43px;transition:transform .12s,filter .12s}.btn:active{transform:scale(.98)}.btn.primary{border-color:transparent;background:linear-gradient(135deg,var(--accent),color-mix(in srgb,var(--accent) 75%,var(--gold)));color:#170f18}.btn.ghost{background:transparent}.btn.danger{background:#4a202b;border-color:#ff626d55}.btn.success{background:#123b32;border-color:#47cf9155}.btn.small{padding:7px 10px;min-height:34px;font-size:13px}.muted{color:var(--muted)}.section{margin-top:18px}.section-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 12px}.section-title h2{margin:0;font-size:18px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.card{background:linear-gradient(180deg,var(--panel),color-mix(in srgb,var(--panel) 78%,#100d18));border:1px solid var(--line);border-radius:var(--radius);padding:16px;min-width:0;box-shadow:0 8px 24px #0002}.card h3{margin:0 0 7px;font-size:16px}.card p{color:var(--muted);margin:6px 0 0;overflow-wrap:anywhere}.event-card{display:flex;flex-direction:column;gap:10px;min-height:150px}.event-card .actions{margin-top:auto}.status{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;border:1px solid var(--line);padding:5px 8px;border-radius:30px;color:var(--muted);width:max-content}.status.active{color:var(--ok);border-color:#47cf9144}.status.draft{color:var(--gold)}.status.archived{color:#f49aa2}.tabs{display:flex;flex-wrap:wrap;gap:7px;overflow:visible;padding:2px 0 10px;margin:14px 0 4px;scrollbar-width:thin}
@@ -364,12 +363,45 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
   const API_BASE = (params.get('api_base') || window.EVENTHUB_API_BASE || (/github\.io$/.test(location.hostname) ? 'https://unwjym.bot-keep.xyz' : location.origin)).replace(/\/$/, '');
   const initialEventId = Number(params.get('event_id') || 0);
   let scannerView = params.get('scanner') === '1';
-  const state = { role:'guest', user:null, activeEvents:[], workspaces:[], eventId:initialEventId, event:null, stats:null, page:'home', guest:null, scanner:null, formSchema:[], pass:null, checkpoints:[], myRegistration:null };
+  const state = { role:'guest', user:null, activeEvents:[], workspaces:[], eventId:initialEventId, event:null, stats:null, page:'home', guest:null, scanner:null, scannerStarting:false, scannerStopPromise:null, scanHandling:false, formSchema:[], pass:null, checkpoints:[], myRegistration:null };
   const $ = (id) => document.getElementById(id);
   const main = $('main');
   const safe = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const parseJSON = (v, fallback) => { try { const x = typeof v === 'string' ? JSON.parse(v || '') : v; return x ?? fallback; } catch (_) { return fallback; } };
   let toastTimer;
+  let qrLibraryPromise=null;
+  function loadQrLibrary(){
+    if(window.Html5Qrcode)return Promise.resolve();
+    if(qrLibraryPromise)return qrLibraryPromise;
+    const sources=[
+      'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js',
+      'https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js'
+    ];
+    qrLibraryPromise=new Promise((resolve,reject)=>{
+      let index=0;
+      const tryNext=()=>{
+        if(index>=sources.length){
+          qrLibraryPromise=null;
+          reject(new Error('QR_LIBRARY_UNAVAILABLE'));
+          return;
+        }
+        const script=document.createElement('script');
+        script.src=sources[index++];
+        script.async=true;
+        script.crossOrigin='anonymous';
+        const timeout=setTimeout(()=>{script.remove();tryNext();},12000);
+        script.onload=()=>{
+          clearTimeout(timeout);
+          if(window.Html5Qrcode)resolve();
+          else{script.remove();tryNext();}
+        };
+        script.onerror=()=>{clearTimeout(timeout);script.remove();tryNext();};
+        document.head.appendChild(script);
+      };
+      tryNext();
+    });
+    return qrLibraryPromise;
+  }
   function toast(message, bad=false) { const el=$('toast'); el.textContent=message; el.style.background=bad?'#ff626d':'#f8f5fb'; el.classList.remove('hidden'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.add('hidden'),3500); }
   function showNotice(message, kind='') { return `<div class="notice ${kind}">${safe(message)}</div>`; }
   function themeColour(value, fallback) { return /^#[0-9a-f]{6}$/i.test(String(value||'')) ? String(value) : fallback; }
@@ -493,7 +525,8 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
     if(!API_BASE) throw new Error('API address is not configured. Ask the EventHub admin to configure the Botkeep API URL.');
     if(!initData) throw new Error('Open this page from the EventHub Telegram bot so Telegram can authenticate you.');
     const controller=typeof AbortController!=='undefined'?new AbortController():null;
-    const slowAction=path==='/api/admin' && ['announcement_send','announcement_unsend','sheets_sync','refresh_event_passes'].includes(String(payload.action||''));
+    const actionName=path==='/api/admin'?String(payload.action||'unknown'):'';
+    const slowAction=path==='/api/admin' && ['announcement_send','announcement_unsend','sheets_sync','refresh_event_passes'].includes(actionName);
     const timeoutMs=slowAction?120000:30000, startedAt=Date.now();
     const timer=controller?setTimeout(()=>controller.abort(),timeoutMs):null;
     let res;
@@ -501,19 +534,41 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
       res=await fetch(API_BASE+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({initData,...payload}),signal:controller?.signal});
     } catch(err) {
       const seconds=Math.round((Date.now()-startedAt)/1000);
-      if(err?.name==='AbortError') throw new Error(`EventHub API ${path} did not respond within ${seconds}s. This is a Botkeep/API response timeout, not a scrolling problem. Check Botkeep service logs and try again.`);
-      throw new Error(`Network connection to EventHub API ${path} failed. Check internet access and Botkeep service availability.`);
+      if(err?.name==='AbortError') throw new Error(`EventHub API ${path}${actionName?' (action: '+actionName+')':''} did not respond within ${seconds}s. Check Botkeep logs for this exact action.`);
+      throw new Error(`Network connection to EventHub API ${path}${actionName?' (action: '+actionName+')':''} failed. Check internet access and Botkeep service availability.`);
     } finally { if(timer) clearTimeout(timer); }
     let data;
     try { data=await res.json(); }
-    catch(_) { throw new Error(`EventHub API ${path} returned an unreadable response. Check the Botkeep service logs.`); }
+    catch(_) { throw new Error(`EventHub API ${path}${actionName?' (action: '+actionName+')':''} returned an unreadable response. Check the Botkeep service logs.`); }
     const elapsed=Date.now()-startedAt;
-    if(elapsed>1500) console.warn('[EventHub slow API]',path,elapsed+'ms','HTTP',res.status);
+    if(elapsed>1500) console.warn('[EventHub slow API]',path,'action='+actionName,elapsed+'ms','HTTP',res.status);
     if(!data || typeof data!=='object') throw new Error(`EventHub API ${path} returned an unexpected response.`);
     if(!res.ok || data.ok===false) throw new Error(data.error || `Request failed (${res.status}).`);
     return data;
   }
-  const adminCall = (action, extra={}) => post('/api/admin',{action,event_id:state.eventId,...extra});
+  // Keep recently fetched, read-only admin data in memory while navigating the
+  // workspace. Mutations invalidate the selected event's cache immediately.
+  const adminReadCache = new Map();
+  const adminReadActions = new Set([
+    'stats','guest_search','pending_registrations','storage_config',
+    'proof_storage_report','announcement_history','sheets_queue_status',
+    'volunteers','admins','checkpoints'
+  ]);
+  const ADMIN_READ_CACHE_MS = 8000;
+  const adminCall = async (action, extra={}) => {
+    const cacheKey = String(state.eventId)+':'+action+':'+JSON.stringify(extra);
+    if(adminReadActions.has(action)) {
+      const cached=adminReadCache.get(cacheKey);
+      if(cached && Date.now()-cached.time<ADMIN_READ_CACHE_MS) return cached.data;
+    }
+    const data=await post('/api/admin',{action,event_id:state.eventId,...extra});
+    if(adminReadActions.has(action)) adminReadCache.set(cacheKey,{time:Date.now(),data});
+    else {
+      const prefix=String(state.eventId)+':';
+      for(const key of adminReadCache.keys()) if(key.startsWith(prefix)) adminReadCache.delete(key);
+    }
+    return data;
+  };
   function updateUrl(eid, push=false) {
     const u=new URL(location.href);
     if(eid) u.searchParams.set('event_id',String(eid)); else u.searchParams.delete('event_id');
@@ -544,14 +599,17 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
   async function loadEvent() {
     if(!state.eventId) { renderEventList(); return; }
     const requestedId=state.eventId;
-    const data=await post('/api/event_details',{event_id:requestedId});
+    const registrationPromise=state.role==='guest'
+      ? post('/api/my_registration_status',{event_id:requestedId}).catch(err=>({registered:null,status:'check_failed',error:err.message}))
+      : Promise.resolve(null);
+    const [data,registration]=await Promise.all([
+      post('/api/event_details',{event_id:requestedId}),
+      registrationPromise
+    ]);
     if(!data.event || Number(data.event.id)!==requestedId) throw new Error('EventHub returned a different event than the one selected. No event details were displayed.');
-    state.event=data.event; eventTheme(state.event); document.title=`${state.event.name} | KSMU HOSTEL 5 EVENTS`; $('backBtn').classList.remove('hidden');
-    state.myRegistration=null;
-    if(state.role==='guest'){
-      try{state.myRegistration=await post('/api/my_registration_status',{event_id:requestedId});}
-      catch(err){state.myRegistration={registered:null,status:'check_failed',error:err.message};}
-    }
+    state.event=data.event;
+    state.myRegistration=registration;
+    eventTheme(state.event); document.title=`${state.event.name} | KSMU HOSTEL 5 EVENTS`; $('backBtn').classList.remove('hidden');
     await renderHome();
   }
   async function boot() {
@@ -579,10 +637,15 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
         const eventData=eventResult.value;
         if(!eventData.event||Number(eventData.event.id)!==requestedId) throw new Error('EventHub returned a different event than the one selected. No event details were displayed.');
         state.event=eventData.event;eventTheme(state.event);document.title=`${state.event.name} | KSMU HOSTEL 5 EVENTS`;$('backBtn').classList.remove('hidden');
+        // Only guests need their registration state to decide whether to show Register.
+        // Admins and volunteers skip this extra API request during startup.
         state.myRegistration=null;
         if(state.role==='guest') {
-          try { state.myRegistration=await post('/api/my_registration_status',{event_id:requestedId}); }
-          catch(err) { state.myRegistration={registered:null,status:'check_failed',error:err.message}; }
+          try {
+            state.myRegistration=await post('/api/my_registration_status',{event_id:requestedId});
+          } catch(registrationError) {
+            state.myRegistration={registered:null,status:'check_failed',error:registrationError?.message||'Registration status could not be checked.'};
+          }
         }
         await renderHome();
         if(scannerView) await openScannerStandalone(false);
@@ -875,8 +938,8 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
   }
   async function renderScanner(host,standalone=false) {
     if(state.role!=='admin'&&state.role!=='volunteer'){host.innerHTML=showNotice('Scanner access is restricted to event volunteers and admins.','error');return;}
-    if(state.event?.status!=='active'){stopScanner();host.innerHTML=showNotice('This event is not active. Its records are available for review, but QR scanning and event-day actions are disabled.','error');return;}
-    stopScanner();
+    if(state.event?.status!=='active'){await stopScanner();host.innerHTML=showNotice('This event is not active. Its records are available for review, but QR scanning and event-day actions are disabled.','error');return;}
+    await stopScanner();
     host.innerHTML=standalone?`<section class="scanner-screen"><section class="card"><div class="section-title"><h2>📷 Event QR Scanner</h2><span class="status active">${safe(state.event.name)}</span></div><p class="muted">The camera starts when this dedicated page opens and is released when you leave.</p><div class="scanner-hint">Camera access is requested whenever you start scanning. Android or Telegram may remember a previous Allow choice, so it might not display a new prompt every time. You can revoke permission in your device/app settings. If access was previously granted, your browser may start the camera without showing the system prompt again.</div><div class="manual-pass-entry"><div class="field"><label for="manualPassCode">Or enter pass code manually</label><input id="manualPassCode" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="120" placeholder="Enter guest pass code"></div><button class="btn primary" type="button" id="verifyManualPass">Verify pass code</button><p class="footnote">Use this if the guest cannot display their QR code or the camera is unavailable.</p></div><div class="scanner-box"><div id="reader"><div class="empty">Camera preview appears here after access is granted.</div></div></div><div class="scanner-actions"><button class="btn primary" id="startCamera">Allow camera & start scanning</button><button class="btn" id="stopCamera" disabled>Stop camera</button></div><div id="scanResult"></div></section><div class="actions"><button class="btn ghost" id="scannerBack">← Back to event workspace</button></div></section>`:`<section class="section card"><div class="section-title"><h2>📷 QR Scanner</h2><span class="status active">${safe(state.event.name)}</span></div><p class="muted">Open the dedicated scanner screen before scanning passes.</p><div class="actions"><button class="btn primary" id="openDedicatedScanner">Open full-screen QR Scanner →</button></div></section>`;
     $('verifyManualPass')?.addEventListener('click',async()=>{const input=$('manualPassCode'),button=$('verifyManualPass'),code=String(input?.value||'').trim();if(!code){toast('Enter a pass code first.',true);input?.focus();return;}await stopScanner();button.disabled=true;button.textContent='Verifying…';try{await lookupGuest(code);}finally{button.disabled=false;button.textContent='Verify pass code';}});
     $('manualPassCode')?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('verifyManualPass')?.click();}});
@@ -887,17 +950,49 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
     if(standalone)await startScanner();
   }
   async function startScanner() {
-    if(!window.Html5Qrcode){toast('QR camera library did not load. Reload the Mini App or use a device with a working camera.',true);return;}
+    if(state.scannerStarting||state.scanHandling)return;
+    state.scannerStarting=true;
     try {
+      if(state.scannerStopPromise)await state.scannerStopPromise;
+      if(state.scanner?.isScanning)return;
+      await loadQrLibrary();
+      if(!window.Html5Qrcode)throw new Error('QR_LIBRARY_UNAVAILABLE');
       if(!state.scanner) state.scanner=new Html5Qrcode('reader');
       $('startCamera').disabled=true; $('stopCamera').disabled=false;
       if(!navigator.mediaDevices?.getUserMedia)throw new Error('CAMERA_UNAVAILABLE');
-      await state.scanner.start({facingMode:'environment'},{fps:10,qrbox:{width:250,height:250},aspectRatio:1.0},async text=>{await stopScanner();await lookupGuest(text);},()=>{});
-    } catch(e){try{if(state.scanner)await state.scanner.clear();}catch(_){}state.scanner=null;$('startCamera').disabled=false;$('stopCamera').disabled=true;const msg=e?.name==='NotAllowedError'?'Camera permission was denied. Allow camera access for Telegram or your browser, then tap Start again.':e?.name==='NotFoundError'?'No camera was found on this device. Please use a device with a working camera.':e?.message==='CAMERA_UNAVAILABLE'?'This browser does not support camera access. Open the Mini App in updated Telegram or Chrome.':'Camera could not start. Check permissions and make sure another app is not using the camera.';toast(msg,true);}
+      await state.scanner.start({facingMode:'environment'},{fps:10,qrbox:{width:250,height:250},aspectRatio:1.0},async text=>{
+        // Decoders can emit the same QR on consecutive frames while the camera is
+        // stopping. Accept only the first result until its lookup has completed.
+        if(state.scanHandling)return;
+        state.scanHandling=true;
+        try{await stopScanner();await lookupGuest(text);}
+        finally{state.scanHandling=false;}
+      },()=>{});
+    } catch(e){
+      const failedScanner=state.scanner;state.scanner=null;
+      try{if(failedScanner)await failedScanner.clear();}catch(_){}
+      if($('startCamera'))$('startCamera').disabled=false;
+      if($('stopCamera'))$('stopCamera').disabled=true;
+      const msg=e?.message==='QR_LIBRARY_UNAVAILABLE'?'QR scanner library could not be downloaded. Check your connection or use manual pass-code verification.':e?.name==='NotAllowedError'?'Camera permission was denied. Allow camera access for Telegram or your browser, then tap Start again.':e?.name==='NotFoundError'?'No camera was found on this device. Please use a device with a working camera.':e?.message==='CAMERA_UNAVAILABLE'?'This browser does not support camera access. Open the Mini App in updated Telegram or Chrome.':'Camera could not start. Check permissions and make sure another app is not using the camera.';
+      toast(msg,true);
+    } finally {state.scannerStarting=false;}
   }
   async function stopScanner() {
-    if(state.scanner){try{if(state.scanner.isScanning)await state.scanner.stop();}catch(_){}try{await state.scanner.clear();}catch(_){}state.scanner=null;}
-    if($('startCamera'))$('startCamera').disabled=false;if($('stopCamera'))$('stopCamera').disabled=true;
+    if(state.scannerStopPromise){await state.scannerStopPromise;}
+    else {
+      const activeScanner=state.scanner;
+      state.scanner=null;
+      if(activeScanner){
+        const stopping=(async()=>{
+          try{if(activeScanner.isScanning)await activeScanner.stop();}catch(_){}
+          try{await activeScanner.clear();}catch(_){}
+        })();
+        state.scannerStopPromise=stopping;
+        try{await stopping;}finally{if(state.scannerStopPromise===stopping)state.scannerStopPromise=null;}
+      }
+    }
+    if($('startCamera'))$('startCamera').disabled=false;
+    if($('stopCamera'))$('stopCamera').disabled=true;
   }
   async function lookupGuest(qr) {
     const value=String(qr||'').trim(); if(!value){toast('Enter or scan a pass first.',true);return;}
@@ -1173,9 +1268,23 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
       ['show_eventhub','Show EventHub button',true],['show_switch_event','Show Switch Event',true],['show_support','Show Telegram Support',true]
     ];
     const botSettingsMarkup=`<section class="section card" id="botChatSettings">
-      <div class="section-title"><h2>Telegram bot chat and menu editor</h2><span class="status pending">Not connected</span></div>
-      <div class="notice">This editor is temporarily unavailable because the connected Botkeep backend does not currently support saving event-specific bot messages or menu labels. Changes made here would not be saved.</div>
-      <p class="muted">Guest registration, approvals, QR passes, scanner permissions and event settings continue to work independently. This panel will be re-enabled when its backend save action is implemented and tested.</p>
+      <div class="section-title"><h2>Telegram bot chat and menu editor</h2><span class="status active">Event-specific settings</span></div>
+      <p class="muted">Customize the welcome message and menu labels shown by the Telegram bot after a guest selects this event. Settings are saved separately for Event #${state.eventId}.</p>
+      <div class="field"><label>Welcome message</label><textarea id="botWelcomeMessage" maxlength="3900" rows="6" placeholder="Welcome to {event_name}!\nDate: {event_date}\nTime: {event_time}\nVenue: {venue}"></textarea><p class="muted">Available placeholders: {event_name}, {event_date}, {event_time}, {venue}. Leave blank to use EventHub's standard event welcome message.</p></div>
+      <div class="grid cols2">
+        <div class="field"><label>Register / Get Pass button</label><input id="botRegisterLabel" maxlength="60"></div>
+        <div class="field"><label>My Pass button</label><input id="botMypassLabel" maxlength="60"></div>
+        <div class="field"><label>Event Details button</label><input id="botEventDetailsLabel" maxlength="60"></div>
+        <div class="field"><label>Open EventHub button</label><input id="botOpenAppLabel" maxlength="60"></div>
+        <div class="field"><label>Switch Event button</label><input id="botSwitchEventLabel" maxlength="60"></div>
+        <div class="field"><label>Support button</label><input id="botSupportLabel" maxlength="60"></div>
+      </div>
+      <div class="actions">
+        <button class="btn primary" type="button" id="saveTelegramBotSettings">Save Telegram settings</button>
+        <button class="btn" type="button" id="reloadTelegramBotSettings">Reload saved settings</button>
+        <button class="btn ghost" type="button" id="resetTelegramBotSettings">Restore defaults</button>
+      </div>
+      <div id="telegramBotSettingsMessage" aria-live="polite"></div>
     </section>`;
 
     if(ev.status==='archived'){host.innerHTML='<section class="card"><div class="section-title"><h2>Archived event settings</h2><span class="status archived">Read only</span></div><p>Archived event settings are preserved and read-only.</p><h3>'+safe(ev.name)+'</h3><p>'+safe(ev.description||'')+'</p><div class="actions"><button class="btn" id="backToEvents">Back to all events</button></div></section>'; $('backToEvents').addEventListener('click',clearEvent);return;}
@@ -1348,10 +1457,22 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
       button.disabled=true;const original=button.textContent;button.textContent='Rendering preview…';
       target.innerHTML='<div class="notice">Rendering a preview with your current unsaved QR design changes…</div>';
       try{
-        const result=await adminCall('preview_pass',{preview_name:'Sample Guest',preview_phone:'+7 900 000 00 00',preview_residence:'Hostel',preview_hostel:'5',preview_room:'392',preview_food:'Vegetarian',theme:collectTheme()});
+        const previewTheme=collectTheme();
+        const result=await adminCall('preview_pass',{
+          event_id:state.eventId,
+          preview_name:'Sample Guest',preview_phone:'+7 900 000 00 00',
+          preview_residence:'Hostel',preview_hostel:'5',preview_room:'392',
+          preview_food:'Vegetarian',theme:previewTheme
+        });
         if(!result.pass?.image)throw new Error('The server did not return a QR preview image.');
         const imageUrl='data:image/png;base64,'+result.pass.image;
-        target.innerHTML='<div class="notice good">Live preview of your current changes. Nothing has been saved and this sample QR cannot be used for entry.</div><img class="pass-image" alt="Live QR pass design preview" src="'+imageUrl+'"><div class="actions" style="justify-content:center"><a class="btn" download="EventHub-QR-Preview.png" href="'+imageUrl+'" style="text-decoration:none;display:inline-flex;align-items:center">Download preview</a></div>';
+        const applied=result.applied_theme||{};
+        const appliedColour=applied.pass_background||previewTheme.pass_background||'unknown';
+        const imageActive=applied.has_background_image===true||applied.background_source==='uploaded image';
+        const backgroundNote=imageActive
+          ? 'An uploaded pass background image is active and takes priority over the solid colour. Use “Remove background image” to preview the selected colour.'
+          : 'Solid pass background colour applied: '+appliedColour+'.';
+        target.innerHTML='<div class="notice good">Live preview of your current unsaved changes. '+safe(backgroundNote)+' Nothing has been saved; this sample QR cannot be used for entry.</div><img class="pass-image" alt="Live QR pass design preview" src="'+imageUrl+'"><div class="actions" style="justify-content:center"><a class="btn" download="EventHub-QR-Preview.png" href="'+imageUrl+'" style="text-decoration:none;display:inline-flex;align-items:center">Download preview</a></div>';
       }catch(err){target.innerHTML=showNotice(err.message,'error');}
       finally{button.disabled=false;button.textContent=original;}
     });
@@ -1367,6 +1488,54 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
     });
     if(host.dataset.schemaAddBound!=='1'){host.dataset.schemaAddBound='1';host.addEventListener('click',e=>{if(!e.target.closest('#addSchemaField'))return;try{const arr=readSchemaEditor();if(arr.length>=30)throw new Error('A registration form can have at most 30 fields.');let next=1;const used=new Set(arr.map(f=>f.key));while(used.has('custom_'+next))next++;arr.push({key:'custom_'+next,label:'New field',type:'text',required:false,options:[]});$('schemaBuilder').outerHTML=schemaEditor(arr);bindSchemaEditorButtons();}catch(err){toast(err.message,true);}});}
     bindSchemaEditorButtons();
+    const telegramBotFields={
+      welcome_message:'botWelcomeMessage',
+      register_label:'botRegisterLabel',
+      mypass_label:'botMypassLabel',
+      event_details_label:'botEventDetailsLabel',
+      open_app_label:'botOpenAppLabel',
+      switch_event_label:'botSwitchEventLabel',
+      support_label:'botSupportLabel'
+    };
+    const telegramBotDefaults={
+      welcome_message:'',
+      register_label:'🎟 Register / Get Pass',
+      mypass_label:'🎫 My Pass',
+      event_details_label:'📅 Event Details',
+      open_app_label:'🧭 Open EventHub',
+      switch_event_label:'🔄 Switch Event',
+      support_label:'💬 Telegram Support'
+    };
+    const applyTelegramBotSettings=(settings={})=>{
+      Object.entries(telegramBotFields).forEach(([key,id])=>{const field=$(id);if(field)field.value=String(settings[key]??telegramBotDefaults[key]);});
+    };
+    const telegramBotMessage=$('telegramBotSettingsMessage');
+    const loadTelegramBotSettings=async()=>{
+      const btn=$('reloadTelegramBotSettings');if(btn)btn.disabled=true;
+      try{const r=await adminCall('event_bot_settings');applyTelegramBotSettings(r.settings||{});telegramBotMessage.innerHTML=showNotice('Saved Telegram settings loaded for this event.','good');}
+      catch(err){telegramBotMessage.innerHTML=showNotice(err.message,'error');}
+      finally{if(btn)btn.disabled=false;}
+    };
+    $('saveTelegramBotSettings').addEventListener('click',async()=>{
+      const btn=$('saveTelegramBotSettings');btn.disabled=true;
+      try{
+        const payload={};Object.entries(telegramBotFields).forEach(([key,id])=>{payload[key]=$(id).value;});
+        const r=await adminCall('save_event_bot_settings',payload);
+        applyTelegramBotSettings(r.settings||payload);
+        telegramBotMessage.innerHTML=showNotice(r.message||'Telegram settings saved for this event.','good');
+        toast('Telegram settings saved');
+      }catch(err){telegramBotMessage.innerHTML=showNotice(err.message,'error');}
+      finally{btn.disabled=false;}
+    });
+    $('reloadTelegramBotSettings').addEventListener('click',loadTelegramBotSettings);
+    $('resetTelegramBotSettings').addEventListener('click',async()=>{
+      if(!confirm('Restore the default Telegram welcome message and menu labels for this event?'))return;
+      const btn=$('resetTelegramBotSettings');btn.disabled=true;
+      try{const r=await adminCall('reset_event_bot_settings');applyTelegramBotSettings(r.settings||telegramBotDefaults);telegramBotMessage.innerHTML=showNotice(r.message||'Telegram settings restored to defaults.','good');toast('Telegram defaults restored');}
+      catch(err){telegramBotMessage.innerHTML=showNotice(err.message,'error');}
+      finally{btn.disabled=false;}
+    });
+    loadTelegramBotSettings();
     $('saveSchema').addEventListener('click',async()=>{try{const arr=readSchemaEditor();const r=await adminCall('update_event',{name:$('editName').value,description:$('editDescription').value,event_date:$('editDate').value,event_time:$('editTime').value,venue:$('editVenue').value,theme:collectTheme(),registration_schema:arr});$('schemaMessage').innerHTML=showNotice(r.message||'Registration form saved.','good');const d=await post('/api/event_details',{event_id:state.eventId});state.event=d.event;toast('Registration form saved');}catch(err){$('schemaMessage').innerHTML=showNotice(err.message,'error');}});
     $('activateEvent')?.addEventListener('click',async()=>{if(!confirm(`Activate ${ev.name}? It will become visible to guests and registration/scanning will open.`))return;const btn=$('activateEvent');btn.disabled=true;try{const r=await adminCall('activate_event');$('archiveMessage').innerHTML=showNotice(r.message||'Event activated.','good');await loadRole();await loadEvent();toast('Event activated');}catch(err){$('archiveMessage').innerHTML=showNotice(err.message,'error');btn.disabled=false;}});
     $('archiveEvent')?.addEventListener('click',async()=>{if(!confirm(`Archive ${ev.name}? New registrations and scans will stop.`))return;const btn=$('archiveEvent');btn.disabled=true;try{const r=await post('/api/admin',{action:'archive_event',event_id:state.eventId});$('archiveMessage').innerHTML=showNotice(r.message,'good');await loadRole();setTimeout(clearEvent,800);}catch(err){$('archiveMessage').innerHTML=showNotice(err.message,'error');btn.disabled=false;}});
