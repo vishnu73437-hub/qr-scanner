@@ -363,7 +363,7 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
   const API_BASE = (params.get('api_base') || window.EVENTHUB_API_BASE || (/github\.io$/.test(location.hostname) ? 'https://unwjym.bot-keep.xyz' : location.origin)).replace(/\/$/, '');
   const initialEventId = Number(params.get('event_id') || 0);
   let scannerView = params.get('scanner') === '1';
-  const state = { role:'guest', user:null, activeEvents:[], workspaces:[], eventId:initialEventId, event:null, stats:null, page:'home', guest:null, scanner:null, scannerStarting:false, scannerStopPromise:null, scanHandling:false, formSchema:[], pass:null, checkpoints:[], myRegistration:null };
+  const state = { role:'guest', user:null, activeEvents:[], workspaces:[], eventId:initialEventId, event:null, stats:null, page:'home', guest:null, scanner:null, scannerStarting:false, scannerStopPromise:null, scannerGeneration:0, scanHandling:false, formSchema:[], pass:null, checkpoints:[], myRegistration:null };
   const $ = (id) => document.getElementById(id);
   const main = $('main');
   const safe = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -952,10 +952,15 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
   async function startScanner() {
     if(state.scannerStarting||state.scanHandling)return;
     state.scannerStarting=true;
+    const generation=++state.scannerGeneration;
     try {
       if(state.scannerStopPromise)await state.scannerStopPromise;
+      if(generation!==state.scannerGeneration||!$('reader'))return;
       if(state.scanner?.isScanning)return;
       await loadQrLibrary();
+      // The user may have left the scanner while the CDN library was loading.
+      // Do not request camera permission or start a hidden camera after navigation.
+      if(generation!==state.scannerGeneration||!$('reader'))return;
       if(!window.Html5Qrcode)throw new Error('QR_LIBRARY_UNAVAILABLE');
       if(!state.scanner) state.scanner=new Html5Qrcode('reader');
       $('startCamera').disabled=true; $('stopCamera').disabled=false;
@@ -968,16 +973,21 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
         try{await stopScanner();await lookupGuest(text);}
         finally{state.scanHandling=false;}
       },()=>{});
+      if(generation!==state.scannerGeneration)await stopScanner();
     } catch(e){
       const failedScanner=state.scanner;state.scanner=null;
       try{if(failedScanner)await failedScanner.clear();}catch(_){}
       if($('startCamera'))$('startCamera').disabled=false;
       if($('stopCamera'))$('stopCamera').disabled=true;
-      const msg=e?.message==='QR_LIBRARY_UNAVAILABLE'?'QR scanner library could not be downloaded. Check your connection or use manual pass-code verification.':e?.name==='NotAllowedError'?'Camera permission was denied. Allow camera access for Telegram or your browser, then tap Start again.':e?.name==='NotFoundError'?'No camera was found on this device. Please use a device with a working camera.':e?.message==='CAMERA_UNAVAILABLE'?'This browser does not support camera access. Open the Mini App in updated Telegram or Chrome.':'Camera could not start. Check permissions and make sure another app is not using the camera.';
-      toast(msg,true);
+      if(generation===state.scannerGeneration){
+        const msg=e?.message==='QR_LIBRARY_UNAVAILABLE'?'QR scanner library could not be downloaded. Check your connection or use manual pass-code verification.':e?.name==='NotAllowedError'?'Camera permission was denied. Allow camera access for Telegram or your browser, then tap Start again.':e?.name==='NotFoundError'?'No camera was found on this device. Please use a device with a working camera.':e?.message==='CAMERA_UNAVAILABLE'?'This browser does not support camera access. Open the Mini App in updated Telegram or Chrome.':'Camera could not start. Check permissions and make sure another app is not using the camera.';
+        toast(msg,true);
+      }
     } finally {state.scannerStarting=false;}
   }
   async function stopScanner() {
+    // Invalidate any pending library load/camera start before changing the DOM.
+    state.scannerGeneration++;
     if(state.scannerStopPromise){await state.scannerStopPromise;}
     else {
       const activeScanner=state.scanner;
