@@ -1236,9 +1236,23 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
       ['show_eventhub','Show EventHub button',true],['show_switch_event','Show Switch Event',true],['show_support','Show Telegram Support',true]
     ];
     const botSettingsMarkup=`<section class="section card" id="botChatSettings">
-      <div class="section-title"><h2>Telegram bot chat and menu editor</h2><span class="status pending">Not connected</span></div>
-      <div class="notice">This editor is temporarily unavailable because the connected Botkeep backend does not currently support saving event-specific bot messages or menu labels. Changes made here would not be saved.</div>
-      <p class="muted">Guest registration, approvals, QR passes, scanner permissions and event settings continue to work independently. This panel will be re-enabled when its backend save action is implemented and tested.</p>
+      <div class="section-title"><h2>Telegram bot chat and menu editor</h2><span class="status active">Event-specific settings</span></div>
+      <p class="muted">Customize the welcome message and menu labels shown by the Telegram bot after a guest selects this event. Settings are saved separately for Event #${state.eventId}.</p>
+      <div class="field"><label>Welcome message</label><textarea id="botWelcomeMessage" maxlength="3900" rows="6" placeholder="Welcome to {event_name}!\nDate: {event_date}\nTime: {event_time}\nVenue: {venue}"></textarea><p class="muted">Available placeholders: {event_name}, {event_date}, {event_time}, {venue}. Leave blank to use EventHub's standard event welcome message.</p></div>
+      <div class="grid cols2">
+        <div class="field"><label>Register / Get Pass button</label><input id="botRegisterLabel" maxlength="60"></div>
+        <div class="field"><label>My Pass button</label><input id="botMypassLabel" maxlength="60"></div>
+        <div class="field"><label>Event Details button</label><input id="botEventDetailsLabel" maxlength="60"></div>
+        <div class="field"><label>Open EventHub button</label><input id="botOpenAppLabel" maxlength="60"></div>
+        <div class="field"><label>Switch Event button</label><input id="botSwitchEventLabel" maxlength="60"></div>
+        <div class="field"><label>Support button</label><input id="botSupportLabel" maxlength="60"></div>
+      </div>
+      <div class="actions">
+        <button class="btn primary" type="button" id="saveTelegramBotSettings">Save Telegram settings</button>
+        <button class="btn" type="button" id="reloadTelegramBotSettings">Reload saved settings</button>
+        <button class="btn ghost" type="button" id="resetTelegramBotSettings">Restore defaults</button>
+      </div>
+      <div id="telegramBotSettingsMessage" aria-live="polite"></div>
     </section>`;
 
     if(ev.status==='archived'){host.innerHTML='<section class="card"><div class="section-title"><h2>Archived event settings</h2><span class="status archived">Read only</span></div><p>Archived event settings are preserved and read-only.</p><h3>'+safe(ev.name)+'</h3><p>'+safe(ev.description||'')+'</p><div class="actions"><button class="btn" id="backToEvents">Back to all events</button></div></section>'; $('backToEvents').addEventListener('click',clearEvent);return;}
@@ -1430,6 +1444,54 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
     });
     if(host.dataset.schemaAddBound!=='1'){host.dataset.schemaAddBound='1';host.addEventListener('click',e=>{if(!e.target.closest('#addSchemaField'))return;try{const arr=readSchemaEditor();if(arr.length>=30)throw new Error('A registration form can have at most 30 fields.');let next=1;const used=new Set(arr.map(f=>f.key));while(used.has('custom_'+next))next++;arr.push({key:'custom_'+next,label:'New field',type:'text',required:false,options:[]});$('schemaBuilder').outerHTML=schemaEditor(arr);bindSchemaEditorButtons();}catch(err){toast(err.message,true);}});}
     bindSchemaEditorButtons();
+    const telegramBotFields={
+      welcome_message:'botWelcomeMessage',
+      register_label:'botRegisterLabel',
+      mypass_label:'botMypassLabel',
+      event_details_label:'botEventDetailsLabel',
+      open_app_label:'botOpenAppLabel',
+      switch_event_label:'botSwitchEventLabel',
+      support_label:'botSupportLabel'
+    };
+    const telegramBotDefaults={
+      welcome_message:'',
+      register_label:'🎟 Register / Get Pass',
+      mypass_label:'🎫 My Pass',
+      event_details_label:'📅 Event Details',
+      open_app_label:'🧭 Open EventHub',
+      switch_event_label:'🔄 Switch Event',
+      support_label:'💬 Telegram Support'
+    };
+    const applyTelegramBotSettings=(settings={})=>{
+      Object.entries(telegramBotFields).forEach(([key,id])=>{const field=$(id);if(field)field.value=String(settings[key]??telegramBotDefaults[key]);});
+    };
+    const telegramBotMessage=$('telegramBotSettingsMessage');
+    const loadTelegramBotSettings=async()=>{
+      const btn=$('reloadTelegramBotSettings');if(btn)btn.disabled=true;
+      try{const r=await adminCall('event_bot_settings');applyTelegramBotSettings(r.settings||{});telegramBotMessage.innerHTML=showNotice('Saved Telegram settings loaded for this event.','good');}
+      catch(err){telegramBotMessage.innerHTML=showNotice(err.message,'error');}
+      finally{if(btn)btn.disabled=false;}
+    };
+    $('saveTelegramBotSettings').addEventListener('click',async()=>{
+      const btn=$('saveTelegramBotSettings');btn.disabled=true;
+      try{
+        const payload={};Object.entries(telegramBotFields).forEach(([key,id])=>{payload[key]=$(id).value;});
+        const r=await adminCall('save_event_bot_settings',payload);
+        applyTelegramBotSettings(r.settings||payload);
+        telegramBotMessage.innerHTML=showNotice(r.message||'Telegram settings saved for this event.','good');
+        toast('Telegram settings saved');
+      }catch(err){telegramBotMessage.innerHTML=showNotice(err.message,'error');}
+      finally{btn.disabled=false;}
+    });
+    $('reloadTelegramBotSettings').addEventListener('click',loadTelegramBotSettings);
+    $('resetTelegramBotSettings').addEventListener('click',async()=>{
+      if(!confirm('Restore the default Telegram welcome message and menu labels for this event?'))return;
+      const btn=$('resetTelegramBotSettings');btn.disabled=true;
+      try{const r=await adminCall('reset_event_bot_settings');applyTelegramBotSettings(r.settings||telegramBotDefaults);telegramBotMessage.innerHTML=showNotice(r.message||'Telegram settings restored to defaults.','good');toast('Telegram defaults restored');}
+      catch(err){telegramBotMessage.innerHTML=showNotice(err.message,'error');}
+      finally{btn.disabled=false;}
+    });
+    loadTelegramBotSettings();
     $('saveSchema').addEventListener('click',async()=>{try{const arr=readSchemaEditor();const r=await adminCall('update_event',{name:$('editName').value,description:$('editDescription').value,event_date:$('editDate').value,event_time:$('editTime').value,venue:$('editVenue').value,theme:collectTheme(),registration_schema:arr});$('schemaMessage').innerHTML=showNotice(r.message||'Registration form saved.','good');const d=await post('/api/event_details',{event_id:state.eventId});state.event=d.event;toast('Registration form saved');}catch(err){$('schemaMessage').innerHTML=showNotice(err.message,'error');}});
     $('activateEvent')?.addEventListener('click',async()=>{if(!confirm(`Activate ${ev.name}? It will become visible to guests and registration/scanning will open.`))return;const btn=$('activateEvent');btn.disabled=true;try{const r=await adminCall('activate_event');$('archiveMessage').innerHTML=showNotice(r.message||'Event activated.','good');await loadRole();await loadEvent();toast('Event activated');}catch(err){$('archiveMessage').innerHTML=showNotice(err.message,'error');btn.disabled=false;}});
     $('archiveEvent')?.addEventListener('click',async()=>{if(!confirm(`Archive ${ev.name}? New registrations and scans will stop.`))return;const btn=$('archiveEvent');btn.disabled=true;try{const r=await post('/api/admin',{action:'archive_event',event_id:state.eventId});$('archiveMessage').innerHTML=showNotice(r.message,'good');await loadRole();setTimeout(clearEvent,800);}catch(err){$('archiveMessage').innerHTML=showNotice(err.message,'error');btn.disabled=false;}});
