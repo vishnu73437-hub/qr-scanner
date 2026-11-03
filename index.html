@@ -343,6 +343,7 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
     }
 
   
+.pass-visual-editor.canva-editor-highlight{outline:3px solid var(--gold);box-shadow:0 0 0 8px color-mix(in srgb,var(--gold) 18%,transparent),0 14px 36px #0005;transition:outline .2s,box-shadow .2s}
 /* Accessible visual pass editor */
 .pass-visual-editor{overflow:hidden}
 .pass-editor-grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(260px,.95fr);gap:18px;align-items:start;margin-top:14px}
@@ -1551,7 +1552,7 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
     // Mobile-friendly admin quick controls: find sections, jump directly, preview/save/publish.
     if(!host.querySelector('.admin-easy-toolbar')){
       const easy=document.createElement('div');easy.className='admin-easy-toolbar';
-      easy.innerHTML='<div><div class="toolbar-title">⚙️ Easy Admin Controls</div><div class="toolbar-help">Find a setting, jump to a section, preview your pass and save without scrolling through the whole page.</div></div><input type="search" id="adminSettingSearch" placeholder="🔎 Find a setting (logo, QR size, venue, colours…)"><div class="toolbar-actions"><button type="button" class="btn" id="adminQuickPreview">👁 Preview pass</button><button type="button" class="btn primary" id="adminQuickSave">💾 Save changes</button><button type="button" class="btn warning" id="adminQuickPublish">📨 Send updated pass</button></div><div class="toolbar-links" id="adminSectionLinks"></div><div class="toolbar-actions"><button type="button" class="btn small" id="adminExpandAll">Expand all sections</button><button type="button" class="btn small" id="adminCollapseAll">Collapse all sections</button></div>';
+      easy.innerHTML='<div><div class="toolbar-title">⚙️ Easy Admin Controls</div><div class="toolbar-help">Find a setting, jump to a section, preview your pass and save without scrolling through the whole page.</div></div><input type="search" id="adminSettingSearch" placeholder="🔎 Find a setting (logo, QR size, venue, colours…)"><div class="toolbar-actions"><button type="button" class="btn primary" id="adminOpenCanvaEditor">🎨 Canva Editor</button><button type="button" class="btn" id="adminQuickPreview">👁 Preview pass</button><button type="button" class="btn primary" id="adminQuickSave">💾 Save changes</button><button type="button" class="btn warning" id="adminQuickPublish">📨 Send updated pass</button></div><div class="toolbar-links" id="adminSectionLinks"></div><div class="toolbar-actions"><button type="button" class="btn small" id="adminExpandAll">Expand all sections</button><button type="button" class="btn small" id="adminCollapseAll">Collapse all sections</button></div>';
       host.insertBefore(easy,host.firstChild);
       const sections=[...host.querySelectorAll(':scope > details.settings-accordion')];
       const links=easy.querySelector('#adminSectionLinks');
@@ -1572,6 +1573,14 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
       });
       easy.querySelector('#adminExpandAll').addEventListener('click',()=>sections.forEach(x=>{x.hidden=false;x.open=true;}));
       easy.querySelector('#adminCollapseAll').addEventListener('click',()=>sections.forEach(x=>{x.hidden=false;x.open=false;}));
+      easy.querySelector('#adminOpenCanvaEditor').addEventListener('click',()=>{
+        const editor=document.getElementById('passVisualEditor');
+        if(!editor){toast('Canva Editor is available in the event settings page.',true);return;}
+        editor.hidden=false;
+        editor.scrollIntoView({behavior:'smooth',block:'start'});
+        editor.classList.add('canva-editor-highlight');
+        setTimeout(()=>editor.classList.remove('canva-editor-highlight'),1800);
+      });
       easy.querySelector('#adminQuickPreview').addEventListener('click',()=>{const b=document.getElementById('previewQrPass');if(b)b.click();else toast('Open the QR Pass Design section first.',true);});
       easy.querySelector('#adminQuickSave').addEventListener('click',()=>{const form=document.getElementById('settingsForm');if(form){form.requestSubmit();}else toast('Save button is not available on this page.',true);});
       easy.querySelector('#adminQuickPublish').addEventListener('click',()=>{const b=document.getElementById('refreshExistingPasses');if(b)b.click();else toast('Open the QR Pass Design section first.',true);});
@@ -1598,8 +1607,6 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
     let selectedPassLayer = 'qr';
     const passLayerNames = {qr:'QR code',guest_name:'Guest name',pass_code:'Pass code',event_date:'Event date',event_time:'Event time',venue:'Venue',title:'Event title',subtitle:'Event subtitle',sponsor_caption:'Sponsor caption',sponsor_logo:'Sponsor logo',brand_heading:'KSMU heading'};
     const passEditor = $('passVisualEditor');
-    const isDeepotsavVisualMode=String((state.event&&state.event.name)||$('editName')?.value||'').toLowerCase().includes('deepotsav');
-    if(passEditor&&!isDeepotsavVisualMode)passEditor.hidden=true;
     function clampPassLayer(layer){
       layer.x=Math.max(0,Math.min(1024-layer.width,Math.round(Number(layer.x)||0)));
       layer.y=Math.max(0,Math.min(1536-layer.height,Math.round(Number(layer.y)||0)));
