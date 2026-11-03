@@ -1382,9 +1382,9 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
             <label><input id="editPassShowResidence" type="checkbox" style="width:auto;min-height:0" ${theme.pass_show_residence!==false?'checked':''}> Show residence</label>
             <label><input id="editPassShowRoom" type="checkbox" style="width:auto;min-height:0" ${theme.pass_show_room!==false?'checked':''}> Show room number</label>
             <label><input id="editPassShowCode" type="checkbox" style="width:auto;min-height:0" ${theme.pass_show_pass_code!==false?'checked':''}> Show pass code</label>
-            <label><input id="editPassShowDate" type="checkbox" style="width:auto;min-height:0" ${theme.pass_show_date?'checked':''}> Show event date</label>
-            <label><input id="editPassShowTime" type="checkbox" style="width:auto;min-height:0" ${theme.pass_show_time?'checked':''}> Show event time</label>
-            <label><input id="editPassShowVenue" type="checkbox" style="width:auto;min-height:0" ${theme.pass_show_venue?'checked':''}> Show event venue</label>
+            <label><input id="editPassShowDate" type="checkbox" style="width:auto;min-height:0" ${(Object.prototype.hasOwnProperty.call(theme,'pass_show_date')?theme.pass_show_date:isDiwali)?'checked':''}> Show event date</label>
+            <label><input id="editPassShowTime" type="checkbox" style="width:auto;min-height:0" ${(Object.prototype.hasOwnProperty.call(theme,'pass_show_time')?theme.pass_show_time:isDiwali)?'checked':''}> Show event time</label>
+            <label><input id="editPassShowVenue" type="checkbox" style="width:auto;min-height:0" ${(Object.prototype.hasOwnProperty.call(theme,'pass_show_venue')?theme.pass_show_venue:isDiwali)?'checked':''}> Show event venue</label>
             <label><input id="editPassShowInstruction" type="checkbox" style="width:auto;min-height:0" ${theme.pass_show_instruction!==false?'checked':''}> Show instruction</label>
             <label><input id="editPassShowPrivacy" type="checkbox" style="width:auto;min-height:0" ${theme.pass_show_privacy!==false?'checked':''}> Show privacy note</label>
           </div>
