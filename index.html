@@ -1584,7 +1584,7 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
       pass_code:{x:250,y:980,width:620,height:64,font_size:38,color:'#5A1720',align:'left',rotation:0,visible:true},
       event_date:{x:148,y:1072,width:257,height:68,font_size:24,color:'#5A1720',align:'center',rotation:0,visible:true},
       event_time:{x:475,y:1072,width:148,height:68,font_size:23,color:'#5A1720',align:'center',rotation:0,visible:true},
-      venue:{x:690,y:1072,width:255,height:68,font_size:20,color:'#5A1720',align:'center',rotation:0,visible:true}
+      venue:{x:675,y:1072,width:270,height:68,font_size:20,color:'#5A1720',align:'center',rotation:0,visible:true}
     };
     const savedPassElements = theme.pass_layout && theme.pass_layout.elements && typeof theme.pass_layout.elements==='object' ? theme.pass_layout.elements : {};
     const passLayout = {};
@@ -1642,6 +1642,7 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
             const dx=(ev.clientX-start.x)*1024/rect.width,dy=(ev.clientY-start.y)*1536/rect.height;
             if(resize){item.width=Math.round(start.width+dx);item.height=Math.round(start.height+dy);}
             else{item.x=Math.round(start.left+dx);item.y=Math.round(start.top+dy);}
+            item.width=Math.max(id==='qr'?100:20,Math.min(1024,item.width));item.height=Math.max(id==='qr'?100:20,Math.min(1536,item.height));
             if(id==='qr'&&resize){const side=Math.max(100,Math.min(item.width,item.height));item.width=side;item.height=side;}
             item.x=Math.max(0,Math.min(1024-item.width,item.x));item.y=Math.max(0,Math.min(1536-item.height,item.y));
             handle.style.left=(item.x/1024*100)+'%';handle.style.top=(item.y/1536*100)+'%';
