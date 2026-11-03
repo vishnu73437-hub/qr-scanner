@@ -343,6 +343,58 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
     }
 
   </style>
+<style id="admin-easy-settings-v1">
+.admin-easy-toolbar{position:sticky;top:0;z-index:40;display:grid;gap:10px;padding:12px;margin:0 0 14px;background:var(--card, #102d35);border:1px solid var(--line,rgba(255,255,255,.18));border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,.22)}
+.admin-easy-toolbar .toolbar-title{font-weight:800;font-size:16px;display:flex;align-items:center;gap:8px}
+.admin-easy-toolbar .toolbar-help{font-size:12px;opacity:.78}
+.admin-easy-toolbar .toolbar-actions,.admin-easy-toolbar .toolbar-links{display:flex;gap:8px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;align-items:center;padding:2px 2px 8px;scrollbar-width:thin}
+.admin-easy-toolbar .toolbar-links .quick-link{flex:0 0 auto;width:auto;min-width:max-content;max-width:none;white-space:nowrap;line-height:1.2;text-align:center}
+.admin-easy-toolbar button{min-height:40px;flex:0 0 auto}
+.admin-easy-toolbar input{width:100%;min-height:44px;border-radius:12px;padding:10px 13px}
+.admin-easy-toolbar .quick-link{border:1px solid var(--line,rgba(255,255,255,.22));border-radius:999px;padding:8px 12px;background:transparent;color:inherit;font-size:12px}
+.settings-accordion{scroll-margin-top:150px}
+.settings-accordion>summary{position:relative;padding:17px 48px 17px 16px!important;font-size:16px!important;font-weight:800!important;min-height:58px;display:flex;align-items:center}
+.settings-accordion>summary:after{content:'Tap to edit';font-size:11px;font-weight:500;opacity:.65;margin-left:auto;padding-right:6px}
+.settings-accordion[open]>summary:after{content:'Editing'}
+.settings-content{padding-top:14px}
+.settings-content .field label{line-height:1.35}
+.settings-content input,.settings-content select,.settings-content textarea{max-width:100%}
+.admin-easy-toolbar .btn{white-space:normal}
+@media(max-width:600px){
+.admin-easy-toolbar{position:relative;top:auto;padding:10px;gap:8px}
+.admin-easy-toolbar .toolbar-title{font-size:15px}
+.admin-easy-toolbar .toolbar-help{font-size:11px;line-height:1.35}
+.admin-easy-toolbar input{min-height:42px;font-size:14px}
+.admin-easy-toolbar .toolbar-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.admin-easy-toolbar .toolbar-actions .btn{min-width:0;width:100%;min-height:42px;font-size:12px;padding:9px 6px;line-height:1.2}
+.admin-easy-toolbar .toolbar-actions #adminQuickPublish{grid-column:1/-1}
+.admin-easy-toolbar .toolbar-links{display:flex;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;gap:7px;padding:2px 2px 8px}
+.admin-easy-toolbar .toolbar-links .quick-link{flex:0 0 auto;width:auto;min-width:max-content;max-width:none;white-space:nowrap;padding:8px 12px;font-size:12px;line-height:1.2}
+.admin-easy-toolbar #adminExpandAll,.admin-easy-toolbar #adminCollapseAll{font-size:11px}
+.settings-accordion>summary{font-size:15px!important}.settings-accordion>summary:after{font-size:10px}
+}
+@media(min-width:601px){.admin-easy-toolbar .toolbar-links .quick-link{flex:0 0 auto;width:auto;white-space:nowrap}}
+</style>
+<style id="pass-settings-groups-v1">
+.pass-settings-toolbar{display:grid;gap:8px;padding:13px;margin:10px 0 16px;border:1px solid var(--line,rgba(255,255,255,.22));border-radius:14px;background:rgba(255,255,255,.045)}
+.pass-settings-toolbar strong{font-size:16px}.pass-settings-toolbar span{font-size:12px;opacity:.78}
+.pass-group-links{display:flex;gap:7px;overflow-x:auto;padding:2px 0 5px}
+.pass-group-links button{white-space:nowrap;border:1px solid var(--line,rgba(255,255,255,.25));border-radius:999px;background:transparent;color:inherit;padding:8px 11px;font-size:12px}
+.pass-setting-group{border:1px solid var(--line,rgba(255,255,255,.2));border-radius:13px;margin:10px 0;overflow:hidden;scroll-margin-top:145px}
+.pass-setting-group>summary{padding:15px!important;font-weight:800!important;font-size:15px!important;cursor:pointer;background:rgba(255,255,255,.045)}
+.pass-setting-body{padding:12px}
+.pass-setting-body>.divider{display:none}
+.pass-setting-body .field{margin:10px 0}
+.pass-setting-body .inline-fields{gap:10px}
+.pass-setting-body input:not([type=checkbox]):not([type=color]),.pass-setting-body select,.pass-setting-body textarea{min-height:44px}
+.pass-setting-body label{line-height:1.4}
+@media(max-width:600px){.pass-setting-body{padding:10px}.pass-setting-body .inline-fields{display:grid;grid-template-columns:1fr}.pass-setting-body .grid.cols3{grid-template-columns:1fr 1fr}}
+</style>
+<style id="admin-toolbar-mobile-fix-v2">
+.admin-easy-toolbar .toolbar-links{min-width:0}
+.admin-easy-toolbar .toolbar-links .quick-link{display:inline-flex;align-items:center;justify-content:center}
+.admin-easy-toolbar .toolbar-actions{min-width:0}
+</style>
 </head>
 <body>
 <div class="shell" id="app">
@@ -1405,6 +1457,68 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
       <section class="section card"><h2>Registration form builder</h2><p class="muted">Add, remove, rename, reorder and configure fields for this event. Keep Full name required.</p>${schemaEditor(Array.isArray(schema)&&schema.length?schema:defaultSchema())}<div class="actions"><button class="btn primary" id="saveSchema">Save registration form</button></div><div id="schemaMessage"></div></section>
       ${botSettingsMarkup}\n      <section class="section card"><h2>Event lifecycle</h2><p class="muted">Draft events are private to admins until activated. Archiving closes an active event while retaining history.</p><div class="actions">${ev.status==='draft'?'<button class="btn success" id="activateEvent">Activate event</button>':''}${ev.status==='active'?'<button class="btn danger" id="archiveEvent">Archive this event</button>':''}<button class="btn" id="backToEvents">Back to all events</button></div><div id="archiveMessage"></div></section>`;
     [...host.children].forEach((section,index)=>{const heading=section.querySelector('h2');if(!heading)return;const details=document.createElement('details');details.className='settings-accordion';details.open=index===1;const summary=document.createElement('summary');summary.textContent=heading.textContent.trim();const content=document.createElement('div');content.className='settings-content';section.parentNode.insertBefore(details,section);details.appendChild(summary);details.appendChild(content);content.appendChild(section);});
+    // Turn the QR pass controls into clear, collapsible mobile-friendly groups.
+    const passSection=[...host.querySelectorAll('section.section,section.card')].find(sec=>sec.querySelector('#editPassBackgroundUpload'));
+    if(passSection&&!passSection.querySelector('.pass-settings-toolbar')){
+      const passForm=passSection.querySelector('form');
+      const startHeading=[...passForm.children].find(n=>n.tagName==='H3'&&n.textContent.toLowerCase().includes('mini app colours and qr pass design'));
+      if(startHeading){
+        const groups=[];let current=null;
+        [...passForm.children].forEach(node=>{
+          if(node===startHeading || (current && node.tagName==='H3')){
+            current={title:node.textContent.trim(),nodes:[]};groups.push(current);
+          }
+          if(current)current.nodes.push(node);
+        });
+        groups.forEach((group,index)=>{
+          const d=document.createElement('details');d.className='pass-setting-group';d.open=index===0;
+          const summary=document.createElement('summary');summary.textContent=group.title;
+          const body=document.createElement('div');body.className='pass-setting-body';
+          group.nodes[0].before(d);d.append(summary,body);
+          group.nodes.forEach(n=>body.appendChild(n));
+        });
+        const toolbar=document.createElement('div');toolbar.className='pass-settings-toolbar';
+        toolbar.innerHTML='<strong>🪔 QR Pass Designer</strong><span>Open only the section you want to edit. Changes appear when you preview.</span><div class="pass-group-links"></div>';
+        const links=toolbar.querySelector('.pass-group-links');
+        passSection.querySelectorAll('.pass-setting-group').forEach((group,index)=>{
+          const b=document.createElement('button');b.type='button';b.textContent=group.querySelector('summary').textContent.replace('QR pass ','').replace('Pass ','').slice(0,25);
+          b.addEventListener('click',()=>{group.open=true;group.scrollIntoView({behavior:'smooth',block:'start'});});
+          links.appendChild(b);
+        });
+        passForm.insertBefore(toolbar,passForm.querySelector('.pass-setting-group'));
+        const visibility=passSection.querySelector('#editPassShowDate')?.closest('.pass-setting-group');
+        if(visibility)visibility.open=true;
+      }
+    }
+    // Mobile-friendly admin quick controls: find sections, jump directly, preview/save/publish.
+    if(!host.querySelector('.admin-easy-toolbar')){
+      const easy=document.createElement('div');easy.className='admin-easy-toolbar';
+      easy.innerHTML='<div><div class="toolbar-title">⚙️ Easy Admin Controls</div><div class="toolbar-help">Find a setting, jump to a section, preview your pass and save without scrolling through the whole page.</div></div><input type="search" id="adminSettingSearch" placeholder="🔎 Find a setting (logo, QR size, venue, colours…)"><div class="toolbar-actions"><button type="button" class="btn" id="adminQuickPreview">👁 Preview pass</button><button type="button" class="btn primary" id="adminQuickSave">💾 Save changes</button><button type="button" class="btn warning" id="adminQuickPublish">📨 Send updated pass</button></div><div class="toolbar-links" id="adminSectionLinks"></div><div class="toolbar-actions"><button type="button" class="btn small" id="adminExpandAll">Expand all sections</button><button type="button" class="btn small" id="adminCollapseAll">Collapse all sections</button></div>';
+      host.insertBefore(easy,host.firstChild);
+      const sections=[...host.querySelectorAll(':scope > details.settings-accordion')];
+      const links=easy.querySelector('#adminSectionLinks');
+      sections.forEach((section,i)=>{
+        const title=section.querySelector('summary')?.textContent?.trim()||('Section '+(i+1));
+        section.dataset.adminSectionTitle=title.toLowerCase();
+        const b=document.createElement('button');b.type='button';b.className='quick-link';b.textContent=title.replace(/\s+/g,' ').slice(0,34);
+        b.addEventListener('click',()=>{section.open=true;section.scrollIntoView({behavior:'smooth',block:'start'});});
+        links.appendChild(b);
+      });
+      easy.querySelector('#adminSettingSearch').addEventListener('input',e=>{
+        const q=e.target.value.trim().toLowerCase();
+        sections.forEach(section=>{
+          const match=!q||section.textContent.toLowerCase().includes(q);
+          section.hidden=!match;
+          if(q&&match)section.open=true;
+        });
+      });
+      easy.querySelector('#adminExpandAll').addEventListener('click',()=>sections.forEach(x=>{x.hidden=false;x.open=true;}));
+      easy.querySelector('#adminCollapseAll').addEventListener('click',()=>sections.forEach(x=>{x.hidden=false;x.open=false;}));
+      easy.querySelector('#adminQuickPreview').addEventListener('click',()=>{const b=document.getElementById('previewQrPass');if(b)b.click();else toast('Open the QR Pass Design section first.',true);});
+      easy.querySelector('#adminQuickSave').addEventListener('click',()=>{const form=document.getElementById('settingsForm');if(form){form.requestSubmit();}else toast('Save button is not available on this page.',true);});
+      easy.querySelector('#adminQuickPublish').addEventListener('click',()=>{const b=document.getElementById('refreshExistingPasses');if(b)b.click();else toast('Open the QR Pass Design section first.',true);});
+    }
+
     function collectTheme(){return {
       primary:$('editPrimary').value,accent:$('editAccent').value,background:$('editBackground').value,gold:$('editGold').value,
       pass_background:$('editPassBackground').value,pass_accent:$('editPassAccent').value,pass_gold:$('editPassGold').value,
