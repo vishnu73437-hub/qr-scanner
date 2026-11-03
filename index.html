@@ -1491,7 +1491,7 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
           </div>
           <div class="pass-editor-controls">
             <div class="field"><label for="passEditorLayer">Select element</label><select id="passEditorLayer">
-              <option value="qr">QR code</option><option value="guest_name">Guest name</option><option value="pass_code">Pass code</option><option value="event_date">Event date</option><option value="event_time">Event time</option><option value="venue">Venue</option>
+              <option value="qr">QR code</option><option value="guest_name">Guest name</option><option value="pass_code">Pass code</option><option value="event_date">Event date</option><option value="event_time">Event time</option><option value="venue">Venue</option><option value="title">Event title</option><option value="subtitle">Event subtitle</option><option value="sponsor_caption">Sponsor caption</option><option value="sponsor_logo">Sponsor logo</option>
             </select></div>
             <div class="pass-editor-fields">
               <div class="field"><label for="passLayerX">X position</label><input id="passLayerX" type="number" min="0" max="1024"></div>
@@ -1584,13 +1584,17 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
       pass_code:{x:250,y:980,width:620,height:64,font_size:38,color:'#5A1720',align:'left',rotation:0,visible:true},
       event_date:{x:148,y:1072,width:257,height:68,font_size:24,color:'#5A1720',align:'center',rotation:0,visible:true},
       event_time:{x:475,y:1072,width:148,height:68,font_size:23,color:'#5A1720',align:'center',rotation:0,visible:true},
-      venue:{x:675,y:1072,width:270,height:68,font_size:20,color:'#5A1720',align:'center',rotation:0,visible:true}
+      venue:{x:675,y:1072,width:270,height:68,font_size:20,color:'#5A1720',align:'center',rotation:0,visible:true},
+      title:{x:120,y:65,width:784,height:82,font_size:68,color:'#FFD166',align:'center',rotation:0,visible:false},
+      subtitle:{x:120,y:145,width:784,height:58,font_size:30,color:'#FFF2DE',align:'center',rotation:0,visible:false},
+      sponsor_caption:{x:320,y:224,width:384,height:34,font_size:22,color:'#5A1720',align:'center',rotation:0,visible:false},
+      sponsor_logo:{x:320,y:260,width:384,height:110,font_size:0,color:'#FFFFFF',align:'center',rotation:0,visible:false}
     };
     const savedPassElements = theme.pass_layout && theme.pass_layout.elements && typeof theme.pass_layout.elements==='object' ? theme.pass_layout.elements : {};
     const passLayout = {};
     Object.keys(passLayoutDefaults).forEach(id=>{passLayout[id]={...passLayoutDefaults[id],...(savedPassElements[id]||{})};});
     let selectedPassLayer = 'qr';
-    const passLayerNames = {qr:'QR code',guest_name:'Guest name',pass_code:'Pass code',event_date:'Event date',event_time:'Event time',venue:'Venue'};
+    const passLayerNames = {qr:'QR code',guest_name:'Guest name',pass_code:'Pass code',event_date:'Event date',event_time:'Event time',venue:'Venue',title:'Event title',subtitle:'Event subtitle',sponsor_caption:'Sponsor caption',sponsor_logo:'Sponsor logo'};
     const passEditor = $('passVisualEditor');
     const isDeepotsavVisualMode=String((state.event&&state.event.name)||$('editName')?.value||'').toLowerCase().includes('deepotsav');
     if(passEditor&&!isDeepotsavVisualMode)passEditor.hidden=true;
@@ -1613,9 +1617,9 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
       $('passLayerFont').value=layer.font_size;$('passLayerRotation').value=layer.rotation;
       $('passLayerColor').value=layer.color||'#5A1720';$('passLayerAlign').value=layer.align||'left';
       $('passLayerVisible').checked=layer.visible!==false;
-      const isQr=selectedPassLayer==='qr';
-      $('passLayerFont').disabled=isQr;$('passLayerRotation').disabled=isQr;
-      $('passLayerColor').disabled=isQr;$('passLayerAlign').disabled=isQr;
+      const isQr=selectedPassLayer==='qr',isLogo=selectedPassLayer==='sponsor_logo';
+      $('passLayerFont').disabled=isQr||isLogo;$('passLayerRotation').disabled=isQr;
+      $('passLayerColor').disabled=isQr||isLogo;$('passLayerAlign').disabled=isQr||isLogo;
       $('passLayerVisible').disabled=isQr;
       $('passEditorOverlays').innerHTML=Object.keys(passLayout).map(id=>{
         const item=passLayout[id];if(item.visible===false)return '';
@@ -1634,7 +1638,7 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
           $('passEditorLayer').value=id;$('passLayerX').value=item.x;$('passLayerY').value=item.y;
           $('passLayerWidth').value=item.width;$('passLayerHeight').value=item.height;$('passLayerFont').value=item.font_size;
           $('passLayerRotation').value=item.rotation;$('passLayerColor').value=item.color||'#5A1720';$('passLayerAlign').value=item.align||'left';$('passLayerVisible').checked=item.visible!==false;
-          const isQr=id==='qr';$('passLayerFont').disabled=isQr;$('passLayerRotation').disabled=isQr;$('passLayerColor').disabled=isQr;$('passLayerAlign').disabled=isQr;$('passLayerVisible').disabled=isQr;
+          const isQr=id==='qr',isLogo=id==='sponsor_logo';$('passLayerFont').disabled=isQr||isLogo;$('passLayerRotation').disabled=isQr;$('passLayerColor').disabled=isQr||isLogo;$('passLayerAlign').disabled=isQr||isLogo;$('passLayerVisible').disabled=isQr;
           const resize=!!e.target.closest('.resize-handle');
           const start={x:e.clientX,y:e.clientY,left:item.x,top:item.y,width:item.width,height:item.height};
           handle.setPointerCapture(e.pointerId);
