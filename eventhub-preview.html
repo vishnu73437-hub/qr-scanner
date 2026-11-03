@@ -342,8 +342,32 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
       #deepotsavFireworks{opacity:.72}
     }
 
-  </style>
+  
+.pass-visual-editor.canva-editor-highlight{outline:3px solid var(--gold);box-shadow:0 0 0 8px color-mix(in srgb,var(--gold) 18%,transparent),0 14px 36px #0005;transition:outline .2s,box-shadow .2s}
+/* Accessible visual pass editor */
+.pass-visual-editor{overflow:hidden}
+.pass-editor-grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(260px,.95fr);gap:18px;align-items:start;margin-top:14px}
+.pass-editor-stage{min-width:0;display:flex;flex-direction:column;align-items:center}
+.pass-editor-canvas{position:relative;width:min(100%,420px);aspect-ratio:2/3;background:linear-gradient(145deg,#38172b,#171321 72%);border:1px solid #d9b15f88;border-radius:16px;overflow:hidden;touch-action:none;user-select:none}
+.pass-editor-canvas>img{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;display:block}
+.pass-editor-placeholder{position:absolute;inset:0;display:grid;place-items:center;padding:28px;text-align:center;color:#f2dba7;font-weight:700;background:repeating-linear-gradient(135deg,#ffffff08 0 12px,#00000008 12px 24px)}
+#passEditorOverlays{position:absolute;inset:0;pointer-events:none}
+.pass-layer-handle{position:absolute;display:block;padding:0;border:2px dashed #ffdb70;background:#ffd16620;color:transparent;touch-action:none;pointer-events:auto;cursor:move;min-width:12px;min-height:12px}
+.pass-layer-handle.selected{border:2px solid #fff2ae;background:#ffd16626;box-shadow:0 0 0 2px #211321aa,0 0 18px #ffd16666;z-index:4}
+.pass-layer-handle.qr{border-color:#62e3b0;background:#47cf9120}
+.pass-layer-handle .layer-tag{position:absolute;left:0;top:0;transform:translateY(-100%);padding:2px 6px;border-radius:5px 5px 0 0;background:#211321;color:#fff2ae;font-size:10px;font-weight:800;white-space:nowrap}
+.pass-layer-handle .resize-handle{position:absolute;right:-7px;bottom:-7px;width:15px;height:15px;border:2px solid #211321;border-radius:4px;background:#ffd166;cursor:nwse-resize;touch-action:none}
+.pass-editor-hint,.footnote{font-size:11px;color:var(--muted);margin-top:8px}
+.pass-editor-controls{min-width:0}
+.pass-editor-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 10px}
+.pass-editor-fields .field{margin:5px 0}
+.pass-editor-fields input,.pass-editor-controls select{min-height:40px;padding:9px}
+.pass-layer-visible{display:flex;align-items:center;gap:9px;margin:10px 0;font-size:13px;font-weight:700}
+.pass-layer-visible input{width:18px;height:18px;min-height:0}
+@media(max-width:720px){.pass-editor-grid{grid-template-columns:1fr}.pass-editor-canvas{width:min(100%,360px)}.pass-editor-controls{width:100%}}
+@media(max-width:420px){.pass-editor-fields{grid-template-columns:repeat(2,minmax(0,1fr))}.pass-visual-editor{padding:12px}}
 
+  </style>
 <style id="admin-easy-settings-v1">
 .admin-easy-toolbar{position:sticky;top:0;z-index:40;display:grid;gap:10px;padding:12px;margin:0 0 14px;background:var(--card, #102d35);border:1px solid var(--line,rgba(255,255,255,.18));border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,.22)}
 .admin-easy-toolbar .toolbar-title{font-weight:800;font-size:16px;display:flex;align-items:center;gap:8px}
@@ -376,7 +400,6 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
 }
 @media(min-width:601px){.admin-easy-toolbar .toolbar-links .quick-link{flex:0 0 auto;width:auto;white-space:nowrap}}
 </style>
-
 <style id="pass-settings-groups-v1">
 .pass-settings-toolbar{display:grid;gap:8px;padding:13px;margin:10px 0 16px;border:1px solid var(--line,rgba(255,255,255,.22));border-radius:14px;background:rgba(255,255,255,.045)}
 .pass-settings-toolbar strong{font-size:16px}.pass-settings-toolbar span{font-size:12px;opacity:.78}
@@ -392,7 +415,6 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
 .pass-setting-body label{line-height:1.4}
 @media(max-width:600px){.pass-setting-body{padding:10px}.pass-setting-body .inline-fields{display:grid;grid-template-columns:1fr}.pass-setting-body .grid.cols3{grid-template-columns:1fr 1fr}}
 </style>
-
 <style id="admin-toolbar-mobile-fix-v2">
 .admin-easy-toolbar .toolbar-links{min-width:0}
 .admin-easy-toolbar .toolbar-links .quick-link{display:inline-flex;align-items:center;justify-content:center}
@@ -1391,6 +1413,7 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
           <div class="field"><label>Pass subtitle (blank uses event description)</label><textarea id="editPassSubtitle" maxlength="240">${safe(theme.pass_subtitle||'')}</textarea></div>
 
           <div class="field"><label>Pass title (use {event})</label><input id="editPassTitle" maxlength="120" value="${safe(theme.pass_title||'{event}')}"></div>
+          <div class="field"><label>Pass header label (for a clean background)</label><input id="editPassHeaderLabel" maxlength="60" value="${safe(theme.pass_header_label||'KSMU HOSTEL 5')}"></div>
           <div class="inline-fields"><div class="field"><label>Guest heading (use {role})</label><input id="editPassGuestLabel" maxlength="60" value="${safe(theme.pass_guest_label||'{role} PASS')}"></div><div class="field"><label>Guest-name label</label><input id="editPassNameLabel" maxlength="60" value="${safe(theme.pass_name_label||'GUEST NAME')}"></div></div>
           <div class="inline-fields"><div class="field"><label>Food label</label><input id="editPassFoodLabel" maxlength="60" value="${safe(theme.pass_food_label||'FOOD PREFERENCE')}"></div><div class="field"><label>Phone label</label><input id="editPassPhoneLabel" maxlength="60" value="${safe(theme.pass_phone_label||'PHONE')}"></div></div>
           <div class="inline-fields"><div class="field"><label>Residence label</label><input id="editPassResidenceLabel" maxlength="60" value="${safe(theme.pass_residence_label||'RESIDENCE')}"></div><div class="field"><label>Hostel format (use {hostel_number})</label><input id="editPassHostelLabel" maxlength="60" value="${safe(theme.pass_hostel_label||'HOSTEL {hostel_number}')}"></div></div>
@@ -1455,7 +1478,40 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
           <div class="field"><label>Pass instruction</label><input id="editPassInstruction" maxlength="160" value="${safe(theme.pass_instruction||'Use this QR for event entry and checkpoints')}"></div>
           <div class="field"><label>Pass privacy note</label><input id="editPassPrivacy" maxlength="160" value="${safe(theme.pass_privacy||'Keep your pass private • One guest per pass')}"></div>
           <div class="actions"><button class="btn" type="button" id="previewQrPass">Preview current QR changes</button><button class="btn warning" type="button" id="refreshExistingPasses">Send updated pass to approved guests</button><button class="btn primary" type="submit">Save event, Mini App and pass design</button></div>
-        </form><div id="settingsMessage"></div><div id="qrPassPreview"></div>
+        </form><div id="settingsMessage"></div>
+      <section class="section card pass-visual-editor" id="passVisualEditor">
+        <div class="section-title"><h2>🎨 Visual QR Pass Editor</h2><span class="status active">Drag &amp; edit</span></div>
+        <p class="muted">Select an item on the pass and drag it. Use the corner handle to resize. Change text size, colour, alignment and rotation below. The QR itself stays square and upright for reliable scanning.</p>
+        <div class="pass-editor-grid">
+          <div class="pass-editor-stage">
+            <div class="pass-editor-canvas" id="passEditorCanvas">
+              <div class="pass-editor-placeholder" id="passEditorPlaceholder">Render a preview to load your current artwork here.</div>
+              <img id="passEditorPreview" alt="QR pass visual editor preview" hidden>
+              <div id="passEditorOverlays"></div>
+            </div>
+            <div class="pass-editor-hint">Portrait canvas · 1024 × 1536 design space</div>
+          </div>
+          <div class="pass-editor-controls">
+            <div class="field"><label for="passEditorLayer">Select element</label><select id="passEditorLayer">
+              <option value="qr">QR code</option><option value="guest_name">Guest name</option><option value="pass_code">Pass code</option><option value="event_date">Event date</option><option value="event_time">Event time</option><option value="venue">Venue</option><option value="title">Event title</option><option value="subtitle">Event subtitle</option><option value="sponsor_caption">Sponsor caption</option><option value="sponsor_logo">Sponsor logo</option><option value="brand_heading">KSMU heading</option>
+            </select></div>
+            <div class="pass-editor-fields">
+              <div class="field"><label for="passLayerX">X position</label><input id="passLayerX" type="number" min="0" max="1024"></div>
+              <div class="field"><label for="passLayerY">Y position</label><input id="passLayerY" type="number" min="0" max="1536"></div>
+              <div class="field"><label for="passLayerWidth">Width</label><input id="passLayerWidth" type="number" min="20" max="1024"></div>
+              <div class="field"><label for="passLayerHeight">Height</label><input id="passLayerHeight" type="number" min="20" max="1536"></div>
+              <div class="field"><label for="passLayerFont">Font size</label><input id="passLayerFont" type="number" min="0" max="128"></div>
+              <div class="field"><label for="passLayerRotation">Rotation (degrees)</label><input id="passLayerRotation" type="number" min="-180" max="180"></div>
+              <div class="field"><label for="passLayerColor">Text colour</label><input id="passLayerColor" type="color"></div>
+              <div class="field"><label for="passLayerAlign">Alignment</label><select id="passLayerAlign"><option value="left">Left</option><option value="center">Centre</option><option value="right">Right</option></select></div>
+            </div>
+            <label class="pass-layer-visible"><input id="passLayerVisible" type="checkbox"> Show this element</label>
+            <div class="actions"><button class="btn small" type="button" id="passLayerReset">Reset selected element</button><button class="btn primary small" type="button" id="passLayoutPreview">Update visual preview</button></div>
+            <p class="footnote">The event title, decorative temple artwork and any logo already embedded in your background image remain part of that image. Upload a clean background when you need those pieces to be separate editable layers.</p>
+          </div>
+        </div>
+      </section>
+      <div id="qrPassPreview"></div>
       </section>
       <section class="section card"><h2>Registration form builder</h2><p class="muted">Add, remove, rename, reorder and configure fields for this event. Keep Full name required.</p>${schemaEditor(Array.isArray(schema)&&schema.length?schema:defaultSchema())}<div class="actions"><button class="btn primary" id="saveSchema">Save registration form</button></div><div id="schemaMessage"></div></section>
       ${botSettingsMarkup}\n      <section class="section card"><h2>Event lifecycle</h2><p class="muted">Draft events are private to admins until activated. Archiving closes an active event while retaining history.</p><div class="actions">${ev.status==='draft'?'<button class="btn success" id="activateEvent">Activate event</button>':''}${ev.status==='active'?'<button class="btn danger" id="archiveEvent">Archive this event</button>':''}<button class="btn" id="backToEvents">Back to all events</button></div><div id="archiveMessage"></div></section>`;
@@ -1496,7 +1552,7 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
     // Mobile-friendly admin quick controls: find sections, jump directly, preview/save/publish.
     if(!host.querySelector('.admin-easy-toolbar')){
       const easy=document.createElement('div');easy.className='admin-easy-toolbar';
-      easy.innerHTML='<div><div class="toolbar-title">⚙️ Easy Admin Controls</div><div class="toolbar-help">Find a setting, jump to a section, preview your pass and save without scrolling through the whole page.</div></div><input type="search" id="adminSettingSearch" placeholder="🔎 Find a setting (logo, QR size, venue, colours…)"><div class="toolbar-actions"><button type="button" class="btn" id="adminQuickPreview">👁 Preview pass</button><button type="button" class="btn primary" id="adminQuickSave">💾 Save changes</button><button type="button" class="btn warning" id="adminQuickPublish">📨 Send updated pass</button></div><div class="toolbar-links" id="adminSectionLinks"></div><div class="toolbar-actions"><button type="button" class="btn small" id="adminExpandAll">Expand all sections</button><button type="button" class="btn small" id="adminCollapseAll">Collapse all sections</button></div>';
+      easy.innerHTML='<div><div class="toolbar-title">⚙️ Easy Admin Controls</div><div class="toolbar-help">Find a setting, jump to a section, preview your pass and save without scrolling through the whole page.</div></div><input type="search" id="adminSettingSearch" placeholder="🔎 Find a setting (logo, QR size, venue, colours…)"><div class="toolbar-actions"><button type="button" class="btn primary" id="adminOpenCanvaEditor">🎨 Canva Editor</button><button type="button" class="btn" id="adminQuickPreview">👁 Preview pass</button><button type="button" class="btn primary" id="adminQuickSave">💾 Save changes</button><button type="button" class="btn warning" id="adminQuickPublish">📨 Send updated pass</button></div><div class="toolbar-links" id="adminSectionLinks"></div><div class="toolbar-actions"><button type="button" class="btn small" id="adminExpandAll">Expand all sections</button><button type="button" class="btn small" id="adminCollapseAll">Collapse all sections</button></div>';
       host.insertBefore(easy,host.firstChild);
       const sections=[...host.querySelectorAll(':scope > details.settings-accordion')];
       const links=easy.querySelector('#adminSectionLinks');
@@ -1517,12 +1573,113 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
       });
       easy.querySelector('#adminExpandAll').addEventListener('click',()=>sections.forEach(x=>{x.hidden=false;x.open=true;}));
       easy.querySelector('#adminCollapseAll').addEventListener('click',()=>sections.forEach(x=>{x.hidden=false;x.open=false;}));
+      easy.querySelector('#adminOpenCanvaEditor').addEventListener('click',()=>{
+        const editor=document.getElementById('passVisualEditor');
+        if(!editor){toast('Canva Editor is available in the event settings page.',true);return;}
+        editor.hidden=false;
+        editor.scrollIntoView({behavior:'smooth',block:'start'});
+        editor.classList.add('canva-editor-highlight');
+        setTimeout(()=>editor.classList.remove('canva-editor-highlight'),1800);
+      });
       easy.querySelector('#adminQuickPreview').addEventListener('click',()=>{const b=document.getElementById('previewQrPass');if(b)b.click();else toast('Open the QR Pass Design section first.',true);});
       easy.querySelector('#adminQuickSave').addEventListener('click',()=>{const form=document.getElementById('settingsForm');if(form){form.requestSubmit();}else toast('Save button is not available on this page.',true);});
       easy.querySelector('#adminQuickPublish').addEventListener('click',()=>{const b=document.getElementById('refreshExistingPasses');if(b)b.click();else toast('Open the QR Pass Design section first.',true);});
     }
+
+
+    // Per-event pass layout model shared with the Botkeep Pillow renderer.
+    const passLayoutDefaults = {
+      qr:{x:332,y:500,width:360,height:360,font_size:0,color:'#111111',align:'center',rotation:0,visible:true},
+      guest_name:{x:250,y:902,width:620,height:63,font_size:32,color:'#5A1720',align:'left',rotation:0,visible:true},
+      pass_code:{x:250,y:980,width:620,height:64,font_size:38,color:'#5A1720',align:'left',rotation:0,visible:true},
+      event_date:{x:148,y:1072,width:257,height:68,font_size:24,color:'#5A1720',align:'center',rotation:0,visible:true},
+      event_time:{x:475,y:1072,width:148,height:68,font_size:23,color:'#5A1720',align:'center',rotation:0,visible:true},
+      venue:{x:675,y:1072,width:270,height:68,font_size:20,color:'#5A1720',align:'center',rotation:0,visible:true},
+      title:{x:120,y:72,width:784,height:82,font_size:68,color:'#FFD166',align:'center',rotation:0,visible:false},
+      brand_heading:{x:160,y:24,width:704,height:48,font_size:30,color:'#FFF2DE',align:'center',rotation:0,visible:false},
+      subtitle:{x:120,y:154,width:784,height:58,font_size:30,color:'#FFF2DE',align:'center',rotation:0,visible:false},
+      sponsor_caption:{x:320,y:224,width:384,height:34,font_size:22,color:'#FFD166',align:'center',rotation:0,visible:false},
+      sponsor_logo:{x:320,y:260,width:384,height:110,font_size:0,color:'#FFFFFF',align:'center',rotation:0,visible:false}
+    };
+    const savedPassElements = theme.pass_layout && theme.pass_layout.elements && typeof theme.pass_layout.elements==='object' ? theme.pass_layout.elements : {};
+    const passLayout = {};
+    Object.keys(passLayoutDefaults).forEach(id=>{passLayout[id]={...passLayoutDefaults[id],...(savedPassElements[id]||{})};});
+    let selectedPassLayer = 'qr';
+    const passLayerNames = {qr:'QR code',guest_name:'Guest name',pass_code:'Pass code',event_date:'Event date',event_time:'Event time',venue:'Venue',title:'Event title',subtitle:'Event subtitle',sponsor_caption:'Sponsor caption',sponsor_logo:'Sponsor logo',brand_heading:'KSMU heading'};
+    const passEditor = $('passVisualEditor');
+    function clampPassLayer(layer){
+      layer.x=Math.max(0,Math.min(1024-layer.width,Math.round(Number(layer.x)||0)));
+      layer.y=Math.max(0,Math.min(1536-layer.height,Math.round(Number(layer.y)||0)));
+      layer.width=Math.max(20,Math.min(1024-layer.x,Math.round(Number(layer.width)||20)));
+      layer.height=Math.max(20,Math.min(1536-layer.y,Math.round(Number(layer.height)||20)));
+      if(selectedPassLayer==='qr'){const side=Math.max(100,Math.min(layer.width,layer.height));layer.width=side;layer.height=side;layer.rotation=0;layer.visible=true;}
+      layer.font_size=Math.max(0,Math.min(128,Math.round(Number(layer.font_size)||0)));
+      layer.rotation=Math.max(-180,Math.min(180,Math.round(Number(layer.rotation)||0)));
+      return layer;
+    }
+    function renderPassEditor(){
+      if(!passEditor)return;
+      const layer=passLayout[selectedPassLayer];
+      $('passEditorLayer').value=selectedPassLayer;
+      $('passLayerX').value=layer.x;$('passLayerY').value=layer.y;
+      $('passLayerWidth').value=layer.width;$('passLayerHeight').value=layer.height;
+      $('passLayerFont').value=layer.font_size;$('passLayerRotation').value=layer.rotation;
+      $('passLayerColor').value=layer.color||'#5A1720';$('passLayerAlign').value=layer.align||'left';
+      $('passLayerVisible').checked=layer.visible!==false;
+      const isQr=selectedPassLayer==='qr',isLogo=selectedPassLayer==='sponsor_logo';
+      $('passLayerFont').disabled=isQr||isLogo;$('passLayerRotation').disabled=isQr;
+      $('passLayerColor').disabled=isQr||isLogo;$('passLayerAlign').disabled=isQr||isLogo;
+      $('passLayerVisible').disabled=isQr;
+      $('passEditorOverlays').innerHTML=Object.keys(passLayout).map(id=>{
+        const item=passLayout[id];if(item.visible===false)return '';
+        const left=(item.x/1024*100),top=(item.y/1536*100),width=(item.width/1024*100),height=(item.height/1536*100);
+        return '<button type="button" class="pass-layer-handle '+(id==='qr'?'qr ':'')+(id===selectedPassLayer?'selected':'')+'" data-pass-layer="'+id+'" aria-label="Move '+passLayerNames[id]+'" style="left:'+left+'%;top:'+top+'%;width:'+width+'%;height:'+height+'%;transform:rotate('+(id==='qr'?0:item.rotation||0)+'deg)"><span class="layer-tag">'+passLayerNames[id]+'</span>'+(id===selectedPassLayer?'<span class="resize-handle" aria-hidden="true"></span>':'')+'</button>';
+      }).join('');
+      $('passEditorOverlays').querySelectorAll('[data-pass-layer]').forEach(handle=>{
+        handle.addEventListener('click',()=>{selectedPassLayer=handle.dataset.passLayer;renderPassEditor();});
+        handle.addEventListener('pointerdown',e=>{
+          if(e.button!==undefined&&e.button!==0)return;
+          e.preventDefault();e.stopPropagation();
+          selectedPassLayer=handle.dataset.passLayer;
+          const id=selectedPassLayer,item=passLayout[id],canvas=$('passEditorCanvas'),rect=canvas.getBoundingClientRect();
+          document.querySelectorAll('.pass-layer-handle').forEach(h=>{h.classList.toggle('selected',h===handle);h.querySelector('.resize-handle')?.remove();});
+          handle.insertAdjacentHTML('beforeend','<span class="resize-handle" aria-hidden="true"></span>');
+          $('passEditorLayer').value=id;$('passLayerX').value=item.x;$('passLayerY').value=item.y;
+          $('passLayerWidth').value=item.width;$('passLayerHeight').value=item.height;$('passLayerFont').value=item.font_size;
+          $('passLayerRotation').value=item.rotation;$('passLayerColor').value=item.color||'#5A1720';$('passLayerAlign').value=item.align||'left';$('passLayerVisible').checked=item.visible!==false;
+          const isQr=id==='qr',isLogo=id==='sponsor_logo';$('passLayerFont').disabled=isQr||isLogo;$('passLayerRotation').disabled=isQr;$('passLayerColor').disabled=isQr||isLogo;$('passLayerAlign').disabled=isQr||isLogo;$('passLayerVisible').disabled=isQr;
+          const resize=!!e.target.closest('.resize-handle');
+          const start={x:e.clientX,y:e.clientY,left:item.x,top:item.y,width:item.width,height:item.height};
+          handle.setPointerCapture(e.pointerId);
+          const move=ev=>{
+            const dx=(ev.clientX-start.x)*1024/rect.width,dy=(ev.clientY-start.y)*1536/rect.height;
+            if(resize){item.width=Math.round(start.width+dx);item.height=Math.round(start.height+dy);}
+            else{item.x=Math.round(start.left+dx);item.y=Math.round(start.top+dy);}
+            item.width=Math.max(id==='qr'?100:20,Math.min(1024,item.width));item.height=Math.max(id==='qr'?100:20,Math.min(1536,item.height));
+            if(id==='qr'&&resize){const side=Math.max(100,Math.min(item.width,item.height));item.width=side;item.height=side;}
+            item.x=Math.max(0,Math.min(1024-item.width,item.x));item.y=Math.max(0,Math.min(1536-item.height,item.y));
+            handle.style.left=(item.x/1024*100)+'%';handle.style.top=(item.y/1536*100)+'%';
+            handle.style.width=(item.width/1024*100)+'%';handle.style.height=(item.height/1536*100)+'%';
+            $('passLayerX').value=item.x;$('passLayerY').value=item.y;$('passLayerWidth').value=item.width;$('passLayerHeight').value=item.height;
+          };
+          const done=()=>{handle.removeEventListener('pointermove',move);handle.removeEventListener('pointerup',done);handle.removeEventListener('pointercancel',done);renderPassEditor();};
+          handle.addEventListener('pointermove',move);handle.addEventListener('pointerup',done);handle.addEventListener('pointercancel',done);
+        });
+      });
+    }
+    if(passEditor){
+      $('passEditorLayer').addEventListener('change',e=>{selectedPassLayer=e.target.value;renderPassEditor();});
+      const layerFields={passLayerX:'x',passLayerY:'y',passLayerWidth:'width',passLayerHeight:'height',passLayerFont:'font_size',passLayerRotation:'rotation',passLayerColor:'color',passLayerAlign:'align'};
+      Object.keys(layerFields).forEach(id=>$(id).addEventListener('change',e=>{const prop=layerFields[id],layer=passLayout[selectedPassLayer];layer[prop]=prop==='color'||prop==='align'?e.target.value:Number(e.target.value);clampPassLayer(layer);renderPassEditor();}));
+      $('passLayerVisible').addEventListener('change',e=>{passLayout[selectedPassLayer].visible=e.target.checked;renderPassEditor();});
+      $('passLayerReset').addEventListener('click',()=>{passLayout[selectedPassLayer]={...passLayoutDefaults[selectedPassLayer]};renderPassEditor();});
+      $('passLayoutPreview').addEventListener('click',()=>{$('previewQrPass').click();});
+      renderPassEditor();
+    }
+
     function collectTheme(){return {
       primary:$('editPrimary').value,accent:$('editAccent').value,background:$('editBackground').value,gold:$('editGold').value,
+      pass_layout:passEditor&&!passEditor.hidden?{version:1,elements:passLayout}:(theme.pass_layout||null),
       pass_background:$('editPassBackground').value,pass_accent:$('editPassAccent').value,pass_gold:$('editPassGold').value,
       app_title:$('editAppTitle').value,app_subtitle:$('editAppSubtitle').value,brand_logo_url:$('editBrandLogo').value,
       brand_logo_image:$('editBrandLogoImage').value,hero_banner_url:$('editHeroBanner').value,hero_banner_image:$('editHeroBannerImage').value,hero_badge:$('editHeroBadge').value,
@@ -1540,7 +1697,7 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
       pass_show_food:$('editPassShowFood').checked,pass_show_residence:$('editPassShowResidence').checked,pass_show_room:$('editPassShowRoom').checked,
       pass_show_pass_code:$('editPassShowCode').checked,pass_show_date:$('editPassShowDate').checked,pass_show_time:$('editPassShowTime').checked,
       pass_show_venue:$('editPassShowVenue').checked,pass_show_instruction:$('editPassShowInstruction').checked,pass_show_privacy:$('editPassShowPrivacy').checked,
-      pass_instruction:$('editPassInstruction').value,pass_privacy:$('editPassPrivacy').value
+      pass_header_label:$('editPassHeaderLabel').value,pass_instruction:$('editPassInstruction').value,pass_privacy:$('editPassPrivacy').value
     };}
     $('refreshExistingPasses').addEventListener('click',async()=>{
       const button=$('refreshExistingPasses');
@@ -1642,6 +1799,7 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
           ? 'An uploaded pass background image is active and takes priority over the solid colour. Use “Remove background image” to preview the selected colour.'
           : 'Solid pass background colour applied: '+appliedColour+'.';
         target.innerHTML='<div class="notice good">Live preview of your current unsaved changes. '+safe(backgroundNote)+' Nothing has been saved; this sample QR cannot be used for entry.</div><img class="pass-image" alt="Live QR pass design preview" src="'+imageUrl+'"><div class="actions" style="justify-content:center"><a class="btn" download="EventHub-QR-Preview.png" href="'+imageUrl+'" style="text-decoration:none;display:inline-flex;align-items:center">Download preview</a></div>';
+        const editorImage=$('passEditorPreview');if(editorImage){editorImage.src=imageUrl;editorImage.hidden=false;$('passEditorPlaceholder').classList.add('hidden');}
       }catch(err){target.innerHTML=showNotice(err.message,'error');}
       finally{button.disabled=false;button.textContent=original;}
     });
