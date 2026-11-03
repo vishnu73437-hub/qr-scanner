@@ -362,6 +362,22 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
 .admin-easy-toolbar .btn{white-space:normal}
 @media(max-width:600px){.admin-easy-toolbar{top:0;padding:10px}.admin-easy-toolbar .toolbar-actions .btn{flex:1 1 42%;font-size:13px;padding:10px 8px}.admin-easy-toolbar .toolbar-links{flex-wrap:nowrap;overflow-x:auto;padding-bottom:3px}.settings-accordion>summary{font-size:15px!important}.settings-accordion>summary:after{font-size:10px}}
 </style>
+
+<style id="pass-settings-groups-v1">
+.pass-settings-toolbar{display:grid;gap:8px;padding:13px;margin:10px 0 16px;border:1px solid var(--line,rgba(255,255,255,.22));border-radius:14px;background:rgba(255,255,255,.045)}
+.pass-settings-toolbar strong{font-size:16px}.pass-settings-toolbar span{font-size:12px;opacity:.78}
+.pass-group-links{display:flex;gap:7px;overflow-x:auto;padding:2px 0 5px}
+.pass-group-links button{white-space:nowrap;border:1px solid var(--line,rgba(255,255,255,.25));border-radius:999px;background:transparent;color:inherit;padding:8px 11px;font-size:12px}
+.pass-setting-group{border:1px solid var(--line,rgba(255,255,255,.2));border-radius:13px;margin:10px 0;overflow:hidden;scroll-margin-top:145px}
+.pass-setting-group>summary{padding:15px!important;font-weight:800!important;font-size:15px!important;cursor:pointer;background:rgba(255,255,255,.045)}
+.pass-setting-body{padding:12px}
+.pass-setting-body>.divider{display:none}
+.pass-setting-body .field{margin:10px 0}
+.pass-setting-body .inline-fields{gap:10px}
+.pass-setting-body input:not([type=checkbox]):not([type=color]),.pass-setting-body select,.pass-setting-body textarea{min-height:44px}
+.pass-setting-body label{line-height:1.4}
+@media(max-width:600px){.pass-setting-body{padding:10px}.pass-setting-body .inline-fields{display:grid;grid-template-columns:1fr}.pass-setting-body .grid.cols3{grid-template-columns:1fr 1fr}}
+</style>
 </head>
 <body>
 <div class="shell" id="app">
@@ -1424,6 +1440,39 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
       <section class="section card"><h2>Registration form builder</h2><p class="muted">Add, remove, rename, reorder and configure fields for this event. Keep Full name required.</p>${schemaEditor(Array.isArray(schema)&&schema.length?schema:defaultSchema())}<div class="actions"><button class="btn primary" id="saveSchema">Save registration form</button></div><div id="schemaMessage"></div></section>
       ${botSettingsMarkup}\n      <section class="section card"><h2>Event lifecycle</h2><p class="muted">Draft events are private to admins until activated. Archiving closes an active event while retaining history.</p><div class="actions">${ev.status==='draft'?'<button class="btn success" id="activateEvent">Activate event</button>':''}${ev.status==='active'?'<button class="btn danger" id="archiveEvent">Archive this event</button>':''}<button class="btn" id="backToEvents">Back to all events</button></div><div id="archiveMessage"></div></section>`;
     [...host.children].forEach((section,index)=>{const heading=section.querySelector('h2');if(!heading)return;const details=document.createElement('details');details.className='settings-accordion';details.open=index===1;const summary=document.createElement('summary');summary.textContent=heading.textContent.trim();const content=document.createElement('div');content.className='settings-content';section.parentNode.insertBefore(details,section);details.appendChild(summary);details.appendChild(content);content.appendChild(section);});
+    // Turn the QR pass controls into clear, collapsible mobile-friendly groups.
+    const passSection=[...host.querySelectorAll('section.section,section.card')].find(sec=>sec.querySelector('#editPassBackgroundUpload'));
+    if(passSection&&!passSection.querySelector('.pass-settings-toolbar')){
+      const passForm=passSection.querySelector('form');
+      const startHeading=[...passForm.children].find(n=>n.tagName==='H3'&&n.textContent.toLowerCase().includes('mini app colours and qr pass design'));
+      if(startHeading){
+        const groups=[];let current=null;
+        [...passForm.children].forEach(node=>{
+          if(node===startHeading || (current && node.tagName==='H3')){
+            current={title:node.textContent.trim(),nodes:[]};groups.push(current);
+          }
+          if(current)current.nodes.push(node);
+        });
+        groups.forEach((group,index)=>{
+          const d=document.createElement('details');d.className='pass-setting-group';d.open=index===0;
+          const summary=document.createElement('summary');summary.textContent=group.title;
+          const body=document.createElement('div');body.className='pass-setting-body';
+          group.nodes[0].before(d);d.append(summary,body);
+          group.nodes.forEach(n=>body.appendChild(n));
+        });
+        const toolbar=document.createElement('div');toolbar.className='pass-settings-toolbar';
+        toolbar.innerHTML='<strong>🪔 QR Pass Designer</strong><span>Open only the section you want to edit. Changes appear when you preview.</span><div class="pass-group-links"></div>';
+        const links=toolbar.querySelector('.pass-group-links');
+        passSection.querySelectorAll('.pass-setting-group').forEach((group,index)=>{
+          const b=document.createElement('button');b.type='button';b.textContent=group.querySelector('summary').textContent.replace('QR pass ','').replace('Pass ','').slice(0,25);
+          b.addEventListener('click',()=>{group.open=true;group.scrollIntoView({behavior:'smooth',block:'start'});});
+          links.appendChild(b);
+        });
+        passForm.insertBefore(toolbar,passForm.querySelector('.pass-setting-group'));
+        const visibility=passSection.querySelector('#editPassShowDate')?.closest('.pass-setting-group');
+        if(visibility)visibility.open=true;
+      }
+    }
     // Mobile-friendly admin quick controls: find sections, jump directly, preview/save/publish.
     if(!host.querySelector('.admin-easy-toolbar')){
       const easy=document.createElement('div');easy.className='admin-easy-toolbar';
