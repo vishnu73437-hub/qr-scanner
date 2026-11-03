@@ -343,6 +343,25 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
     }
 
   </style>
+
+<style id="admin-easy-settings-v1">
+.admin-easy-toolbar{position:sticky;top:0;z-index:40;display:grid;gap:10px;padding:12px;margin:0 0 14px;background:var(--card, #102d35);border:1px solid var(--line,rgba(255,255,255,.18));border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,.22)}
+.admin-easy-toolbar .toolbar-title{font-weight:800;font-size:16px;display:flex;align-items:center;gap:8px}
+.admin-easy-toolbar .toolbar-help{font-size:12px;opacity:.78}
+.admin-easy-toolbar .toolbar-actions,.admin-easy-toolbar .toolbar-links{display:flex;gap:8px;flex-wrap:wrap}
+.admin-easy-toolbar button{min-height:40px}
+.admin-easy-toolbar input{width:100%;min-height:44px;border-radius:12px;padding:10px 13px}
+.admin-easy-toolbar .quick-link{border:1px solid var(--line,rgba(255,255,255,.22));border-radius:999px;padding:8px 12px;background:transparent;color:inherit;font-size:12px}
+.settings-accordion{scroll-margin-top:150px}
+.settings-accordion>summary{position:relative;padding:17px 48px 17px 16px!important;font-size:16px!important;font-weight:800!important;min-height:58px;display:flex;align-items:center}
+.settings-accordion>summary:after{content:'Tap to edit';font-size:11px;font-weight:500;opacity:.65;margin-left:auto;padding-right:6px}
+.settings-accordion[open]>summary:after{content:'Editing'}
+.settings-content{padding-top:14px}
+.settings-content .field label{line-height:1.35}
+.settings-content input,.settings-content select,.settings-content textarea{max-width:100%}
+.admin-easy-toolbar .btn{white-space:normal}
+@media(max-width:600px){.admin-easy-toolbar{top:0;padding:10px}.admin-easy-toolbar .toolbar-actions .btn{flex:1 1 42%;font-size:13px;padding:10px 8px}.admin-easy-toolbar .toolbar-links{flex-wrap:nowrap;overflow-x:auto;padding-bottom:3px}.settings-accordion>summary{font-size:15px!important}.settings-accordion>summary:after{font-size:10px}}
+</style>
 </head>
 <body>
 <div class="shell" id="app">
@@ -1405,6 +1424,34 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
       <section class="section card"><h2>Registration form builder</h2><p class="muted">Add, remove, rename, reorder and configure fields for this event. Keep Full name required.</p>${schemaEditor(Array.isArray(schema)&&schema.length?schema:defaultSchema())}<div class="actions"><button class="btn primary" id="saveSchema">Save registration form</button></div><div id="schemaMessage"></div></section>
       ${botSettingsMarkup}\n      <section class="section card"><h2>Event lifecycle</h2><p class="muted">Draft events are private to admins until activated. Archiving closes an active event while retaining history.</p><div class="actions">${ev.status==='draft'?'<button class="btn success" id="activateEvent">Activate event</button>':''}${ev.status==='active'?'<button class="btn danger" id="archiveEvent">Archive this event</button>':''}<button class="btn" id="backToEvents">Back to all events</button></div><div id="archiveMessage"></div></section>`;
     [...host.children].forEach((section,index)=>{const heading=section.querySelector('h2');if(!heading)return;const details=document.createElement('details');details.className='settings-accordion';details.open=index===1;const summary=document.createElement('summary');summary.textContent=heading.textContent.trim();const content=document.createElement('div');content.className='settings-content';section.parentNode.insertBefore(details,section);details.appendChild(summary);details.appendChild(content);content.appendChild(section);});
+    // Mobile-friendly admin quick controls: find sections, jump directly, preview/save/publish.
+    if(!host.querySelector('.admin-easy-toolbar')){
+      const easy=document.createElement('div');easy.className='admin-easy-toolbar';
+      easy.innerHTML='<div><div class="toolbar-title">⚙️ Easy Admin Controls</div><div class="toolbar-help">Find a setting, jump to a section, preview your pass and save without scrolling through the whole page.</div></div><input type="search" id="adminSettingSearch" placeholder="🔎 Find a setting (logo, QR size, venue, colours…)"><div class="toolbar-actions"><button type="button" class="btn" id="adminQuickPreview">👁 Preview pass</button><button type="button" class="btn primary" id="adminQuickSave">💾 Save changes</button><button type="button" class="btn warning" id="adminQuickPublish">📨 Send updated pass</button></div><div class="toolbar-links" id="adminSectionLinks"></div><div class="toolbar-actions"><button type="button" class="btn small" id="adminExpandAll">Expand all sections</button><button type="button" class="btn small" id="adminCollapseAll">Collapse all sections</button></div>';
+      host.insertBefore(easy,host.firstChild);
+      const sections=[...host.querySelectorAll(':scope > details.settings-accordion')];
+      const links=easy.querySelector('#adminSectionLinks');
+      sections.forEach((section,i)=>{
+        const title=section.querySelector('summary')?.textContent?.trim()||('Section '+(i+1));
+        section.dataset.adminSectionTitle=title.toLowerCase();
+        const b=document.createElement('button');b.type='button';b.className='quick-link';b.textContent=title.replace(/\s+/g,' ').slice(0,34);
+        b.addEventListener('click',()=>{section.open=true;section.scrollIntoView({behavior:'smooth',block:'start'});});
+        links.appendChild(b);
+      });
+      easy.querySelector('#adminSettingSearch').addEventListener('input',e=>{
+        const q=e.target.value.trim().toLowerCase();
+        sections.forEach(section=>{
+          const match=!q||section.textContent.toLowerCase().includes(q);
+          section.hidden=!match;
+          if(q&&match)section.open=true;
+        });
+      });
+      easy.querySelector('#adminExpandAll').addEventListener('click',()=>sections.forEach(x=>{x.hidden=false;x.open=true;}));
+      easy.querySelector('#adminCollapseAll').addEventListener('click',()=>sections.forEach(x=>{x.hidden=false;x.open=false;}));
+      easy.querySelector('#adminQuickPreview').addEventListener('click',()=>{const b=document.getElementById('previewQrPass');if(b)b.click();else toast('Open the QR Pass Design section first.',true);});
+      easy.querySelector('#adminQuickSave').addEventListener('click',()=>{const form=document.getElementById('settingsForm');if(form){form.requestSubmit();}else toast('Save button is not available on this page.',true);});
+      easy.querySelector('#adminQuickPublish').addEventListener('click',()=>{const b=document.getElementById('refreshExistingPasses');if(b)b.click();else toast('Open the QR Pass Design section first.',true);});
+    }
     function collectTheme(){return {
       primary:$('editPrimary').value,accent:$('editAccent').value,background:$('editBackground').value,gold:$('editGold').value,
       pass_background:$('editPassBackground').value,pass_accent:$('editPassAccent').value,pass_gold:$('editPassGold').value,
