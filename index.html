@@ -603,7 +603,7 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
     if(!initData) throw new Error('Open this page from the EventHub Telegram bot so Telegram can authenticate you.');
     const controller=typeof AbortController!=='undefined'?new AbortController():null;
     const actionName=path==='/api/admin'?String(payload.action||'unknown'):'';
-    const slowAction=path==='/api/admin' && ['announcement_send','announcement_unsend','sheets_sync','refresh_event_passes'].includes(actionName);
+    const slowAction=path==='/api/admin' && ['announcement_send','announcement_unsend','sheets_sync','refresh_event_passes','update_event'].includes(actionName);
     const timeoutMs=slowAction?120000:30000, startedAt=Date.now();
     const timer=controller?setTimeout(()=>controller.abort(),timeoutMs):null;
     let res;
