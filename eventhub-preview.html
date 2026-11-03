@@ -348,8 +348,9 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
 .admin-easy-toolbar{position:sticky;top:0;z-index:40;display:grid;gap:10px;padding:12px;margin:0 0 14px;background:var(--card, #102d35);border:1px solid var(--line,rgba(255,255,255,.18));border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,.22)}
 .admin-easy-toolbar .toolbar-title{font-weight:800;font-size:16px;display:flex;align-items:center;gap:8px}
 .admin-easy-toolbar .toolbar-help{font-size:12px;opacity:.78}
-.admin-easy-toolbar .toolbar-actions,.admin-easy-toolbar .toolbar-links{display:flex;gap:8px;flex-wrap:wrap}
-.admin-easy-toolbar button{min-height:40px}
+.admin-easy-toolbar .toolbar-actions,.admin-easy-toolbar .toolbar-links{display:flex;gap:8px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;align-items:center;padding:2px 2px 8px;scrollbar-width:thin}
+.admin-easy-toolbar .toolbar-links .quick-link{flex:0 0 auto;width:auto;min-width:max-content;max-width:none;white-space:nowrap;line-height:1.2;text-align:center}
+.admin-easy-toolbar button{min-height:40px;flex:0 0 auto}
 .admin-easy-toolbar input{width:100%;min-height:44px;border-radius:12px;padding:10px 13px}
 .admin-easy-toolbar .quick-link{border:1px solid var(--line,rgba(255,255,255,.22));border-radius:999px;padding:8px 12px;background:transparent;color:inherit;font-size:12px}
 .settings-accordion{scroll-margin-top:150px}
@@ -360,7 +361,20 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
 .settings-content .field label{line-height:1.35}
 .settings-content input,.settings-content select,.settings-content textarea{max-width:100%}
 .admin-easy-toolbar .btn{white-space:normal}
-@media(max-width:600px){.admin-easy-toolbar{top:0;padding:10px}.admin-easy-toolbar .toolbar-actions .btn{flex:1 1 42%;font-size:13px;padding:10px 8px}.admin-easy-toolbar .toolbar-links{flex-wrap:nowrap;overflow-x:auto;padding-bottom:3px}.settings-accordion>summary{font-size:15px!important}.settings-accordion>summary:after{font-size:10px}}
+@media(max-width:600px){
+.admin-easy-toolbar{position:relative;top:auto;padding:10px;gap:8px}
+.admin-easy-toolbar .toolbar-title{font-size:15px}
+.admin-easy-toolbar .toolbar-help{font-size:11px;line-height:1.35}
+.admin-easy-toolbar input{min-height:42px;font-size:14px}
+.admin-easy-toolbar .toolbar-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.admin-easy-toolbar .toolbar-actions .btn{min-width:0;width:100%;min-height:42px;font-size:12px;padding:9px 6px;line-height:1.2}
+.admin-easy-toolbar .toolbar-actions #adminQuickPublish{grid-column:1/-1}
+.admin-easy-toolbar .toolbar-links{display:flex;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;gap:7px;padding:2px 2px 8px}
+.admin-easy-toolbar .toolbar-links .quick-link{flex:0 0 auto;width:auto;min-width:max-content;max-width:none;white-space:nowrap;padding:8px 12px;font-size:12px;line-height:1.2}
+.admin-easy-toolbar #adminExpandAll,.admin-easy-toolbar #adminCollapseAll{font-size:11px}
+.settings-accordion>summary{font-size:15px!important}.settings-accordion>summary:after{font-size:10px}
+}
+@media(min-width:601px){.admin-easy-toolbar .toolbar-links .quick-link{flex:0 0 auto;width:auto;white-space:nowrap}}
 </style>
 
 <style id="pass-settings-groups-v1">
@@ -377,6 +391,12 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
 .pass-setting-body input:not([type=checkbox]):not([type=color]),.pass-setting-body select,.pass-setting-body textarea{min-height:44px}
 .pass-setting-body label{line-height:1.4}
 @media(max-width:600px){.pass-setting-body{padding:10px}.pass-setting-body .inline-fields{display:grid;grid-template-columns:1fr}.pass-setting-body .grid.cols3{grid-template-columns:1fr 1fr}}
+</style>
+
+<style id="admin-toolbar-mobile-fix-v2">
+.admin-easy-toolbar .toolbar-links{min-width:0}
+.admin-easy-toolbar .toolbar-links .quick-link{display:inline-flex;align-items:center;justify-content:center}
+.admin-easy-toolbar .toolbar-actions{min-width:0}
 </style>
 </head>
 <body>
