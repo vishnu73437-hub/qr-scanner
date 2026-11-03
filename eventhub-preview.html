@@ -1342,11 +1342,35 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
           <div class="inline-fields"><div class="field"><label>Apartment value</label><input id="editPassApartmentLabel" maxlength="60" value="${safe(theme.pass_apartment_label||'APARTMENT')}"></div><div class="field"><label>Room label</label><input id="editPassRoomLabel" maxlength="60" value="${safe(theme.pass_room_label||'ROOM')}"></div><div class="field"><label>Pass-code label</label><input id="editPassCodeLabel" maxlength="60" value="${safe(theme.pass_code_label||'PASS CODE')}"></div></div>
           <div class="inline-fields"><div class="field"><label>Date label</label><input id="editPassDateLabel" maxlength="40" value="${safe(theme.pass_date_label||'DATE')}"></div><div class="field"><label>Time label</label><input id="editPassTimeLabel" maxlength="40" value="${safe(theme.pass_time_label||'TIME')}"></div><div class="field"><label>Venue label</label><input id="editPassVenueLabel" maxlength="40" value="${safe(theme.pass_venue_label||'VENUE')}"></div></div>
           <div class="divider"></div><h3>QR pass background image</h3>
-          <p class="muted">Upload a JPG, PNG or WebP image (maximum 1 MB). It will be used as the full pass background; the QR remains on a white scanning panel.</p>
+          <p class="muted">Upload artwork only: no event title, sponsor logo, guest name or QR code. EventHub adds those elements separately. JPG, PNG or WebP is auto-compressed to a maximum of 1 MB. The QR is always rendered on a clean white scanning panel.</p>
           <div class="field"><label>Upload background artwork</label><input id="editPassBackgroundUpload" type="file" accept="image/png,image/jpeg,image/webp"></div>
           <div class="actions"><button class="btn" type="button" id="removePassBackground">Remove uploaded background</button></div>
           <input id="editPassBackgroundImage" type="hidden" value="${safe(theme.pass_background_image||'')}">
           <div id="passBackgroundPreview"></div>
+          <div class="divider"></div><h3>Background fit and position</h3>
+          <div class="inline-fields">
+            <div class="field"><label>Image fit</label><select id="editPassBackgroundFit"><option value="cover" ${(theme.pass_background_fit||'cover')==='cover'?'selected':''}>Cover (fill pass)</option><option value="contain" ${theme.pass_background_fit==='contain'?'selected':''}>Contain (show full image)</option><option value="stretch" ${theme.pass_background_fit==='stretch'?'selected':''}>Stretch (fill exactly)</option></select></div>
+            <div class="field"><label>Dark overlay (0–45%)</label><input id="editPassBackgroundOverlay" type="number" min="0" max="45" value="${Number(theme.pass_background_overlay??0)}"></div>
+          </div>
+          <div class="inline-fields">
+            <div class="field"><label>Horizontal image focus (0–100)</label><input id="editPassBackgroundX" type="number" min="0" max="100" value="${Number(theme.pass_background_position_x??50)}"></div>
+            <div class="field"><label>Vertical image focus (0–100)</label><input id="editPassBackgroundY" type="number" min="0" max="100" value="${Number(theme.pass_background_position_y??50)}"></div>
+          </div>
+          <p class="footnote">For a portrait image, start with Cover and focus 50 / 50. Use Contain to avoid cropping important temple artwork.</p>
+          <div class="divider"></div><h3>Pass element layout</h3>
+          <div class="notice">The QR stays horizontally centred for reliable scanning. Adjust the vertical positions and sponsor size below to prevent artwork and text from overlapping.</div>
+          <div class="inline-fields">
+            <div class="field"><label>Title top (20–120 px)</label><input id="editPassTitleY" type="number" min="20" max="120" value="${Number(theme.pass_title_y??44)}"></div>
+            <div class="field"><label>Sponsor top (130–330 px)</label><input id="editPassSponsorY" type="number" min="130" max="330" value="${Number(theme.pass_sponsor_y??165)}"></div>
+          </div>
+          <div class="inline-fields">
+            <div class="field"><label>Sponsor width (130–420 px)</label><input id="editPassSponsorWidth" type="number" min="130" max="420" value="${Number(theme.pass_sponsor_width??280)}"></div>
+            <div class="field"><label>Guest details top (210–430 px)</label><input id="editPassContentY" type="number" min="210" max="430" value="${Number(theme.pass_content_y??280)}"></div>
+            <div class="field"><label>QR top (390–760 px)</label><input id="editPassQrY" type="number" min="390" max="760" value="${Number(theme.pass_qr_y??480)}"></div>
+          </div>
+          <div class="field"><label><input id="editPassShowSponsor" type="checkbox" style="width:auto;min-height:0" ${(Object.prototype.hasOwnProperty.call(theme,'pass_show_sponsor')?theme.pass_show_sponsor:(Object.prototype.hasOwnProperty.call(theme,'sponsor_enabled')?theme.sponsor_enabled:isDiwali))?'checked':''}> Show sponsor logo on the QR pass</label></div>
+          <div class="field"><label>Text colour on artwork</label><input id="editPassTextColor" type="color" value="${safe(theme.pass_text_color||(theme.pass_background_image?'#4A1820':'#FFFFFF'))}"></div>
+          <div class="field"><label>Secondary text colour</label><input id="editPassMutedTextColor" type="color" value="${safe(theme.pass_muted_text_color||(theme.pass_background_image?'#713B43':'#FFE6A6'))}"></div>
           <div class="divider"></div><h3>QR code appearance</h3><p class="muted">The QR verification token remains protected. You can customise how the code looks.</p>
           <div class="inline-fields"><div class="field"><label>QR foreground</label><input id="editPassQrForeground" type="color" value="${safe(theme.pass_qr_foreground||'#111111')}"></div><div class="field"><label>QR background</label><input id="editPassQrBackground" type="color" value="${safe(theme.pass_qr_background||'#FFFFFF')}"></div><div class="field"><label>Pass border colour</label><input id="editPassBorderColor" type="color" value="${safe(theme.pass_border_color||theme.pass_accent||theme.accent||'#FF7518')}"></div></div>
           <div class="inline-fields"><div class="field"><label>QR size (220–430 px)</label><input id="editPassQrSize" type="number" min="220" max="430" step="10" value="${Number(theme.pass_qr_size||360)}"></div><div class="field"><label>QR quiet-zone border (1–8)</label><input id="editPassQrBorder" type="number" min="1" max="8" value="${Number(theme.pass_qr_border||4)}"></div><div class="field"><label>Pass border width (2–12)</label><input id="editPassBorderWidth" type="number" min="2" max="12" value="${Number(theme.pass_border_width||5)}"></div><div class="field"><label>QR error correction</label><select id="editPassQrError"><option value="H" ${(theme.pass_qr_error_correction||'H')==='H'?'selected':''}>H — highest (recommended)</option><option value="Q" ${theme.pass_qr_error_correction==='Q'?'selected':''}>Q — high</option><option value="M" ${theme.pass_qr_error_correction==='M'?'selected':''}>M — medium</option><option value="L" ${theme.pass_qr_error_correction==='L'?'selected':''}>L — low</option></select></div></div>
@@ -1380,7 +1404,7 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
       brand_logo_image:$('editBrandLogoImage').value,hero_banner_url:$('editHeroBanner').value,hero_banner_image:$('editHeroBannerImage').value,hero_badge:$('editHeroBadge').value,
       sponsor_enabled:$('editSponsorEnabled').checked,sponsor_label:$('editSponsorLabel').value,sponsor_logo_url:$('editSponsorLogo').value,sponsor_logo_image:$('editSponsorLogoImage').value,sponsor_alt:$('editSponsorAlt').value,
       food_collection_enabled:$('editFoodCollectionEnabled').checked,
-      pass_background_image:$('editPassBackgroundImage').value,pass_title:$('editPassTitle').value,pass_subtitle:$('editPassSubtitle').value,pass_guest_label:$('editPassGuestLabel').value,
+      pass_background_image:$('editPassBackgroundImage').value,pass_background_fit:$('editPassBackgroundFit').value,pass_background_position_x:Number($('editPassBackgroundX').value),pass_background_position_y:Number($('editPassBackgroundY').value),pass_background_overlay:Number($('editPassBackgroundOverlay').value),pass_title_y:Number($('editPassTitleY').value),pass_sponsor_y:Number($('editPassSponsorY').value),pass_sponsor_width:Number($('editPassSponsorWidth').value),pass_content_y:Number($('editPassContentY').value),pass_qr_y:Number($('editPassQrY').value),pass_show_sponsor:$('editPassShowSponsor').checked,pass_text_color:$('editPassTextColor').value,pass_muted_text_color:$('editPassMutedTextColor').value,pass_sponsor_label:$('editSponsorLabel').value||'Powered by',pass_title:$('editPassTitle').value,pass_subtitle:$('editPassSubtitle').value,pass_guest_label:$('editPassGuestLabel').value,
       pass_name_label:$('editPassNameLabel').value,pass_phone_label:$('editPassPhoneLabel').value,pass_food_label:$('editPassFoodLabel').value,
       pass_residence_label:$('editPassResidenceLabel').value,pass_hostel_label:$('editPassHostelLabel').value,pass_apartment_label:$('editPassApartmentLabel').value,
       pass_room_label:$('editPassRoomLabel').value,pass_code_label:$('editPassCodeLabel').value,pass_date_label:$('editPassDateLabel').value,
@@ -1445,30 +1469,33 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
       slot.remove.addEventListener('click',()=>{slot.value.value='';slot.input.value='';renderArtworkPreview(slot);toast(slot.label+' upload removed. Save event settings to apply.');});
     });
     const backgroundInput=$('editPassBackgroundUpload'),backgroundValue=$('editPassBackgroundImage'),backgroundPreview=$('passBackgroundPreview');
-    const showPassBackground=(note='')=>{const value=backgroundValue.value;backgroundPreview.innerHTML=(value?'<img alt="QR pass background preview" style="display:block;width:min(100%,260px);max-height:220px;object-fit:cover;border-radius:12px;border:1px solid var(--line)" src="'+safe(value)+'">':'<p class="muted">No custom background uploaded. Event colour will be used.</p>')+(note?'<p class="muted" style="margin-top:8px">'+safe(note)+'</p>':'');};
+    const showPassBackground=(note='')=>{const value=backgroundValue.value;backgroundPreview.innerHTML=(value?'<img alt="QR pass background preview" style="display:block;width:min(100%,260px);max-height:260px;object-fit:contain;border-radius:12px;border:1px solid var(--line);background:#fff" src="'+safe(value)+'">':'<p class="muted">No custom background uploaded. Event colour will be used.</p>')+(note?'<p class="muted" style="margin-top:8px">'+safe(note)+'</p>':'');};
     const compressPassBackground=async(file)=>{
+      if(!file||!['image/png','image/jpeg','image/webp'].includes(file.type))throw new Error('Choose a PNG, JPG or WebP image.');
+      if(file.size>25*1024*1024)throw new Error('The original image is over 25 MB. Choose a smaller image.');
       const sourceUrl=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result||''));reader.onerror=()=>reject(new Error('Could not read this image. Try another file.'));reader.readAsDataURL(file);});
-      const img=await new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=()=>reject(new Error('This image could not be decoded. Please try a JPG, PNG or WebP image.'));image.src=sourceUrl;});
-      if(img.naturalWidth*img.naturalHeight>80000000)throw new Error('This image is too large to process. Please choose a smaller original image.');
-      // Use a 3:4 pass canvas. Cover-crop and upscale small uploads so the backend
-      // always receives dimensions within its accepted range (320x420 to 20 MP).
-      const canvas=document.createElement('canvas');canvas.width=900;canvas.height=1200;
+      const img=await new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=()=>reject(new Error('This image could not be decoded. Please try another JPG, PNG or WebP image.'));image.src=sourceUrl;});
+      if(!img.naturalWidth||!img.naturalHeight||img.naturalWidth*img.naturalHeight>80000000)throw new Error('Image dimensions are too large to process.');
+      // Preserve the entire source aspect ratio. Cropping is selected later by
+      // the admin (cover/contain/stretch) and performed consistently by Pillow.
+      let scale=Math.min(1,1400/img.naturalWidth,1800/img.naturalHeight);
+      scale=Math.max(scale,320/img.naturalWidth,420/img.naturalHeight);
+      const width=Math.round(img.naturalWidth*scale),height=Math.round(img.naturalHeight*scale);
+      if(width>1800||height>1800||width*height>20000000)throw new Error('This image aspect ratio is too extreme for the pass canvas. Please crop it closer to portrait before uploading.');
+      const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;
       const ctx=canvas.getContext('2d');if(!ctx)throw new Error('Your browser could not process this image.');
-      const scale=Math.max(canvas.width/img.naturalWidth,canvas.height/img.naturalHeight);
-      const drawWidth=img.naturalWidth*scale,drawHeight=img.naturalHeight*scale;
-      const offsetX=(canvas.width-drawWidth)/2,offsetY=(canvas.height-drawHeight)/2;
-      ctx.fillStyle='#170F24';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,offsetX,offsetY,drawWidth,drawHeight);
+      ctx.drawImage(img,0,0,width,height);
       let blob=null;
-      for(const quality of [0.88,0.82,0.76,0.70,0.64,0.58,0.52,0.46]){
+      for(const quality of [0.88,0.82,0.76,0.70,0.64,0.58,0.52,0.46,0.40]){
         blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',quality));
         if(blob&&blob.size<=900*1024)break;
       }
-      if(!blob||blob.size>1024*1024)throw new Error('Could not compress this image below 1 MB. Please choose a simpler image.');
+      if(!blob||blob.size>1024*1024)throw new Error('Could not compress this image below 1 MB. Please choose a simpler or smaller image.');
       const dataUrl=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result||''));reader.onerror=()=>reject(new Error('Could not prepare the compressed image.'));reader.readAsDataURL(blob);});
       return {dataUrl,blob,original:file.size,width:canvas.width,height:canvas.height};
     };
     showPassBackground();
-    backgroundInput.addEventListener('change',async()=>{const file=backgroundInput.files&&backgroundInput.files[0];if(!file)return;if(!['image/png','image/jpeg','image/webp'].includes(file.type)){toast('Choose a PNG, JPG or WebP image.',true);backgroundInput.value='';return;}const previous=backgroundValue.value;showPassBackground('Compressing image…');try{const result=await compressPassBackground(file);backgroundValue.value=result.dataUrl;const before=(result.original/1024).toFixed(0),after=(result.blob.size/1024).toFixed(0);showPassBackground('Auto-compressed: '+before+' KB → '+after+' KB · '+result.width+' × '+result.height+' px · JPEG (3:4 crop)');toast('Image compressed and loaded. Save event settings to apply it.');}catch(err){backgroundValue.value=previous;showPassBackground();toast(err.message||'Image compression failed.',true);backgroundInput.value='';}});
+    backgroundInput.addEventListener('change',async()=>{const file=backgroundInput.files&&backgroundInput.files[0];if(!file)return;if(!['image/png','image/jpeg','image/webp'].includes(file.type)){toast('Choose a PNG, JPG or WebP image.',true);backgroundInput.value='';return;}const previous=backgroundValue.value;showPassBackground('Compressing image…');try{const result=await compressPassBackground(file);backgroundValue.value=result.dataUrl;const before=(result.original/1024).toFixed(0),after=(result.blob.size/1024).toFixed(0);showPassBackground('Auto-compressed: '+before+' KB → '+after+' KB · '+result.width+' × '+result.height+' px · full aspect ratio preserved');toast('Image compressed and loaded. Save event settings to apply it.');}catch(err){backgroundValue.value=previous;showPassBackground();toast(err.message||'Image compression failed.',true);backgroundInput.value='';}});
     $('removePassBackground').addEventListener('click',()=>{backgroundValue.value='';backgroundInput.value='';showPassBackground();toast('Custom background removed. Save settings to apply.');});
     $('previewQrPass').addEventListener('click',async()=>{
       const button=$('previewQrPass'),target=$('qrPassPreview');
