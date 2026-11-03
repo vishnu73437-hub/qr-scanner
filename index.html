@@ -1592,6 +1592,8 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
     let selectedPassLayer = 'qr';
     const passLayerNames = {qr:'QR code',guest_name:'Guest name',pass_code:'Pass code',event_date:'Event date',event_time:'Event time',venue:'Venue'};
     const passEditor = $('passVisualEditor');
+    const isDeepotsavVisualMode=String((state.event&&state.event.name)||$('editName')?.value||'').toLowerCase().includes('deepotsav');
+    if(passEditor&&!isDeepotsavVisualMode)passEditor.hidden=true;
     function clampPassLayer(layer){
       layer.x=Math.max(0,Math.min(1024-layer.width,Math.round(Number(layer.x)||0)));
       layer.y=Math.max(0,Math.min(1536-layer.height,Math.round(Number(layer.y)||0)));
@@ -1627,6 +1629,12 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
           e.preventDefault();e.stopPropagation();
           selectedPassLayer=handle.dataset.passLayer;
           const id=selectedPassLayer,item=passLayout[id],canvas=$('passEditorCanvas'),rect=canvas.getBoundingClientRect();
+          document.querySelectorAll('.pass-layer-handle').forEach(h=>{h.classList.toggle('selected',h===handle);h.querySelector('.resize-handle')?.remove();});
+          handle.insertAdjacentHTML('beforeend','<span class="resize-handle" aria-hidden="true"></span>');
+          $('passEditorLayer').value=id;$('passLayerX').value=item.x;$('passLayerY').value=item.y;
+          $('passLayerWidth').value=item.width;$('passLayerHeight').value=item.height;$('passLayerFont').value=item.font_size;
+          $('passLayerRotation').value=item.rotation;$('passLayerColor').value=item.color||'#5A1720';$('passLayerAlign').value=item.align||'left';$('passLayerVisible').checked=item.visible!==false;
+          const isQr=id==='qr';$('passLayerFont').disabled=isQr;$('passLayerRotation').disabled=isQr;$('passLayerColor').disabled=isQr;$('passLayerAlign').disabled=isQr;$('passLayerVisible').disabled=isQr;
           const resize=!!e.target.closest('.resize-handle');
           const start={x:e.clientX,y:e.clientY,left:item.x,top:item.y,width:item.width,height:item.height};
           handle.setPointerCapture(e.pointerId);
@@ -1636,11 +1644,12 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
             else{item.x=Math.round(start.left+dx);item.y=Math.round(start.top+dy);}
             if(id==='qr'&&resize){const side=Math.max(100,Math.min(item.width,item.height));item.width=side;item.height=side;}
             item.x=Math.max(0,Math.min(1024-item.width,item.x));item.y=Math.max(0,Math.min(1536-item.height,item.y));
-            renderPassEditor();
+            handle.style.left=(item.x/1024*100)+'%';handle.style.top=(item.y/1536*100)+'%';
+            handle.style.width=(item.width/1024*100)+'%';handle.style.height=(item.height/1536*100)+'%';
+            $('passLayerX').value=item.x;$('passLayerY').value=item.y;$('passLayerWidth').value=item.width;$('passLayerHeight').value=item.height;
           };
-          const done=()=>{handle.removeEventListener('pointermove',move);handle.removeEventListener('pointerup',done);handle.removeEventListener('pointercancel',done);};
+          const done=()=>{handle.removeEventListener('pointermove',move);handle.removeEventListener('pointerup',done);handle.removeEventListener('pointercancel',done);renderPassEditor();};
           handle.addEventListener('pointermove',move);handle.addEventListener('pointerup',done);handle.addEventListener('pointercancel',done);
-          renderPassEditor();
         });
       });
     }
@@ -1656,7 +1665,7 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
 
     function collectTheme(){return {
       primary:$('editPrimary').value,accent:$('editAccent').value,background:$('editBackground').value,gold:$('editGold').value,
-      pass_layout:{version:1,elements:passLayout},
+      pass_layout:passEditor&&!passEditor.hidden?{version:1,elements:passLayout}:(theme.pass_layout||null),
       pass_background:$('editPassBackground').value,pass_accent:$('editPassAccent').value,pass_gold:$('editPassGold').value,
       app_title:$('editAppTitle').value,app_subtitle:$('editAppSubtitle').value,brand_logo_url:$('editBrandLogo').value,
       brand_logo_image:$('editBrandLogoImage').value,hero_banner_url:$('editHeroBanner').value,hero_banner_image:$('editHeroBannerImage').value,hero_badge:$('editHeroBadge').value,
