@@ -1198,28 +1198,37 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     $('startCamera')?.addEventListener('click',startScanner);$('stopCamera')?.addEventListener('click',stopScanner);
     $('openDedicatedScanner')?.addEventListener('click',()=>openScannerStandalone());$('scannerBack')?.addEventListener('click',()=>closeScannerStandalone());
     state.checkpoints=[];state.checkpointAccessBlocked=false;
-    try{
-      const cp=await post('/api/checkpoints',{event_id:state.eventId});
-      state.checkpoints=Array.isArray(cp.checkpoints)?cp.checkpoints:[];
-      if(state.staffRole==='checkpoint'&&!state.checkpoints.length){
-        state.checkpointAccessBlocked=true;
-        $('startCamera')?.setAttribute('disabled','disabled');$('verifyManualPass')?.setAttribute('disabled','disabled');
-        showScanFeedback('danger','NO CHECKPOINT ASSIGNED','Your account has no enabled checkpoint assigned for this event. Ask an admin to assign your name to an enabled station.','BACK TO WORKSPACE',()=>closeScannerStandalone());
-      }
-    }catch(err){
-      const detail=String(err?.message||'');
-      const assignmentMissing=state.staffRole==='checkpoint'&&/no (enabled )?checkpoint station is assigned|none of your assigned checkpoint stations/i.test(detail);
-      if(assignmentMissing){
-        state.checkpointAccessBlocked=true;
-        $('startCamera')?.setAttribute('disabled','disabled');$('verifyManualPass')?.setAttribute('disabled','disabled');
-        showScanFeedback('danger','NO CHECKPOINT ASSIGNED',detail,'BACK TO WORKSPACE',()=>closeScannerStandalone());
-      }else toast('Assigned checkpoints could not be loaded: '+detail,true);
+    if(state.staffRole==='checkpoint'){
+      await refreshCheckpointAccess();
+    }else{
+      try{const cp=await post('/api/checkpoints',{event_id:state.eventId});state.checkpoints=Array.isArray(cp.checkpoints)?cp.checkpoints:[];}
+      catch(err){toast('Assigned checkpoints could not be loaded: '+String(err?.message||err),true);}
     }
     if(state.scanHandling&&state.scanCurrentQr){
       document.body.classList.add('scanner-has-guest');
       if(state.scanPendingAction)showScanFeedback('danger','ACTION NOT YET CONFIRMED','A previous guest action still needs verification. Retry the save before scanning another guest.','RETRY / CHECK STATUS',retryPendingScanAction);
       else if(state.guest){renderScannedGuest();if(state.scanProofPending)showScanFeedback('warning','PROOF STILL REQUIRED','Store the guest ID proof or explicitly record No Proof Provided before scanning the next guest.','CONTINUE TO PROOF',()=>hideScanFeedback());}
       else showScanFeedback('warning','VERIFICATION INTERRUPTED','This guest pass was not fully checked. Verify it again before admitting the guest.','RETRY VERIFY',()=>lookupGuest(state.scanCurrentQr),'NEXT GUEST',releaseGuestScanLock);
+    }
+  }
+  async function refreshCheckpointAccess(){
+    state.checkpointAccessBlocked=true;
+    $('startCamera')?.setAttribute('disabled','disabled');$('verifyManualPass')?.setAttribute('disabled','disabled');
+    try{
+      const cp=await post('/api/checkpoints',{event_id:state.eventId});
+      state.checkpoints=Array.isArray(cp.checkpoints)?cp.checkpoints:[];
+      if(!state.checkpoints.length){
+        showScanFeedback('danger','NO ENABLED STATION','Your account has no enabled checkpoint assigned for this event. Ask an admin to assign your name to an enabled station, then retry this check.','RETRY ACCESS CHECK',refreshCheckpointAccess,'BACK TO WORKSPACE',()=>closeScannerStandalone());
+        return false;
+      }
+      state.checkpointAccessBlocked=false;
+      $('startCamera')?.removeAttribute('disabled');$('verifyManualPass')?.removeAttribute('disabled');
+      hideScanFeedback();toast('Assigned checkpoint access verified.');
+      return true;
+    }catch(err){
+      const detail=String(err?.message||'Station access could not be verified.');
+      showScanFeedback('danger','STATION ACCESS UNAVAILABLE','EventHub could not verify your assigned station. Do not scan until this check succeeds. '+detail,'RETRY ACCESS CHECK',refreshCheckpointAccess,'BACK TO WORKSPACE',()=>closeScannerStandalone());
+      return false;
     }
   }
   async function startScanner() {
