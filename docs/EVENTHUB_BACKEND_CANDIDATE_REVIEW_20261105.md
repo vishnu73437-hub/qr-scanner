@@ -43,3 +43,7 @@ A portability defect was found in the original `test_staff_roles.py`: it read `/
 ## Safety
 
 Do not replace the live Botkeep entry point or merge the frontend PR solely on the basis of these isolated tests. Preserve the existing database files, `.env`, bot token, Sheets credentials, startup command and Botkeep process configuration. Deploy frontend and backend separately after exact-source reconciliation and a verified backup/restore rehearsal.
+
+## Frontend/backend action-name compatibility
+
+A static cross-check was also run between the current staging `index.html` and the 361,211-byte backend candidate. All 40 distinct `adminCall(...)` action names used by the frontend were found in the backend candidate's admin action dispatch. No frontend admin action name was missing. This is a source-level contract check only; it does not replace authenticated HTTP requests against a running Botkeep instance.
