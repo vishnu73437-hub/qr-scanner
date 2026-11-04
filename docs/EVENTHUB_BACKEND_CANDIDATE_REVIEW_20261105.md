@@ -2,35 +2,27 @@
 
 ## Candidate identity
 
-- Base source: saved Library file bot(20261104-204816).py; this is not a fresh export from the running Botkeep process.
-- Final bot.py size: 364,251 bytes.
-- Final candidate bot.py SHA-256: 970d88a75bb0b860afe90895d197f5625fab5ace5f6657c61acb34211eef808c.
-- Final release ZIP: 88,423 bytes.
-- Final release ZIP SHA-256: a80986282984ebb911f08308bf26f538bf2ed2726cadc35f1992a37b86d43cec.
+- Base source: saved Library file bot(20261104-204816).py; not a fresh export from the running Botkeep process.
+- Final bot.py size: 365,412 bytes.
+- Final candidate bot.py SHA-256: 0510c10f9df31b9f3884c3d168f07f33ed8ecab9ab7a086fbf9033372661a848.
+- Final release ZIP: 89,817 bytes.
+- Final release ZIP SHA-256: 10b2b54cf44fd6568f43927d7eb0ea03f641fd64dac615e2520a31d67c34b5bd.
 
 ## Issues found and fixed during the audit
 
 1. **Checkpoint-role fail-open fallback:** checkpoint-only volunteers with no explicit assignment previously retained legacy event-wide checkpoint access. The final backend requires at least one assigned enabled station for guest lookup, checkpoint list, volunteer dashboard and checkpoint scan. A scan is accepted only at an explicitly assigned station.
-2. **Blocked global users in assignment picker:** the global-volunteer arm of checkpoint_team now filters blocked profiles. The backend additionally rejects blocked Telegram profiles at event-role, checkpoint and core/global assignment endpoints, even if a stale/manual request bypasses the picker.
-3. **Volunteer scanner preflight:** the staging frontend disables both camera and manual verification when a checkpoint-only volunteer has no enabled station and directs them to the workspace/admin.
-4. **Orphaned checkpoint assignment after removing core access:** cleanup now preserves an assignment only when that same event still has an event-specific checkpoint role. It removes stale assignments belonging to event-scoped entry/food/proof/scanner roles and assignments with no event role, while preserving legitimate checkpoint-role assignments.
-
-## Backend functionality retained
-
-- Additive bot_users.display_name / username migration and unique checkpoint assignment storage.
-- Named Admin candidate picker, checkpoint team, assignment and removal actions.
-- Event-specific and core/global volunteer access remain separate.
-- Multiple station assignments per volunteer; removing one station preserves the others.
-- Blocked profile state is not cleared by opening the Mini App; blocked users are rejected by assignment endpoints.
-- Checkpoint deletion, event cleanup and volunteer cleanup handle assignment rows.
-- Exact station authorization is enforced by the backend, not merely hidden in the UI.
+2. **Blocked global users in assignment picker:** checkpoint_team filters blocked profiles. The backend additionally rejects blocked Telegram profiles at event-role, checkpoint and core/global assignment endpoints, even if a stale/manual request bypasses the picker.
+3. **Volunteer scanner preflight:** the staging frontend disables both camera and manual verification when a checkpoint-only volunteer has no enabled station. If the station-list request fails, the scanner stays blocked until the station-access check succeeds.
+4. **Orphaned checkpoint assignment after removing core access:** cleanup preserves an assignment only when that same event still has an event-specific checkpoint role. It removes stale assignments belonging to event-scoped entry/food/proof/scanner roles and assignments with no event role, while preserving legitimate checkpoint-role assignments.
+5. **Blocked-status regression:** /api/role previously reset the blocked flag when the Mini App opened. It now refreshes last-seen/name metadata without clearing a blocked flag; an actual /start interaction can reactivate the user.
+6. **Shared blocked-status propagation:** Telegram delivery failures indicating blocked/deactivated/chat-not-found now upsert blocked status into both the shared registry and current event database. This makes Admin picker filters consistent with announcement delivery results, including when a user had no registry row yet.
 
 ## Isolated checks rerun against the final packaged source
 
 - Python bytecode compilation for bot.py and both tests: PASS.
-- test_staff_roles.py: PASS, including role resolution, role-to-action matrix, dashboard route and cross-event isolation.
-- test_checkpoint_assignments.py: PASS, including no-assignment fail-closed checks, exact-station authorization, blocked candidate filtering, blocked endpoint rejection guards, name selection, isolated SQLite query execution, and core-access cleanup that preserves only an event-specific checkpoint role.
-- Package SHA-256 values recorded in SHA256SUMS.txt and independently recomputed after packaging.
+- test_staff_roles.py: PASS, including role resolution, role-to-action matrix, dashboard route, cross-event isolation and Mini App blocked-state preservation.
+- test_checkpoint_assignments.py: PASS, including no-assignment fail-closed checks, exact-station authorization, blocked candidate filtering, blocked endpoint rejection guards, blocked-status propagation to both databases, name selection, isolated SQLite query execution, and core-access cleanup that preserves only an event-specific checkpoint role.
+- Package SHA-256 values recorded in SHA256SUMS.txt and recomputed after packaging.
 
 Tests use disposable SQLite databases and AST/source checks. They do not connect to Botkeep, Telegram, Google Sheets or physical Android devices.
 
