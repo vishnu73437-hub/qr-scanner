@@ -51,6 +51,11 @@
 .scan-feedback-card .btn{border-radius:var(--ui-button-radius,16px)}
 .scan-feedback-card:before{background:linear-gradient(90deg,transparent,var(--ui-dialog-accent,#e5b85c),transparent)}
 .scan-feedback-card .scan-feedback-icon{color:var(--ui-dialog-accent,#e5b85c);border-color:color-mix(in srgb,var(--ui-dialog-accent,#e5b85c) 27%,transparent);background:color-mix(in srgb,var(--ui-dialog-accent,#e5b85c) 13%,transparent)}
+.field input,.field textarea,.field select,.input{background:var(--ui-input-bg,#100d1b);color:var(--text)}
+.btn.primary{background:var(--ui-button-bg,var(--accent));color:var(--ui-button-text,#170f18)}
+body.interface-button-outline .btn.primary{background:transparent;color:var(--ui-button-bg,var(--accent));border:2px solid var(--ui-button-bg,var(--accent))}
+body.interface-button-soft .btn.primary{background:color-mix(in srgb,var(--ui-button-bg,var(--accent)) 18%,var(--panel));color:var(--text);border:1px solid color-mix(in srgb,var(--ui-button-bg,var(--accent)) 45%,var(--line))}
+body.interface-no-card-shadow .card{box-shadow:none}
 .card{border-radius:var(--ui-card-radius,18px)}
 .scan-feedback-backdrop{background:rgba(8,7,18,var(--ui-backdrop-dim,.72));backdrop-filter:blur(var(--ui-dialog-blur,16px)) saturate(125%);-webkit-backdrop-filter:blur(var(--ui-dialog-blur,16px)) saturate(125%)}
 body.interface-compact .card{padding:14px}body.interface-compact .section{gap:8px}
@@ -598,6 +603,18 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     root.style.setProperty('--bg',background);root.style.setProperty('--panel',primary);root.style.setProperty('--panel2',shade(primary,.10));
     root.style.setProperty('--accent',accent);root.style.setProperty('--gold',gold);
     const uiNumber=(value,fallback,min,max)=>{const n=Number(value);return Number.isFinite(n)?Math.max(min,Math.min(max,n)):fallback;};
+    root.style.setProperty('--panel',themeColour(t.interface_surface,primary));
+    root.style.setProperty('--panel2',themeColour(t.interface_surface_alt,shade(primary,.10)));
+    root.style.setProperty('--text',themeColour(t.interface_text,'#F8F5FB'));
+    root.style.setProperty('--muted',themeColour(t.interface_muted,'#BCB4C9'));
+    root.style.setProperty('--line',themeColour(t.interface_line,'#FFFFFF18'));
+    root.style.setProperty('--ui-input-bg',themeColour(t.interface_input_bg,'#100D1B'));
+    root.style.setProperty('--ui-button-bg',themeColour(t.interface_button_bg,accent));
+    root.style.setProperty('--ui-button-text',themeColour(t.interface_button_text,'#170F18'));
+    root.style.setProperty('--radius',uiNumber(t.interface_global_radius,20,8,32)+'px');
+    document.body.classList.toggle('interface-button-outline',t.interface_button_style==='outline');
+    document.body.classList.toggle('interface-button-soft',t.interface_button_style==='soft');
+    document.body.classList.toggle('interface-no-card-shadow',t.interface_card_shadow===false);
     root.style.setProperty('--ui-dialog-bg',themeColour(t.interface_dialog_bg,'#1C1E2D'));
     root.style.setProperty('--ui-dialog-text',themeColour(t.interface_dialog_text,'#F8F7FC'));
     root.style.setProperty('--ui-dialog-muted',themeColour(t.interface_dialog_muted,'#C5C7D4'));
@@ -1866,6 +1883,25 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
           <div class="inline-fields"><div class="field"><label>Primary colour</label><input id="editPrimary" type="color" value="${safe(theme.primary||(isDiwali?'#32104d':'#25113b'))}"></div><div class="field"><label>Accent colour</label><input id="editAccent" type="color" value="${safe(theme.accent||(isDiwali?'#d9b15f':'#ff7518'))}"></div><div class="field"><label>Background colour</label><input id="editBackground" type="color" value="${safe(theme.background||(isDiwali?'#190d2b':'#170F24'))}"></div><div class="field"><label>Gold / highlight</label><input id="editGold" type="color" value="${safe(theme.gold||(isDiwali?'#d9b15f':'#ffd166'))}"></div></div>
           <div class="divider"></div><h3>🎨 Interface Studio — app-wide appearance</h3>
           <p class="muted">These controls apply to this event's Mini App, including scanner dialogs. Changes are saved with this event and can be previewed before saving.</p>
+          <h4>Whole app theme</h4>
+          <div class="inline-fields">
+            <div class="field"><label>Card / panel surface</label><input id="editUiSurface" type="color" value="${safe(theme.interface_surface||theme.primary||'#211C2D')}"></div>
+            <div class="field"><label>Secondary surface</label><input id="editUiSurfaceAlt" type="color" value="${safe(theme.interface_surface_alt||'#2B2438')}"></div>
+            <div class="field"><label>Main text</label><input id="editUiText" type="color" value="${safe(theme.interface_text||'#F8F5FB')}"></div>
+            <div class="field"><label>Muted text</label><input id="editUiMuted" type="color" value="${safe(theme.interface_muted||'#BCB4C9')}"></div>
+          </div>
+          <div class="inline-fields">
+            <div class="field"><label>Divider / border</label><input id="editUiLine" type="color" value="${safe(theme.interface_line||'#FFFFFF')}"></div>
+            <div class="field"><label>Input background</label><input id="editUiInputBg" type="color" value="${safe(theme.interface_input_bg||'#100D1B')}"></div>
+            <div class="field"><label>Button background</label><input id="editUiButtonBg" type="color" value="${safe(theme.interface_button_bg||theme.accent||'#FF7518')}"></div>
+            <div class="field"><label>Button text</label><input id="editUiButtonText" type="color" value="${safe(theme.interface_button_text||'#170F18')}"></div>
+          </div>
+          <div class="inline-fields">
+            <div class="field"><label>Button appearance</label><select id="editUiButtonStyle"><option value="solid" ${(theme.interface_button_style||'solid')==='solid'?'selected':''}>Solid</option><option value="outline" ${theme.interface_button_style==='outline'?'selected':''}>Outline</option><option value="soft" ${theme.interface_button_style==='soft'?'selected':''}>Soft</option></select></div>
+            <div class="field"><label>Global corner radius (8–32 px)</label><input id="editUiGlobalRadius" type="number" min="8" max="32" value="${Number(theme.interface_global_radius??20)}"></div>
+            <div class="field"><label><input id="editUiCardShadow" type="checkbox" style="width:auto;min-height:0" ${theme.interface_card_shadow!==false?'checked':''}> Show card shadows</label></div>
+          </div>
+          <div class="divider"></div><h4>Popup appearance</h4>
           <div class="inline-fields">
             <div class="field"><label>Popup / dialog surface</label><input id="editUiDialogBg" type="color" value="${safe(theme.interface_dialog_bg||'#1C1E2D')}"></div>
             <div class="field"><label>Popup text</label><input id="editUiDialogText" type="color" value="${safe(theme.interface_dialog_text||'#F8F7FC')}"></div>
@@ -2174,6 +2210,10 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
 
     function collectTheme(){const collected={
       primary:$('editPrimary').value,accent:$('editAccent').value,background:$('editBackground').value,gold:$('editGold').value,
+      interface_surface:$('editUiSurface').value,interface_surface_alt:$('editUiSurfaceAlt').value,
+      interface_text:$('editUiText').value,interface_muted:$('editUiMuted').value,interface_line:$('editUiLine').value,
+      interface_input_bg:$('editUiInputBg').value,interface_button_bg:$('editUiButtonBg').value,interface_button_text:$('editUiButtonText').value,
+      interface_button_style:$('editUiButtonStyle').value,interface_global_radius:Number($('editUiGlobalRadius').value),interface_card_shadow:$('editUiCardShadow').checked,
       interface_dialog_bg:$('editUiDialogBg').value,interface_dialog_text:$('editUiDialogText').value,interface_dialog_muted:$('editUiDialogMuted').value,
       interface_dialog_accent:$('editUiDialogAccent').value,interface_dialog_border:$('editUiDialogBorder').value,
       interface_dialog_radius:Number($('editUiDialogRadius').value),interface_card_radius:Number($('editUiCardRadius').value),interface_button_radius:Number($('editUiButtonRadius').value),
