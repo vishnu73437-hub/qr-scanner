@@ -3,10 +3,10 @@
 ## Candidate identity
 
 - Base source: saved Library file bot(20261104-204816).py; not a fresh export from the running Botkeep process.
-- Final bot.py size: 365,412 bytes.
-- Final candidate bot.py SHA-256: 0510c10f9df31b9f3884c3d168f07f33ed8ecab9ab7a086fbf9033372661a848.
-- Final release ZIP: 89,817 bytes.
-- Final release ZIP SHA-256: ff2cc90b1db5bf0db3ee4432c1a5af626471051735f269b030cbb904253dcfd3.
+- Final bot.py size: 365,539 bytes.
+- Final candidate bot.py SHA-256: 163a1d0e6d39de21dfc8c9c2e9af903b64685cd467434fcac238f993e448c0f3.
+- Final release ZIP: 90,000 bytes.
+- Final release ZIP SHA-256: 188e9570aaf94578930a1e359a3bdf89e51a50982264f254f143a52afc585648.
 
 ## Issues found and fixed during the audit
 
@@ -16,12 +16,12 @@
 4. **Orphaned checkpoint assignment after removing core access:** cleanup preserves an assignment only when that same event still has an event-specific checkpoint role. It removes stale assignments belonging to event-scoped entry/food/proof/scanner roles and assignments with no event role, while preserving legitimate checkpoint-role assignments.
 5. **Blocked-status regression:** /api/role previously reset the blocked flag when the Mini App opened. It now refreshes last-seen/name metadata without clearing a blocked flag; an actual /start interaction can reactivate the user.
 6. **Shared blocked-status propagation:** Telegram delivery failures indicating blocked/deactivated/chat-not-found now upsert blocked status into both the shared registry and current event database. This makes Admin picker filters consistent with announcement delivery results, including when a user had no registry row yet.
-7. **Entry-to-proof hand-off:** Entry-role volunteers can now record Entry and then store proof or explicitly confirm No Proof Provided. The backend still denies food, proof return and exit to the Entry role; the scanner remains locked until proof is resolved, while the Proof/Exit role handles return and exit.
+7. **Entry-to-proof hand-off:** Entry-role volunteers can record Entry, then store ID proof or explicitly confirm No Proof Provided. This proof action must be confirmed before the scanner releases the guest. Entry-role volunteers are still denied Food, proof return and Exit; the Proof/Exit role handles proof return and exit.
 
 ## Isolated checks rerun against the final packaged source
 
 - Python bytecode compilation for bot.py and both tests: PASS.
-- test_staff_roles.py: PASS, including role resolution, role-to-action matrix, dashboard route, cross-event isolation and Mini App blocked-state preservation, and Entry-to-proof role gating.
+- test_staff_roles.py: PASS, including role resolution, role-to-action matrix, dashboard route, cross-event isolation, Mini App blocked-state preservation and Entry-to-proof gating.
 - test_checkpoint_assignments.py: PASS, including no-assignment fail-closed checks, exact-station authorization, blocked candidate filtering, blocked endpoint rejection guards, blocked-status propagation to both databases, name selection, isolated SQLite query execution, and core-access cleanup that preserves only an event-specific checkpoint role.
 - Package SHA-256 values recorded in SHA256SUMS.txt and recomputed after packaging.
 
