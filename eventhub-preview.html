@@ -1155,9 +1155,9 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
   }
   async function closeScannerStandalone(push=true) {
     if(state.scanLookupBusy){showScanFeedback('warning','VERIFYING GUEST','Please wait until the server finishes checking this pass. The scanner remains locked.','',null);return false;}
-    if(state.scanProofPending){showScanFeedback('warning','PROOF STILL REQUIRED','Store the guest ID proof or explicitly record No Proof Provided before leaving this guest.','CONTINUE TO PROOF',()=>hideScanFeedback());return false;}
     if(state.scanActionBusy){showScanFeedback('warning','SAVE IN PROGRESS','Please wait for the server to confirm this event record. The scanner remains locked.','',null);return false;}
     if(state.scanPendingAction){showScanFeedback('danger','SAVE NOT CONFIRMED','This guest action still needs verification. Retry or check its status before leaving the scanner.','RETRY / CHECK STATUS',retryPendingScanAction);return false;}
+    if(state.scanProofPending){showScanFeedback('warning','PROOF STILL REQUIRED','Store the guest ID proof or explicitly record No Proof Provided before leaving this guest.','CONTINUE TO PROOF',()=>hideScanFeedback());return false;}
     if(state.scanHandling){hideScanFeedback();state.scanHandling=false;state.scanCurrentQr='';state.scanSource='';state.guest=null;document.body.classList.remove('scanner-has-guest');}
     await stopScanner();
     scannerView=false;document.body.classList.remove('scanner-mode');
@@ -2484,8 +2484,8 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
       if(scannerView){const restoreUrl=new URL(location.href);restoreUrl.searchParams.set('scanner','1');history.pushState({scanner:true,event_id:state.eventId},'',restoreUrl.pathname+restoreUrl.search+restoreUrl.hash);}
       if(state.scanActionBusy)showScanFeedback('warning','SAVE IN PROGRESS','Please wait for backend confirmation. Do not leave or scan another guest.','',null);
       else if(state.scanLookupBusy)showScanFeedback('warning','VERIFYING GUEST','Please wait until pass verification finishes. Do not admit this guest yet.','',null);
+      else if(state.scanPendingAction)showScanFeedback('danger','SAVE NOT CONFIRMED','This action has not yet been confirmed. Retry or check its status before continuing.','RETRY / CHECK STATUS',retryPendingScanAction);
       else if(state.scanProofPending)showScanFeedback('warning','PROOF STILL REQUIRED','Complete ID proof storage or explicitly record No Proof Provided before continuing.','CONTINUE TO PROOF',()=>hideScanFeedback());
-      else showScanFeedback('danger','SAVE NOT CONFIRMED','This action has not yet been confirmed. Retry or check its status before continuing.','RETRY / CHECK STATUS',retryPendingScanAction);
       return;
     }
     if(state.scanHandling){hideScanFeedback();state.scanHandling=false;state.scanCurrentQr='';state.scanSource='';state.scanPendingAction=null;state.guest=null;document.body.classList.remove('scanner-has-guest');}
