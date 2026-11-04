@@ -1255,7 +1255,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
       },()=>{
         if(++state.scanMisses>=8){state.lastScannedQr='';state.scanMisses=0;}
       });
-      if(generation===state.scannerGeneration&&$('startCamera'))$('startCamera').textContent='Scanning…';
+      if(generation===state.scannerGeneration){hideScanFeedback();state.scannerPaused=false;if($('startCamera')){$('startCamera').disabled=true;$('startCamera').textContent='Scanning…';}if($('stopCamera'))$('stopCamera').disabled=false;}
       if(generation!==state.scannerGeneration)await stopScanner();
     } catch(e){
       const failedScanner=state.scanner;state.scanner=null;state.scannerPaused=false;
@@ -1408,13 +1408,27 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     document.body.classList.remove('scanner-has-guest');
     if($('scanResult'))$('scanResult').innerHTML='<div class="notice">Ready for the next guest. Present one QR at a time.</div>';
     const activeScanner=state.scanner;
-    if(activeScanner&&activeScanner.isScanning&&state.scannerPaused){
-      try{activeScanner.resume();state.scannerPaused=false;}
-      catch(err){state.scannerPaused=false;stopScanner().then(()=>{if($('scanResult'))$('scanResult').innerHTML=showNotice('The camera could not resume. Tap Start QR scanner to continue.','error');}).catch(()=>{});}
-    }else if($('startCamera')){
-      $('startCamera').disabled=false;$('startCamera').textContent='Start QR scanner';
+    // html5-qrcode reports isScanning=false while PAUSED. Do not use isScanning
+    // as a prerequisite for resume(): doing so starts a second camera session
+    // while the original MediaStream is still held, causing repeated permission
+    // prompts or "camera not ready" failures on Android/Telegram WebView.
+    if(activeScanner&&state.scannerPaused){
+      try{
+        activeScanner.resume();
+        state.scannerPaused=false;
+        if($('startCamera')){$('startCamera').disabled=true;$('startCamera').textContent='Scanning…';}
+        if($('stopCamera'))$('stopCamera').disabled=false;
+      }catch(err){
+        state.scannerPaused=false;
+        stopScanner().then(()=>{if($('scanResult'))$('scanResult').innerHTML=showNotice('The camera could not resume. Tap Start QR scanner to continue.','error');}).catch(()=>{});
+      }
+    }else if(activeScanner&&activeScanner.isScanning){
+      if($('startCamera')){$('startCamera').disabled=true;$('startCamera').textContent='Scanning…';}
+      if($('stopCamera'))$('stopCamera').disabled=false;
+    }else{
+      if($('startCamera')){$('startCamera').disabled=false;$('startCamera').textContent='Start QR scanner';}
+      if($('stopCamera'))$('stopCamera').disabled=true;
     }
-    if($('stopCamera'))$('stopCamera').disabled=!(activeScanner&&activeScanner.isScanning);
     return true;
   }
   async function fetchFreshGuest(passCode) {
