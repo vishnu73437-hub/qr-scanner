@@ -45,6 +45,23 @@ def main():
     if contents[FILES[0]] != contents[FILES[1]]:
         raise SystemExit("FAIL: index.html and eventhub-preview.html differ")
 
+    # Fail fast if critical event-day safety controls disappear in a later UI edit.
+    source = contents[FILES[0]]
+    required_contracts = {
+        "one-guest camera lock": "beginGuestScanLock(scanned,'camera')",
+        "manual scan lock": "beginGuestScanLock(code,'manual')",
+        "pre/post save verification": "fetchFreshGuest(passCode)",
+        "proof-gated release": "state.scanProofPending",
+        "visible save failure dialog": "SAVE NOT CONFIRMED",
+        "retry / status recovery": "RETRY / CHECK STATUS",
+        "checkpoint assignment preflight": "checkpointAccessBlocked",
+        "admin checkpoint name picker": "Assign volunteer by name",
+        "sticky volunteer action controls": "position:sticky;bottom:calc(env(safe-area-inset-bottom) + 4px)",
+    }
+    missing = [label for label, fragment in required_contracts.items() if fragment not in source]
+    if missing:
+        raise SystemExit("FAIL: missing event-day safety/UI contracts: " + ", ".join(missing))
+
     total = 0
     with tempfile.TemporaryDirectory() as tmp:
         for name, source in contents.items():
