@@ -31,13 +31,43 @@
 .scanner-mode .scanner-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .scanner-mode .scanner-actions .btn{min-height:52px;font-size:15px}
 .scanner-hint{padding:12px;border-radius:14px;border:1px solid color-mix(in srgb,var(--gold) 40%,var(--line));background:color-mix(in srgb,var(--accent) 10%,var(--panel));font-size:13px;color:var(--text)}
-.scan-feedback-backdrop{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;padding:18px;background:#080610d9;backdrop-filter:blur(8px)}
-.scan-feedback-card{width:min(100%,460px);border:2px solid var(--line);border-radius:24px;padding:24px;background:var(--panel);box-shadow:0 24px 80px #000b;text-align:center;max-height:88dvh;overflow:auto}
-.scan-feedback-card.danger{border-color:var(--danger)}.scan-feedback-card.success{border-color:var(--ok)}.scan-feedback-card.warning{border-color:var(--gold)}
-.scan-feedback-icon{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;margin:0 auto 12px;font-size:34px;font-weight:900;background:#ffffff12}
-.scan-feedback-card h2{font-size:clamp(24px,5vw,34px);line-height:1.05;margin:8px 0 12px}.scan-feedback-card p{color:var(--muted);margin:6px 0 18px;overflow-wrap:anywhere}
-.scan-feedback-card .btn{width:100%;min-height:58px;font-size:17px;font-weight:900;margin-top:8px}
-.scan-feedback-card.danger .scan-feedback-icon{background:#ff626d22;color:var(--danger)}.scan-feedback-card.success .scan-feedback-icon{background:#47cf9122;color:var(--ok)}
+.scan-feedback-backdrop{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;padding:20px 16px calc(20px + env(safe-area-inset-bottom));background:rgba(8,7,18,.72);backdrop-filter:blur(16px) saturate(125%);-webkit-backdrop-filter:blur(16px) saturate(125%);animation:scanBackdropIn .2s ease-out}
+.scan-feedback-card{--feedback-accent:#e5b85c;position:relative;isolation:isolate;width:min(100%,430px);max-height:min(82dvh,680px);overflow:auto;text-align:center;padding:30px 26px 24px;border:1px solid color-mix(in srgb,var(--feedback-accent) 42%,#34364a);border-radius:28px;background:radial-gradient(ellipse at 50% 0%,#292b40 0%,#1c1e2d 48%,#151622 100%);color:#f8f7fc;box-shadow:0 28px 90px rgba(0,0,0,.58),inset 0 1px 0 rgba(255,255,255,.10);animation:scanCardIn .28s cubic-bezier(.2,.8,.2,1);overscroll-behavior:contain}
+.scan-feedback-card:before{content:"";position:absolute;z-index:-1;inset:0 18% auto;height:2px;border-radius:0 0 99px 99px;background:linear-gradient(90deg,transparent,var(--feedback-accent),transparent);opacity:.95}
+.scan-feedback-card.danger{--feedback-accent:#ff7181}.scan-feedback-card.success{--feedback-accent:#54d6a0}.scan-feedback-card.warning{--feedback-accent:#e8bb63}
+.scan-feedback-kicker{display:block;margin:0 0 15px;color:var(--muted);font-size:10px;font-weight:900;letter-spacing:2px;text-transform:uppercase}
+.scan-feedback-icon{width:66px;height:66px;border-radius:22px;display:grid;place-items:center;margin:0 auto 17px;font-size:29px;font-weight:850;color:var(--feedback-accent);background:color-mix(in srgb,var(--feedback-accent) 13%,transparent);border:1px solid color-mix(in srgb,var(--feedback-accent) 27%,transparent);box-shadow:0 8px 24px color-mix(in srgb,var(--feedback-accent) 12%,transparent)}
+.scan-feedback-card h2{font-size:clamp(21px,5vw,27px);line-height:1.12;letter-spacing:-.5px;margin:0 0 10px;font-weight:850}
+.scan-feedback-card p{max-width:34ch;margin:0 auto 22px;color:#c5c7d4;font-size:14px;line-height:1.65;overflow-wrap:anywhere}
+.scan-feedback-card .btn{width:100%;min-height:54px;border-radius:16px;font-size:14px;font-weight:850;letter-spacing:.2px;margin-top:9px;box-shadow:0 8px 22px rgba(0,0,0,.16);transition:transform .16s ease,filter .16s ease,opacity .16s ease}
+.scan-feedback-card .btn:active{transform:scale(.985)}.scan-feedback-card .btn:focus-visible{outline:3px solid color-mix(in srgb,var(--feedback-accent) 70%,white);outline-offset:3px}
+.scan-feedback-card .btn:disabled{opacity:.65;cursor:wait;transform:none}
+.scan-feedback-card .btn:not(.danger):not(.success){border:1px solid color-mix(in srgb,var(--feedback-accent) 32%,var(--line))}
+.scan-feedback-card.danger .scan-feedback-icon{color:var(--feedback-accent)}.scan-feedback-card.success .scan-feedback-icon{color:var(--feedback-accent)}
+.scan-feedback-spinner{display:block;width:27px;height:27px;border:3px solid rgba(232,187,99,.24);border-top-color:#e8bb63;border-radius:50%;animation:scanSpin .8s linear infinite}
+@keyframes scanSpin{to{transform:rotate(360deg)}}
+.scan-feedback-card{width:min(100%,var(--ui-dialog-width,430px));border-radius:var(--ui-dialog-radius,28px);background:var(--ui-dialog-bg,radial-gradient(ellipse at 50% 0%,#292b40 0%,#1c1e2d 48%,#151622 100%));color:var(--ui-dialog-text,#f8f7fc);border-color:color-mix(in srgb,var(--ui-dialog-border,#e5b85c) 42%,#34364a)}
+.scan-feedback-card p{color:var(--ui-dialog-muted,#c5c7d4)}
+.scan-feedback-card .btn{border-radius:var(--ui-button-radius,16px)}
+.scan-feedback-card:before{background:linear-gradient(90deg,transparent,var(--ui-dialog-accent,#e5b85c),transparent)}
+.scan-feedback-card .scan-feedback-icon{color:var(--ui-dialog-accent,#e5b85c);border-color:color-mix(in srgb,var(--ui-dialog-accent,#e5b85c) 27%,transparent);background:color-mix(in srgb,var(--ui-dialog-accent,#e5b85c) 13%,transparent)}
+.field input,.field textarea,.field select,.input{background:var(--ui-input-bg,#100d1b);color:var(--text)}
+.btn.primary{background:var(--ui-button-bg,var(--accent));color:var(--ui-button-text,#170f18)}
+body.interface-button-outline .btn.primary{background:transparent;color:var(--ui-button-bg,var(--accent));border:2px solid var(--ui-button-bg,var(--accent))}
+body.interface-button-soft .btn.primary{background:color-mix(in srgb,var(--ui-button-bg,var(--accent)) 18%,var(--panel));color:var(--text);border:1px solid color-mix(in srgb,var(--ui-button-bg,var(--accent)) 45%,var(--line))}
+body.interface-no-card-shadow .card{box-shadow:none}
+.card{border-radius:var(--ui-card-radius,18px)}
+.scan-feedback-backdrop{background:rgba(8,7,18,var(--ui-backdrop-dim,.72));backdrop-filter:blur(var(--ui-dialog-blur,16px)) saturate(125%);-webkit-backdrop-filter:blur(var(--ui-dialog-blur,16px)) saturate(125%)}
+body.interface-compact .card{padding:14px}body.interface-compact .section{gap:8px}
+body.interface-hide-banner .hero-banner{display:none!important}
+body.interface-no-motion *,body.interface-no-motion *:before,body.interface-no-motion *:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+body.interface-header-centered .brand{justify-content:center;text-align:center}body.interface-header-centered .brand-mark{margin-inline:auto}
+body.interface-header-compact header{padding-top:8px;padding-bottom:8px}body.interface-header-compact .brand-mark{width:38px;height:38px}
+.scan-feedback-card .scan-feedback-kicker{color:var(--ui-dialog-muted,#aeb1c2)}
+@keyframes scanBackdropIn{from{opacity:0}to{opacity:1}}
+@keyframes scanCardIn{from{opacity:0;transform:translateY(12px) scale(.975)}to{opacity:1;transform:translateY(0) scale(1)}}
+@media(max-width:480px){.scan-feedback-backdrop{padding-left:14px;padding-right:14px}.scan-feedback-card{padding:26px 20px 20px;border-radius:25px}.scan-feedback-icon{width:60px;height:60px;border-radius:19px}.scan-feedback-card p{font-size:13px}}
+@media(prefers-reduced-motion:reduce){.scan-feedback-backdrop,.scan-feedback-card{animation:none}.scan-feedback-card .btn{transition:none}}
 .scanner-mode .scanner-screen{gap:8px}.scanner-mode .scanner-screen .card{padding:12px}
 .scanner-mode .scanner-screen .scanner-box{min-height:clamp(130px,27vh,230px);padding:6px}
 .scanner-mode .scanner-screen .scanner-box #reader{max-width:520px}
@@ -572,8 +602,38 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     const root=document.documentElement;
     root.style.setProperty('--bg',background);root.style.setProperty('--panel',primary);root.style.setProperty('--panel2',shade(primary,.10));
     root.style.setProperty('--accent',accent);root.style.setProperty('--gold',gold);
+    const uiNumber=(value,fallback,min,max)=>{const n=Number(value);return Number.isFinite(n)?Math.max(min,Math.min(max,n)):fallback;};
+    root.style.setProperty('--panel',themeColour(t.interface_surface,primary));
+    root.style.setProperty('--panel2',themeColour(t.interface_surface_alt,shade(primary,.10)));
+    root.style.setProperty('--text',themeColour(t.interface_text,'#F8F5FB'));
+    root.style.setProperty('--muted',themeColour(t.interface_muted,'#BCB4C9'));
+    root.style.setProperty('--line',themeColour(t.interface_line,'#FFFFFF18'));
+    root.style.setProperty('--ui-input-bg',themeColour(t.interface_input_bg,'#100D1B'));
+    root.style.setProperty('--ui-button-bg',themeColour(t.interface_button_bg,accent));
+    root.style.setProperty('--ui-button-text',themeColour(t.interface_button_text,'#170F18'));
+    root.style.setProperty('--radius',uiNumber(t.interface_global_radius,20,8,32)+'px');
+    document.body.classList.toggle('interface-button-outline',t.interface_button_style==='outline');
+    document.body.classList.toggle('interface-button-soft',t.interface_button_style==='soft');
+    document.body.classList.toggle('interface-no-card-shadow',t.interface_card_shadow===false);
+    root.style.setProperty('--ui-dialog-bg',themeColour(t.interface_dialog_bg,'#1C1E2D'));
+    root.style.setProperty('--ui-dialog-text',themeColour(t.interface_dialog_text,'#F8F7FC'));
+    root.style.setProperty('--ui-dialog-muted',themeColour(t.interface_dialog_muted,'#C5C7D4'));
+    root.style.setProperty('--ui-dialog-accent',themeColour(t.interface_dialog_accent,gold));
+    root.style.setProperty('--ui-dialog-border',themeColour(t.interface_dialog_border,'#E5B85C'));
+    root.style.setProperty('--ui-dialog-radius',uiNumber(t.interface_dialog_radius,28,14,36)+'px');
+    root.style.setProperty('--ui-card-radius',uiNumber(t.interface_card_radius,18,12,28)+'px');
+    root.style.setProperty('--ui-dialog-blur',uiNumber(t.interface_dialog_blur,16,0,24)+'px');
+    root.style.setProperty('--ui-backdrop-dim',uiNumber(t.interface_backdrop_dim,72,30,90)/100);
+    root.style.setProperty('--ui-button-radius',uiNumber(t.interface_button_radius,16,8,24)+'px');
+    root.style.setProperty('--ui-dialog-width',uiNumber(t.interface_dialog_width,430,320,520)+'px');
+    root.style.setProperty('--ui-font-scale',uiNumber(t.interface_font_scale,100,90,115)+'%');root.style.fontSize=uiNumber(t.interface_font_scale,100,90,115)+'%';
+    document.body.classList.toggle('interface-compact',t.interface_density==='compact');
+    document.body.classList.toggle('interface-hide-banner',t.interface_show_banner===false);
+    document.body.classList.toggle('interface-no-motion',t.interface_motion_enabled===false);
+    document.body.classList.toggle('interface-header-centered',t.interface_header_style==='centered');
+    document.body.classList.toggle('interface-header-compact',t.interface_header_style==='compact');
     document.body.classList.toggle('theme-deepotsav',isDiwali);document.body.classList.toggle('theme-halloween',isHalloween);
-    setDeepotsavFireworks(isDiwali);
+    setDeepotsavFireworks(typeof t.interface_fireworks==='boolean'?t.interface_fireworks:isDiwali);
     document.querySelector('meta[name="theme-color"]').content=background;
     const title=document.getElementById('brandTitle'), subtitle=document.getElementById('brandSubtitle'), mark=document.getElementById('brandMark');
     if(title)title.textContent=t.app_title||'KSMU HOSTEL 5 EVENTS';if(subtitle)subtitle.textContent=t.app_subtitle||'EVENT MANAGEMENT';
@@ -1255,7 +1315,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
       },()=>{
         if(++state.scanMisses>=8){state.lastScannedQr='';state.scanMisses=0;}
       });
-      if(generation===state.scannerGeneration&&$('startCamera'))$('startCamera').textContent='Scanning…';
+      if(generation===state.scannerGeneration){hideScanFeedback();state.scannerPaused=false;if($('startCamera')){$('startCamera').disabled=true;$('startCamera').textContent='Scanning…';}if($('stopCamera'))$('stopCamera').disabled=false;}
       if(generation!==state.scannerGeneration)await stopScanner();
     } catch(e){
       const failedScanner=state.scanner;state.scanner=null;state.scannerPaused=false;
@@ -1362,9 +1422,11 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     let layer=$('scanFeedbackLayer');
     if(!layer){layer=document.createElement('div');layer.id='scanFeedbackLayer';layer.className='scan-feedback-backdrop';document.body.appendChild(layer);}
     if(state.scanResumeTimer){clearTimeout(state.scanResumeTimer);state.scanResumeTimer=null;}
+    const isSaving=/^SAVING EVENT RECORD$/i.test(String(title||''));
     const icon=tone==='success'?'✓':(tone==='warning'?'!':'×');
-    layer.innerHTML='<section class="scan-feedback-card '+safe(tone)+'" role="alertdialog" aria-modal="true" aria-labelledby="scanFeedbackTitle" aria-describedby="scanFeedbackMessage">'+
-      '<div class="scan-feedback-icon" aria-hidden="true">'+icon+'</div>'+
+    layer.innerHTML='<section data-animation="'+safe(parseJSON(state.event?.theme_json,{}).interface_dialog_animation||'soft')+'" class="scan-feedback-card '+safe(tone)+'" role="alertdialog" aria-modal="true" aria-labelledby="scanFeedbackTitle" aria-describedby="scanFeedbackMessage">'+
+      '<span class="scan-feedback-kicker">EVENTHUB · SCANNER</span>'+
+      '<div class="scan-feedback-icon'+(isSaving?' is-saving':'')+'" aria-hidden="true">'+(isSaving?'<span class="scan-feedback-spinner"></span>':icon)+'</div>'+
       '<h2 id="scanFeedbackTitle">'+safe(title)+'</h2>'+
       '<p id="scanFeedbackMessage">'+safe(message)+'</p>'+
       (primaryLabel?'<button class="btn '+(tone==='danger'?'danger':(tone==='success'?'success':'primary'))+'" id="scanFeedbackPrimary" type="button">'+safe(primaryLabel)+'</button>':'')+
@@ -1408,13 +1470,27 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     document.body.classList.remove('scanner-has-guest');
     if($('scanResult'))$('scanResult').innerHTML='<div class="notice">Ready for the next guest. Present one QR at a time.</div>';
     const activeScanner=state.scanner;
-    if(activeScanner&&activeScanner.isScanning&&state.scannerPaused){
-      try{activeScanner.resume();state.scannerPaused=false;}
-      catch(err){state.scannerPaused=false;stopScanner().then(()=>{if($('scanResult'))$('scanResult').innerHTML=showNotice('The camera could not resume. Tap Start QR scanner to continue.','error');}).catch(()=>{});}
-    }else if($('startCamera')){
-      $('startCamera').disabled=false;$('startCamera').textContent='Start QR scanner';
+    // html5-qrcode reports isScanning=false while PAUSED. Do not use isScanning
+    // as a prerequisite for resume(): doing so starts a second camera session
+    // while the original MediaStream is still held, causing repeated permission
+    // prompts or "camera not ready" failures on Android/Telegram WebView.
+    if(activeScanner&&state.scannerPaused){
+      try{
+        activeScanner.resume();
+        state.scannerPaused=false;
+        if($('startCamera')){$('startCamera').disabled=true;$('startCamera').textContent='Scanning…';}
+        if($('stopCamera'))$('stopCamera').disabled=false;
+      }catch(err){
+        state.scannerPaused=false;
+        stopScanner().then(()=>{if($('scanResult'))$('scanResult').innerHTML=showNotice('The camera could not resume. Tap Start QR scanner to continue.','error');}).catch(()=>{});
+      }
+    }else if(activeScanner&&activeScanner.isScanning){
+      if($('startCamera')){$('startCamera').disabled=true;$('startCamera').textContent='Scanning…';}
+      if($('stopCamera'))$('stopCamera').disabled=false;
+    }else{
+      if($('startCamera')){$('startCamera').disabled=false;$('startCamera').textContent='Start QR scanner';}
+      if($('stopCamera'))$('stopCamera').disabled=true;
     }
-    if($('stopCamera'))$('stopCamera').disabled=!(activeScanner&&activeScanner.isScanning);
     return true;
   }
   async function fetchFreshGuest(passCode) {
@@ -1805,6 +1881,59 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
           <div class="field"><label>Sponsor image description</label><input id="editSponsorAlt" maxlength="120" value="${safe(theme.sponsor_alt||'Doc Tutorials')}"></div>
           <div class="divider"></div><h3>Mini App colours and QR pass design</h3>
           <div class="inline-fields"><div class="field"><label>Primary colour</label><input id="editPrimary" type="color" value="${safe(theme.primary||(isDiwali?'#32104d':'#25113b'))}"></div><div class="field"><label>Accent colour</label><input id="editAccent" type="color" value="${safe(theme.accent||(isDiwali?'#d9b15f':'#ff7518'))}"></div><div class="field"><label>Background colour</label><input id="editBackground" type="color" value="${safe(theme.background||(isDiwali?'#190d2b':'#170F24'))}"></div><div class="field"><label>Gold / highlight</label><input id="editGold" type="color" value="${safe(theme.gold||(isDiwali?'#d9b15f':'#ffd166'))}"></div></div>
+          <div class="divider"></div><h3>🎨 Interface Studio — app-wide appearance</h3>
+          <p class="muted">These controls apply to this event's Mini App, including scanner dialogs. Changes are saved with this event and can be previewed before saving.</p>
+          <h4>Whole app theme</h4>
+          <div class="inline-fields">
+            <div class="field"><label>Card / panel surface</label><input id="editUiSurface" type="color" value="${safe(theme.interface_surface||theme.primary||'#211C2D')}"></div>
+            <div class="field"><label>Secondary surface</label><input id="editUiSurfaceAlt" type="color" value="${safe(theme.interface_surface_alt||'#2B2438')}"></div>
+            <div class="field"><label>Main text</label><input id="editUiText" type="color" value="${safe(theme.interface_text||'#F8F5FB')}"></div>
+            <div class="field"><label>Muted text</label><input id="editUiMuted" type="color" value="${safe(theme.interface_muted||'#BCB4C9')}"></div>
+          </div>
+          <div class="inline-fields">
+            <div class="field"><label>Divider / border</label><input id="editUiLine" type="color" value="${safe(theme.interface_line||'#FFFFFF')}"></div>
+            <div class="field"><label>Input background</label><input id="editUiInputBg" type="color" value="${safe(theme.interface_input_bg||'#100D1B')}"></div>
+            <div class="field"><label>Button background</label><input id="editUiButtonBg" type="color" value="${safe(theme.interface_button_bg||theme.accent||'#FF7518')}"></div>
+            <div class="field"><label>Button text</label><input id="editUiButtonText" type="color" value="${safe(theme.interface_button_text||'#170F18')}"></div>
+          </div>
+          <div class="inline-fields">
+            <div class="field"><label>Button appearance</label><select id="editUiButtonStyle"><option value="solid" ${(theme.interface_button_style||'solid')==='solid'?'selected':''}>Solid</option><option value="outline" ${theme.interface_button_style==='outline'?'selected':''}>Outline</option><option value="soft" ${theme.interface_button_style==='soft'?'selected':''}>Soft</option></select></div>
+            <div class="field"><label>Global corner radius (8–32 px)</label><input id="editUiGlobalRadius" type="number" min="8" max="32" value="${Number(theme.interface_global_radius??20)}"></div>
+            <div class="field"><label><input id="editUiCardShadow" type="checkbox" style="width:auto;min-height:0" ${theme.interface_card_shadow!==false?'checked':''}> Show card shadows</label></div>
+          </div>
+          <div class="divider"></div><h4>Popup appearance</h4>
+          <div class="inline-fields">
+            <div class="field"><label>Popup / dialog surface</label><input id="editUiDialogBg" type="color" value="${safe(theme.interface_dialog_bg||'#1C1E2D')}"></div>
+            <div class="field"><label>Popup text</label><input id="editUiDialogText" type="color" value="${safe(theme.interface_dialog_text||'#F8F7FC')}"></div>
+            <div class="field"><label>Secondary text</label><input id="editUiDialogMuted" type="color" value="${safe(theme.interface_dialog_muted||'#C5C7D4')}"></div>
+          </div>
+          <div class="inline-fields">
+            <div class="field"><label>Popup accent</label><input id="editUiDialogAccent" type="color" value="${safe(theme.interface_dialog_accent||theme.gold||'#E5B85C')}"></div>
+            <div class="field"><label>Popup border</label><input id="editUiDialogBorder" type="color" value="${safe(theme.interface_dialog_border||'#E5B85C')}"></div>
+          </div>
+          <div class="inline-fields">
+            <div class="field"><label>Popup corner radius (14–36 px)</label><input id="editUiDialogRadius" type="number" min="14" max="36" value="${Number(theme.interface_dialog_radius??28)}"></div>
+            <div class="field"><label>Card corner radius (12–28 px)</label><input id="editUiCardRadius" type="number" min="12" max="28" value="${Number(theme.interface_card_radius??18)}"></div>
+            <div class="field"><label>Button corner radius (8–24 px)</label><input id="editUiButtonRadius" type="number" min="8" max="24" value="${Number(theme.interface_button_radius??16)}"></div>
+            <div class="field"><label>Popup max width (320–520 px)</label><input id="editUiDialogWidth" type="number" min="320" max="520" value="${Number(theme.interface_dialog_width??430)}"></div>
+          </div>
+          <div class="inline-fields">
+            <div class="field"><label>Backdrop blur (0–24 px)</label><input id="editUiDialogBlur" type="number" min="0" max="24" value="${Number(theme.interface_dialog_blur??16)}"></div>
+            <div class="field"><label>Backdrop dimness (30–90%)</label><input id="editUiBackdropDim" type="number" min="30" max="90" value="${Number(theme.interface_backdrop_dim??72)}"></div>
+            <div class="field"><label><input id="editUiShowBanner" type="checkbox" style="width:auto;min-height:0" ${theme.interface_show_banner!==false?'checked':''}> Show event banner</label></div>
+          </div>
+          <div class="inline-fields">
+            <div class="field"><label>Font scale (%)</label><input id="editUiFontScale" type="number" min="90" max="115" value="${Number(theme.interface_font_scale??100)}"></div>
+            <div class="field"><label>Content density</label><select id="editUiDensity"><option value="comfortable" ${(theme.interface_density||'comfortable')==='comfortable'?'selected':''}>Comfortable</option><option value="compact" ${theme.interface_density==='compact'?'selected':''}>Compact</option></select></div>
+            <div class="field"><label>Header layout</label><select id="editUiHeaderStyle"><option value="standard" ${(theme.interface_header_style||'standard')==='standard'?'selected':''}>Standard</option><option value="compact" ${theme.interface_header_style==='compact'?'selected':''}>Compact</option><option value="centered" ${theme.interface_header_style==='centered'?'selected':''}>Centered</option></select></div>
+          </div>
+          <div class="inline-fields">
+            <div class="field"><label>Popup animation</label><select id="editUiDialogAnimation"><option value="soft" ${(theme.interface_dialog_animation||'soft')==='soft'?'selected':''}>Soft</option><option value="pop" ${theme.interface_dialog_animation==='pop'?'selected':''}>Pop</option><option value="none" ${theme.interface_dialog_animation==='none'?'selected':''}>None</option></select></div>
+            <div class="field"><label><input id="editUiMotion" type="checkbox" style="width:auto;min-height:0" ${theme.interface_motion_enabled!==false?'checked':''}> Enable motion effects</label></div>
+            <div class="field"><label><input id="editUiFireworks" type="checkbox" style="width:auto;min-height:0" ${(typeof theme.interface_fireworks==='boolean'?theme.interface_fireworks:isDiwali)?'checked':''}> Enable event fireworks</label></div>
+          </div>
+          <div class="notice" id="interfacePreview" aria-live="polite"><strong>Live interface preview</strong><div style="margin:12px auto 0;max-width:360px;padding:18px;border-radius:var(--ui-dialog-radius,28px);background:var(--ui-dialog-bg,#1C1E2D);color:var(--ui-dialog-text,#F8F7FC);border:1px solid var(--ui-dialog-border,#E5B85C);text-align:center"><span style="display:inline-grid;place-items:center;width:42px;height:42px;border-radius:14px;background:color-mix(in srgb,var(--ui-dialog-accent,#E5B85C) 18%,transparent);color:var(--ui-dialog-accent,#E5B85C);font-size:22px">✓</span><h3 style="margin:10px 0 6px">SAVED & VERIFIED</h3><p style="color:var(--ui-dialog-muted,#C5C7D4);font-size:13px;margin:0 0 12px">This is how scanner alerts will look.</p><span style="display:inline-block;padding:10px 18px;border-radius:var(--ui-button-radius,16px);background:var(--accent);color:#fff;font-weight:800">NEXT GUEST</span></div></div>
+          <div class="divider"></div><h3>QR pass design</h3>
           <div class="inline-fields"><div class="field"><label>Pass background</label><input id="editPassBackground" type="color" value="${safe(theme.pass_background||theme.background||(isDiwali?'#190d2b':'#170F24'))}"></div><div class="field"><label>Pass accent</label><input id="editPassAccent" type="color" value="${safe(theme.pass_accent||theme.accent||(isDiwali?'#d9b15f':'#ff7518'))}"></div><div class="field"><label>Pass highlight</label><input id="editPassGold" type="color" value="${safe(theme.pass_gold||theme.gold||(isDiwali?'#d9b15f':'#ffd166'))}"></div></div>
           <div class="field"><label>Pass subtitle (blank uses event description)</label><textarea id="editPassSubtitle" maxlength="240">${safe(theme.pass_subtitle||'')}</textarea></div>
 
@@ -2081,6 +2210,18 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
 
     function collectTheme(){const collected={
       primary:$('editPrimary').value,accent:$('editAccent').value,background:$('editBackground').value,gold:$('editGold').value,
+      interface_surface:$('editUiSurface').value,interface_surface_alt:$('editUiSurfaceAlt').value,
+      interface_text:$('editUiText').value,interface_muted:$('editUiMuted').value,interface_line:$('editUiLine').value,
+      interface_input_bg:$('editUiInputBg').value,interface_button_bg:$('editUiButtonBg').value,interface_button_text:$('editUiButtonText').value,
+      interface_button_style:$('editUiButtonStyle').value,interface_global_radius:Number($('editUiGlobalRadius').value),interface_card_shadow:$('editUiCardShadow').checked,
+      interface_dialog_bg:$('editUiDialogBg').value,interface_dialog_text:$('editUiDialogText').value,interface_dialog_muted:$('editUiDialogMuted').value,
+      interface_dialog_accent:$('editUiDialogAccent').value,interface_dialog_border:$('editUiDialogBorder').value,
+      interface_dialog_radius:Number($('editUiDialogRadius').value),interface_card_radius:Number($('editUiCardRadius').value),interface_button_radius:Number($('editUiButtonRadius').value),
+      interface_dialog_width:Number($('editUiDialogWidth').value),interface_dialog_blur:Number($('editUiDialogBlur').value),interface_backdrop_dim:Number($('editUiBackdropDim').value),
+      interface_show_banner:$('editUiShowBanner').checked,interface_font_scale:Number($('editUiFontScale').value),
+      interface_density:$('editUiDensity').value,interface_header_style:$('editUiHeaderStyle').value,
+      interface_dialog_animation:$('editUiDialogAnimation').value,interface_motion_enabled:$('editUiMotion').checked,
+      interface_fireworks:$('editUiFireworks').checked,
       pass_background:$('editPassBackground').value,pass_accent:$('editPassAccent').value,pass_gold:$('editPassGold').value,
       app_title:$('editAppTitle').value,app_subtitle:$('editAppSubtitle').value,brand_logo_url:$('editBrandLogo').value,
       brand_logo_image:$('editBrandLogoImage').value,hero_banner_url:$('editHeroBanner').value,hero_banner_image:$('editHeroBannerImage').value,hero_badge:$('editHeroBadge').value,
@@ -2106,6 +2247,27 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
       if(passEditor&&!passEditor.hidden)collected.pass_layout={version:1,elements:passLayout};
       return collected;
     }
+    const interfacePreview=$('interfacePreview');
+    const updateInterfacePreview=()=>{
+      if(!interfacePreview)return;
+      const values={
+        '--ui-dialog-bg':$('editUiDialogBg').value,'--ui-dialog-text':$('editUiDialogText').value,
+        '--ui-dialog-muted':$('editUiDialogMuted').value,'--ui-dialog-accent':$('editUiDialogAccent').value,
+        '--ui-dialog-border':$('editUiDialogBorder').value,'--ui-dialog-radius':Math.max(14,Math.min(36,Number($('editUiDialogRadius').value)||28))+'px',
+        '--ui-button-radius':Math.max(8,Math.min(24,Number($('editUiButtonRadius').value)||16))+'px'
+      };
+      Object.entries(values).forEach(([key,value])=>interfacePreview.style.setProperty(key,value));
+      interfacePreview.style.color=values['--ui-dialog-text'];
+      interfacePreview.style.borderColor=values['--ui-dialog-border'];
+      interfacePreview.style.borderRadius=values['--ui-dialog-radius'];
+      interfacePreview.style.background=values['--ui-dialog-bg'];
+      const sample=interfacePreview.querySelector('div');
+      if(sample){Object.entries(values).forEach(([key,value])=>sample.style.setProperty(key,value));}
+    };
+    ['editUiDialogBg','editUiDialogText','editUiDialogMuted','editUiDialogAccent','editUiDialogBorder','editUiDialogRadius','editUiButtonRadius'].forEach(id=>{
+      const input=$(id);if(input)input.addEventListener('input',updateInterfacePreview);
+    });
+    updateInterfacePreview();
     $('refreshExistingPasses').addEventListener('click',async()=>{
       const button=$('refreshExistingPasses');
       if(!confirm('Send the newly saved QR pass design to every approved guest in this event? This sends a new pass image to each guest, but preserves their existing QR token and pass code.'))return;
