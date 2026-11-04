@@ -1407,8 +1407,17 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
   function completeConfirmedGuestAction(action,guest,serverMessage) {
     state.scanPendingAction=null;state.scanActionBusy=false;
     state.guest=guest;
+    const proofStatus=String(guest.proofStatus||'Not collected');
+    guest.proofStatus=proofStatus;
     renderScannedGuest(serverMessage||'The action was saved and verified in the EventHub record.');
     const labels={entry:'Entry recorded',proof_deposit:'Proof stored',proof_no_proof:'No proof confirmation stored',food:'Food collection recorded',proof_return:'Proof return recorded',exit:'Exit recorded',checkpoint:'Checkpoint scan recorded'};
+    const role=state.role==='admin'?'admin':(state.staffRole||'global');
+    const canHandleProof=['admin','global','scanner','event_lead','proof'].includes(role);
+    const proofResolved=['Stored','No proof','Returned'].includes(proofStatus);
+    if(action==='entry'&&canHandleProof&&!proofResolved){
+      showScanFeedback('warning','ENTRY RECORDED — PROOF REQUIRED',(guest.name||'This guest')+' is checked in. Keep this guest selected and store the ID proof, or explicitly record that no proof was provided. The scanner will remain locked until that step is confirmed.','CONTINUE TO PROOF',()=>hideScanFeedback());
+      return;
+    }
     showScanFeedback('success','SAVED & VERIFIED',(guest.name||'Guest')+' · '+(labels[action]||'Event record')+'. The backend confirmed the updated record.','NEXT GUEST',releaseGuestScanLock);
   }
   async function retryPendingScanAction() {
@@ -1460,12 +1469,13 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     const g=state.guest;if(!g)return;
     const actions=[];
     const activePass=g.status==='approved';
+    g.proofStatus=String(g.proofStatus||'Not collected');
     const proofResolved=['Stored','No proof','Returned'].includes(g.proofStatus);
     const role=state.role==='admin'?'admin':(state.staffRole||'global');
     const canDo=action=>['admin','global','scanner','event_lead'].includes(role)||(role==='entry'&&action==='entry')||(role==='food'&&action==='food')||(role==='proof'&&['proof_deposit','proof_no_proof','proof_return','exit'].includes(action));
     const canUseCheckpoint=['admin','global','scanner','event_lead','checkpoint'].includes(role);
     if(activePass&&!g.exitRecorded&&!g.entryUsed&&canDo('entry'))actions.push(['entry','RECORD ENTRY','success']);
-    if(activePass&&g.entryUsed&&!g.exitRecorded&&g.proofStatus==='Not collected'){
+    if(activePass&&g.entryUsed&&!g.exitRecorded&&!proofResolved){
       if(canDo('proof_deposit'))actions.push(['proof_deposit','STORE ID PROOF','']);
       if(canDo('proof_no_proof'))actions.push(['proof_no_proof','NO PROOF PROVIDED','']);
     }
