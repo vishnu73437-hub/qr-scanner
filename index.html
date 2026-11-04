@@ -2318,7 +2318,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
         const assignments=Array.isArray(team.assignments)?team.assignments:[];
         const candidateOptions=candidates.map(v=>{
           const role=String(v.role||'');
-          const canAssign=!role||role==='checkpoint'||role==='global';
+          const canAssign=!role||role==='volunteer'||role==='checkpoint'||role==='global';
           const label=safe(v.name)+(v.username?' · @'+safe(v.username):'')+(role?' · '+safe(role.replaceAll('_',' ')):' · not assigned yet');
           return '<option value="'+Number(v.telegram_id)+'" '+(canAssign?'':'disabled')+'>'+label+'</option>';
         }).join('');
