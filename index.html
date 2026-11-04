@@ -948,9 +948,9 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
         global:'You have core access across EventHub events. Select the correct event before scanning.',
         event_lead:'You can oversee the selected event and complete its event-day workflow.',
         scanner:'You can complete the full guest workflow: entry, proof, food, exit and enabled checkpoints.',
-        entry:'Your station is entry only. Verify the pass and record arrival.',
+        entry:'Verify the pass, record Entry, then store the ID proof or explicitly confirm No Proof Provided before the next guest.',
         food:'Your station is food collection only. EventHub checks the required entry and proof status.',
-        proof:'Your station handles ID proof storage, no-proof confirmation, proof return and exit.',
+        proof:'Your station handles any outstanding ID proof, proof return and exit. Entry must be confirmed before food or exit.',
         checkpoint:'You can scan only at the checkpoint stations assigned to you by the event admin.'
       };
       const roleLabel=roleLabels[role]||'Event volunteer';
@@ -1441,7 +1441,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     renderScannedGuest(serverMessage||'The action was saved and verified in the EventHub record.');
     const labels={entry:'Entry recorded',proof_deposit:'Proof stored',proof_no_proof:'No proof confirmation stored',food:'Food collection recorded',proof_return:'Proof return recorded',exit:'Exit recorded',checkpoint:'Checkpoint scan recorded'};
     const role=state.role==='admin'?'admin':(state.staffRole||'global');
-    const canHandleProof=['admin','global','scanner','event_lead','proof'].includes(role);
+    const canHandleProof=['admin','global','scanner','event_lead','entry','proof'].includes(role);
     const proofResolved=['Stored','No proof','Returned'].includes(proofStatus);
     if(action==='proof_deposit'||action==='proof_no_proof')state.scanProofPending=false;
     if(action==='entry'&&canHandleProof&&!proofResolved){
@@ -1503,7 +1503,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     g.proofStatus=String(g.proofStatus||'Not collected');
     const proofResolved=['Stored','No proof','Returned'].includes(g.proofStatus);
     const role=state.role==='admin'?'admin':(state.staffRole||'global');
-    const canDo=action=>['admin','global','scanner','event_lead'].includes(role)||(role==='entry'&&action==='entry')||(role==='food'&&action==='food')||(role==='proof'&&['proof_deposit','proof_no_proof','proof_return','exit'].includes(action));
+    const canDo=action=>['admin','global','scanner','event_lead'].includes(role)||(role==='entry'&&['entry','proof_deposit','proof_no_proof'].includes(action))||(role==='food'&&action==='food')||(role==='proof'&&['proof_deposit','proof_no_proof','proof_return','exit'].includes(action));
     if(proofResolved)state.scanProofPending=false;
     else if(state.scanHandling&&activePass&&g.entryUsed&&!g.exitRecorded&&(canDo('proof_deposit')||canDo('proof_no_proof')))state.scanProofPending=true;
     const canUseCheckpoint=['admin','global','scanner','event_lead','checkpoint'].includes(role);
