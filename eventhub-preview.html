@@ -51,7 +51,10 @@
 .scan-feedback-card .btn{border-radius:var(--ui-button-radius,16px)}
 .scan-feedback-card:before{background:linear-gradient(90deg,transparent,var(--ui-dialog-accent,#e5b85c),transparent)}
 .scan-feedback-card .scan-feedback-icon{color:var(--ui-dialog-accent,#e5b85c);border-color:color-mix(in srgb,var(--ui-dialog-accent,#e5b85c) 27%,transparent);background:color-mix(in srgb,var(--ui-dialog-accent,#e5b85c) 13%,transparent)}
+.card{border-radius:var(--ui-card-radius,18px)}
+.scan-feedback-backdrop{background:rgba(8,7,18,var(--ui-backdrop-dim,.72));backdrop-filter:blur(var(--ui-dialog-blur,16px)) saturate(125%);-webkit-backdrop-filter:blur(var(--ui-dialog-blur,16px)) saturate(125%)}
 body.interface-compact .card{padding:14px}body.interface-compact .section{gap:8px}
+body.interface-hide-banner .hero-banner{display:none!important}
 body.interface-no-motion *,body.interface-no-motion *:before,body.interface-no-motion *:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
 body.interface-header-centered .brand{justify-content:center;text-align:center}body.interface-header-centered .brand-mark{margin-inline:auto}
 body.interface-header-compact header{padding-top:8px;padding-bottom:8px}body.interface-header-compact .brand-mark{width:38px;height:38px}
@@ -601,10 +604,14 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     root.style.setProperty('--ui-dialog-accent',themeColour(t.interface_dialog_accent,gold));
     root.style.setProperty('--ui-dialog-border',themeColour(t.interface_dialog_border,'#E5B85C'));
     root.style.setProperty('--ui-dialog-radius',uiNumber(t.interface_dialog_radius,28,14,36)+'px');
+    root.style.setProperty('--ui-card-radius',uiNumber(t.interface_card_radius,18,12,28)+'px');
+    root.style.setProperty('--ui-dialog-blur',uiNumber(t.interface_dialog_blur,16,0,24)+'px');
+    root.style.setProperty('--ui-backdrop-dim',uiNumber(t.interface_backdrop_dim,72,30,90)/100);
     root.style.setProperty('--ui-button-radius',uiNumber(t.interface_button_radius,16,8,24)+'px');
     root.style.setProperty('--ui-dialog-width',uiNumber(t.interface_dialog_width,430,320,520)+'px');
     root.style.setProperty('--ui-font-scale',uiNumber(t.interface_font_scale,100,90,115)+'%');root.style.fontSize=uiNumber(t.interface_font_scale,100,90,115)+'%';
     document.body.classList.toggle('interface-compact',t.interface_density==='compact');
+    document.body.classList.toggle('interface-hide-banner',t.interface_show_banner===false);
     document.body.classList.toggle('interface-no-motion',t.interface_motion_enabled===false);
     document.body.classList.toggle('interface-header-centered',t.interface_header_style==='centered');
     document.body.classList.toggle('interface-header-compact',t.interface_header_style==='compact');
@@ -1870,8 +1877,14 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
           </div>
           <div class="inline-fields">
             <div class="field"><label>Popup corner radius (14–36 px)</label><input id="editUiDialogRadius" type="number" min="14" max="36" value="${Number(theme.interface_dialog_radius??28)}"></div>
+            <div class="field"><label>Card corner radius (12–28 px)</label><input id="editUiCardRadius" type="number" min="12" max="28" value="${Number(theme.interface_card_radius??18)}"></div>
             <div class="field"><label>Button corner radius (8–24 px)</label><input id="editUiButtonRadius" type="number" min="8" max="24" value="${Number(theme.interface_button_radius??16)}"></div>
             <div class="field"><label>Popup max width (320–520 px)</label><input id="editUiDialogWidth" type="number" min="320" max="520" value="${Number(theme.interface_dialog_width??430)}"></div>
+          </div>
+          <div class="inline-fields">
+            <div class="field"><label>Backdrop blur (0–24 px)</label><input id="editUiDialogBlur" type="number" min="0" max="24" value="${Number(theme.interface_dialog_blur??16)}"></div>
+            <div class="field"><label>Backdrop dimness (30–90%)</label><input id="editUiBackdropDim" type="number" min="30" max="90" value="${Number(theme.interface_backdrop_dim??72)}"></div>
+            <div class="field"><label><input id="editUiShowBanner" type="checkbox" style="width:auto;min-height:0" ${theme.interface_show_banner!==false?'checked':''}> Show event banner</label></div>
           </div>
           <div class="inline-fields">
             <div class="field"><label>Font scale (%)</label><input id="editUiFontScale" type="number" min="90" max="115" value="${Number(theme.interface_font_scale??100)}"></div>
@@ -2163,8 +2176,9 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
       primary:$('editPrimary').value,accent:$('editAccent').value,background:$('editBackground').value,gold:$('editGold').value,
       interface_dialog_bg:$('editUiDialogBg').value,interface_dialog_text:$('editUiDialogText').value,interface_dialog_muted:$('editUiDialogMuted').value,
       interface_dialog_accent:$('editUiDialogAccent').value,interface_dialog_border:$('editUiDialogBorder').value,
-      interface_dialog_radius:Number($('editUiDialogRadius').value),interface_button_radius:Number($('editUiButtonRadius').value),
-      interface_dialog_width:Number($('editUiDialogWidth').value),interface_font_scale:Number($('editUiFontScale').value),
+      interface_dialog_radius:Number($('editUiDialogRadius').value),interface_card_radius:Number($('editUiCardRadius').value),interface_button_radius:Number($('editUiButtonRadius').value),
+      interface_dialog_width:Number($('editUiDialogWidth').value),interface_dialog_blur:Number($('editUiDialogBlur').value),interface_backdrop_dim:Number($('editUiBackdropDim').value),
+      interface_show_banner:$('editUiShowBanner').checked,interface_font_scale:Number($('editUiFontScale').value),
       interface_density:$('editUiDensity').value,interface_header_style:$('editUiHeaderStyle').value,
       interface_dialog_animation:$('editUiDialogAnimation').value,interface_motion_enabled:$('editUiMotion').checked,
       interface_fireworks:$('editUiFireworks').checked,
