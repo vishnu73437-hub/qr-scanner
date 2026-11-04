@@ -678,7 +678,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     if(role==='admin'&&state.page==='registration')return 'guest-register';
     if(role==='admin'&&state.page==='pass')return 'guest-pass';
     const page=String(state.page||'home').toLowerCase().replace(/[^a-z0-9_-]/g,'-').slice(0,30)||'home';
-    return role+'-'+page;
+    return role==='volunteer'?'volunteer-'+String(state.staffRole||'global')+'-'+page:role+'-'+page;
   }
   function interfaceEditorRoot(){return document.body;}
   function interfaceNodes(root){
@@ -819,6 +819,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
       panel.innerHTML='<div class="ui-editor-heading"><div><span class="ui-editor-scope" id="interfaceEditorScope"></span><h2>Customize this screen</h2></div><button class="btn small" id="closeInterfaceEditor" type="button">✕</button></div>'+
         '<p class="ui-editor-help">Choose a role preview, then select any visible component to edit its text, visibility, colours, size and spacing. Previews are read-only; permissions and real event actions are never changed.</p>'+
         '<div class="ui-editor-grid"><div class="ui-editor-field"><label for="interfaceEditorPreviewRole">Preview role</label><select id="interfaceEditorPreviewRole"><option value="admin">Admin</option><option value="guest">Guest</option><option value="volunteer">Volunteer</option></select></div><div class="ui-editor-field"><label for="interfaceEditorPreviewPage">Preview screen</label><select id="interfaceEditorPreviewPage"><option value="home">Home screen</option><option value="register">Registration form</option></select></div></div>'+
+        '<div class="ui-editor-field" id="interfaceEditorVolunteerRoleWrap" style="display:none"><label for="interfaceEditorVolunteerRole">Volunteer desk assignment</label><select id="interfaceEditorVolunteerRole"><option value="global">Core volunteer</option><option value="event_lead">Event lead</option><option value="scanner">Full scanner</option><option value="entry">Entry desk</option><option value="food">Food desk</option><option value="proof">Proof & exit desk</option><option value="checkpoint">Checkpoint desk</option></select></div>'+
         '<div class="ui-editor-field"><label for="interfaceEditorComponent">Individual component</label><select id="interfaceEditorComponent"></select></div>'+
         '<div class="ui-editor-field"><label for="interfaceEditorText">Display text (leave unchanged to keep the default)</label><textarea id="interfaceEditorText" maxlength="300"></textarea></div>'+
         '<div class="ui-editor-field"><label for="interfaceEditorPlaceholder">Input placeholder / image alt text</label><input id="interfaceEditorPlaceholder" maxlength="140"></div>'+
@@ -832,6 +833,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
       $('interfaceEditorComponent').addEventListener('change',interfaceEditorPopulate);
       $('interfaceEditorPreviewRole').addEventListener('change',switchInterfacePreview);
       $('interfaceEditorPreviewPage').addEventListener('change',switchInterfacePreview);
+      $('interfaceEditorVolunteerRole').addEventListener('change',switchInterfacePreview);
       ['interfaceEditorText','interfaceEditorPlaceholder','interfaceEditorVisible','interfaceEditorBgEnabled','interfaceEditorBg','interfaceEditorColorEnabled','interfaceEditorColor','interfaceEditorRadius','interfaceEditorPadding','interfaceEditorFontSize','interfaceEditorAlign'].forEach(id=>{
         $(id).addEventListener('input',interfaceEditorReadDraft);$(id).addEventListener('change',interfaceEditorReadDraft);
       });
@@ -870,7 +872,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     if(state.role!=='admin'||!state.event)return;
     ensureInterfaceEditor();interfaceEditorDraft=interfaceClone(interfaceSavedComponents());
     interfacePreviewActive=false;interfacePreviewSnapshot=null;
-    $('interfaceEditorPreviewRole').value='admin';$('interfaceEditorPreviewPage').value='home';
+    $('interfaceEditorPreviewRole').value='admin';$('interfaceEditorPreviewPage').value='home';$('interfaceEditorVolunteerRole').value='global';$('interfaceEditorVolunteerRoleWrap').style.display='none';
     interfaceEditorScope=currentInterfaceScope();
     $('interfaceEditorScope').textContent=interfaceEditorScope.replace(/-/g,' ');
     $('interfaceEditorPanel').classList.add('open');interfaceEditorOpen=true;document.body.classList.add('interface-component-editing');
@@ -882,10 +884,11 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     const page=$('interfaceEditorPreviewPage').value;
     if(role!=='admin'&&role!=='guest'&&role!=='volunteer')return;
     if(page==='register'&&role!=='guest'){$('interfaceEditorPreviewPage').value='home';}
+    $('interfaceEditorVolunteerRoleWrap').style.display=role==='volunteer'?'block':'none';
     if(!interfacePreviewSnapshot)interfacePreviewSnapshot={role:state.role,staffRole:state.staffRole,page:state.page,myRegistration:state.myRegistration};
     interfacePreviewActive=role!=='admin';
     state.role=role;
-    state.staffRole=role==='volunteer'?'global':'';
+    state.staffRole=role==='volunteer'?$('interfaceEditorVolunteerRole').value:'';
     state.myRegistration=null;
     state.page=role==='guest'&&$('interfaceEditorPreviewPage').value==='register'?'register':'home';
     try{
