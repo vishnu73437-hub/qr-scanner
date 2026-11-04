@@ -23,15 +23,16 @@ This staging branch improves the EventHub event-day volunteer and admin workflow
 
 ## Backend candidate (separate Botkeep release ZIP)
 
-The matching Botkeep Python release candidate and regression tests are packaged separately. It adds additive checkpoint assignment storage, volunteer display-name metadata and Admin checkpoint team/assignment endpoints. The backend restricts checkpoint-only volunteers to stations assigned to them, preserves legacy event-wide checkpoint roles with no station-specific rows, validates checkpoint enablement, and includes checkpoint assignments in event cleanup backups/deletion.
+The matching Botkeep Python release candidate and regression tests are packaged separately. It adds additive checkpoint assignment storage, signed Telegram display-name metadata, name-based volunteer promotion and Admin checkpoint team/assignment endpoints. The staff promotion picker can select named, unblocked Telegram users; the checkpoint picker is narrower and includes only authorized core/event volunteers. Event/core team lists now return display names and usernames. The backend restricts checkpoint-only volunteers to explicitly assigned enabled stations and fails closed if a checkpoint-role volunteer has no station assignment. Existing checkpoint-role volunteers must be assigned before use. Core/global volunteers retain their event-wide access. Assignment rows are included in cleanup backups/deletion and are removed with unused station or volunteer cleanup.
 
-The backend ZIP is based on a saved Library source file, not a live export from the running Botkeep process. Compare it with the exact deployed `bot.py` before installing; do not overwrite a newer running version blindly.
+The backend ZIP is based on saved Library source `bot(20261104-204816).py`, not a live export from the running Botkeep process. The packaged candidate is 360,201 bytes (SHA-256 `0a2357fadbf792be11a22a6153279c293768d335f63e1a371e702963ae213853`); the ZIP SHA-256 is `54ab372ce9983f5278f5fe40430bd4970635eee3c719bc370a9608808c43fe9e`. Compare it with the exact deployed `bot.py` before installing; do not overwrite a newer running version blindly.
 
 ## Validation performed
 
 - Python bytecode compilation: passed.
 - Isolated role-resolution and action-permission regression tests: passed.
-- Isolated checkpoint-assignment, duplicate constraint, event/station/user isolation, exact-station authorization, volunteer-name SQL, blocked-user filtering and event-chooser tests: passed.
+- Isolated checkpoint-team and event-volunteer candidate APIs, named Admin team lists, blocked-profile preservation, duplicate assignment idempotency, role-conflict rejection, disabled-station rejection, exact-station API authorization, multi-station removal, fail-closed unassigned roles, and checkpoint/volunteer cleanup tests: passed.
+- Static frontend/backend action-contract check: all 40 distinct Admin action names used by the staging frontend are present in the Python Admin dispatcher.
 - Frontend inline JavaScript compilation: passed.
 - Static literal element-ID reference check: 232 fixed ID references checked; no missing fixed IDs found.
 - Manual QR lock, backend pre/post verification, proof-gated release, failed-write lock and browser-back protection: source assertions passed.
@@ -52,4 +53,4 @@ These checks do not replace live Botkeep/API integration tests, Telegram WebApp 
 
 A separate candidate review is recorded in [EVENTHUB_BACKEND_CANDIDATE_REVIEW_20261105.md](EVENTHUB_BACKEND_CANDIDATE_REVIEW_20261105.md). The reviewed candidate SHA-256 is `c412b7fef9f22de0c3213c88c5852116ac58f345fecd109d5c5b96e9ec974323`. Its two isolated regression scripts were rerun successfully against that candidate after correcting a test portability issue that previously pointed to a different absolute local path.
 
-The backend candidate is still separate from this GitHub branch and has not been reconciled against the exact running Botkeep source. It must not be deployed yet.
+The backend candidate is still a separate ZIP release and has not been reconciled against the exact running Botkeep source. It must not be deployed until that source is compared and a verified persistent-database backup is made.
