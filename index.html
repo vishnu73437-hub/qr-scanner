@@ -603,7 +603,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     root.style.setProperty('--ui-dialog-radius',uiNumber(t.interface_dialog_radius,28,14,36)+'px');
     root.style.setProperty('--ui-button-radius',uiNumber(t.interface_button_radius,16,8,24)+'px');
     root.style.setProperty('--ui-dialog-width',uiNumber(t.interface_dialog_width,430,320,520)+'px');
-    root.style.setProperty('--ui-font-scale',uiNumber(t.interface_font_scale,100,90,115)+'%');
+    root.style.setProperty('--ui-font-scale',uiNumber(t.interface_font_scale,100,90,115)+'%');root.style.fontSize=uiNumber(t.interface_font_scale,100,90,115)+'%';
     document.body.classList.toggle('interface-compact',t.interface_density==='compact');
     document.body.classList.toggle('interface-no-motion',t.interface_motion_enabled===false);
     document.body.classList.toggle('interface-header-centered',t.interface_header_style==='centered');
@@ -2193,6 +2193,27 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
       if(passEditor&&!passEditor.hidden)collected.pass_layout={version:1,elements:passLayout};
       return collected;
     }
+    const interfacePreview=$('interfacePreview');
+    const updateInterfacePreview=()=>{
+      if(!interfacePreview)return;
+      const values={
+        '--ui-dialog-bg':$('editUiDialogBg').value,'--ui-dialog-text':$('editUiDialogText').value,
+        '--ui-dialog-muted':$('editUiDialogMuted').value,'--ui-dialog-accent':$('editUiDialogAccent').value,
+        '--ui-dialog-border':$('editUiDialogBorder').value,'--ui-dialog-radius':Math.max(14,Math.min(36,Number($('editUiDialogRadius').value)||28))+'px',
+        '--ui-button-radius':Math.max(8,Math.min(24,Number($('editUiButtonRadius').value)||16))+'px'
+      };
+      Object.entries(values).forEach(([key,value])=>interfacePreview.style.setProperty(key,value));
+      interfacePreview.style.color=values['--ui-dialog-text'];
+      interfacePreview.style.borderColor=values['--ui-dialog-border'];
+      interfacePreview.style.borderRadius=values['--ui-dialog-radius'];
+      interfacePreview.style.background=values['--ui-dialog-bg'];
+      const sample=interfacePreview.querySelector('div');
+      if(sample){Object.entries(values).forEach(([key,value])=>sample.style.setProperty(key,value));}
+    };
+    ['editUiDialogBg','editUiDialogText','editUiDialogMuted','editUiDialogAccent','editUiDialogBorder','editUiDialogRadius','editUiButtonRadius'].forEach(id=>{
+      const input=$(id);if(input)input.addEventListener('input',updateInterfacePreview);
+    });
+    updateInterfacePreview();
     $('refreshExistingPasses').addEventListener('click',async()=>{
       const button=$('refreshExistingPasses');
       if(!confirm('Send the newly saved QR pass design to every approved guest in this event? This sends a new pass image to each guest, but preserves their existing QR token and pass code.'))return;
