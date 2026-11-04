@@ -607,7 +607,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     root.style.setProperty('--panel2',themeColour(t.interface_surface_alt,shade(primary,.10)));
     root.style.setProperty('--text',themeColour(t.interface_text,'#F8F5FB'));
     root.style.setProperty('--muted',themeColour(t.interface_muted,'#BCB4C9'));
-    root.style.setProperty('--line',themeColour(t.interface_line,'#FFFFFF18'));
+    root.style.setProperty('--line',themeColour(t.interface_line,'#5A5366'));
     root.style.setProperty('--ui-input-bg',themeColour(t.interface_input_bg,'#100D1B'));
     root.style.setProperty('--ui-button-bg',themeColour(t.interface_button_bg,accent));
     root.style.setProperty('--ui-button-text',themeColour(t.interface_button_text,'#170F18'));
@@ -1891,7 +1891,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
             <div class="field"><label>Muted text</label><input id="editUiMuted" type="color" value="${safe(theme.interface_muted||'#BCB4C9')}"></div>
           </div>
           <div class="inline-fields">
-            <div class="field"><label>Divider / border</label><input id="editUiLine" type="color" value="${safe(theme.interface_line||'#FFFFFF')}"></div>
+            <div class="field"><label>Divider / border</label><input id="editUiLine" type="color" value="${safe(theme.interface_line||'#5A5366')}"></div>
             <div class="field"><label>Input background</label><input id="editUiInputBg" type="color" value="${safe(theme.interface_input_bg||'#100D1B')}"></div>
             <div class="field"><label>Button background</label><input id="editUiButtonBg" type="color" value="${safe(theme.interface_button_bg||theme.accent||'#FF7518')}"></div>
             <div class="field"><label>Button text</label><input id="editUiButtonText" type="color" value="${safe(theme.interface_button_text||'#170F18')}"></div>
