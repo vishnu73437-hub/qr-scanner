@@ -15,7 +15,7 @@ This staging branch improves EventHub event-day volunteer and admin workflows. I
 - Large primary actions, sticky action controls, compact status grid, collapsed help and manual code fallback keep the volunteer workflow on one screen.
 - Adds role-specific volunteer home/desk information, assigned stations and recent action summaries.
 - Admin-only checkpoint manager creates/edits/enables stations and assigns eligible volunteers by display name.
-- An unassigned checkpoint-only volunteer is blocked from both camera and manual scanning by the frontend; the backend also fails closed.
+- An unassigned checkpoint-only volunteer is blocked from both camera and manual scanning by the frontend; failed station-list verification also blocks scanning until Retry access check succeeds. The backend also fails closed.
 - index.html and eventhub-preview.html remain byte-for-byte identical.
 
 ## Backend candidate (separate Botkeep release ZIP)
@@ -45,4 +45,4 @@ These are source-level, static and isolated SQLite checks. They are not live Bot
 
 ## Backend review
 
-See EVENTHUB_BACKEND_CANDIDATE_REVIEW_20261105.md for details. The backend candidate still requires comparison with the exact running Botkeep source and a verified live-database backup before deployment.
+See EVENTHUB_BACKEND_CANDIDATE_REVIEW_20261105.md for details. The backend candidate also preserves blocked-delivery state when the Mini App opens and propagates Telegram delivery failures into the shared registry and event DB. It still requires comparison with the exact running Botkeep source and a verified live-database backup before deployment.
