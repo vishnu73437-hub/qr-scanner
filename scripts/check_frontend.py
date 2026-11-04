@@ -60,6 +60,7 @@ def main():
         "guest mode hides nonessential camera controls": ".scanner-mode.scanner-has-guest .scanner-screen .manual-pass-entry",
         "checkpoint access retry path": "RETRY ACCESS CHECK",
         "checkpoint preflight fail closed": "STATION ACCESS UNAVAILABLE",
+        "entry desk proof is required before release": "role==='entry'&&['entry','proof_deposit','proof_no_proof'].includes(action)",
     }
     missing = [label for label, fragment in required_contracts.items() if fragment not in source]
     if missing:
