@@ -760,7 +760,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     await stopScanner();
     state.eventId=eid; state.event=null; state.guest=null; state.pass=null; state.myRegistration=null; state.page='home'; updateUrl(eid,true);
     main.innerHTML='<div class="empty">Opening this event…</div>';
-    try { await loadEvent(); }
+    try { await loadRole(); await loadEvent(); }
     catch(err) { main.innerHTML=showNotice(err.message,'error')+'<div class="actions"><button class="btn" id="returnEvents">← All events</button></div>'; $('returnEvents')?.addEventListener('click',clearEvent); throw err; }
   }
   async function clearEvent() {
