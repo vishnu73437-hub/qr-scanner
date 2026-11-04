@@ -40,3 +40,13 @@ This roadmap is a review checklist, not a claim that every item is implemented o
 
 ## Release gate
 Do not call the upgrade complete until all critical checks have been performed on the live Botkeep service and the Mini App has been tested from Telegram on a physical phone. Record test date, test account, result, and any failure without recording secrets or guest personal data.
+
+
+## 4 November 2026 code follow-up (isolated, not a production release)
+- [x] Frontend source: prevent `pass_layout: null` from being sent when the visual editor is closed.
+- [x] Frontend source: keep request timeout active through JSON parsing and distinguish uncertain save outcomes.
+- [x] Frontend source: guard duplicate settings submissions and separate save success from page-refresh failure.
+- [x] Backend candidate: bound `update_event` SQLite waits and preserve a registry audit fallback.
+- [x] Offline regression: verify layout retention, QR geometry, locked secondary DB behavior and existing guest-data preservation.
+- [ ] Install backend candidate on the existing Botkeep service after backing up source and databases.
+- [ ] Verify live health, admin save, guest pass preview, Telegram /mypass, QR scan, and Google Sheets from production test accounts.
