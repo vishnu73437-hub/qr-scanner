@@ -1224,21 +1224,49 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
         try{await stopping;}finally{if(state.scannerStopPromise===stopping)state.scannerStopPromise=null;}
       }
     }
-    if($('startCamera')){$('startCamera').disabled=false;$('startCamera').textContent=state.guest?'Scan next pass':'Start QR scanner';}
+    state.scannerPaused=false;
+    if($('startCamera')){$('startCamera').disabled=false;$('startCamera').textContent='Start QR scanner';}
     if($('stopCamera'))$('stopCamera').disabled=true;
   }
   async function lookupGuest(qr) {
-    const value=String(qr||'').trim(); if(!value){toast('Enter or scan a pass first.',true);return;}
-    $('scanResult').innerHTML='<div class="notice">Checking this QR…</div>';
+    const value=String(qr||'').trim();
+    if(!value){showScanFeedback('warning','NO QR DATA','Enter or scan a guest pass first.','NEXT GUEST',releaseGuestScanLock);return false;}
+    state.scanCurrentQr=state.scanCurrentQr||value;
+    state.guest=null;
+    if($('scanResult'))$('scanResult').innerHTML='<div class="notice">Verifying guest pass…</div>';
     const eventQr=value.match(/^EVENTHUB:EVENT:([1-9][0-9]{0,8}):([0-9a-f]{24})$/);
     if(eventQr){
       await stopScanner();
-      if(state.role!=='admin'){$('scanResult').innerHTML=showNotice('Event-management QR detected. Only an authenticated administrator can open event settings.','error');return;}
-      try{if(scannerView){scannerView=false;document.body.classList.remove('scanner-mode');const cleanUrl=new URL(location.href);cleanUrl.searchParams.delete('scanner');history.replaceState({scanner:false,event_id:state.eventId},'',cleanUrl.pathname+cleanUrl.search+cleanUrl.hash);$('refreshBtn').classList.remove('hidden');$('backBtn').textContent='← All events';}const result=await post('/api/admin',{action:'event_qr_lookup',qr:value});await setEvent(Number(result.event_id));await openPage('settings');toast('Admin event settings opened: '+result.event.name);}
-      catch(err){$('scanResult').innerHTML=showNotice(err.message,'error');}return;
+      state.scanHandling=false;state.scanCurrentQr='';state.scannerPaused=false;
+      if(state.role!=='admin'){
+        showScanFeedback('danger','ADMIN QR DETECTED','This is an event-management QR. Only an authenticated administrator can open event settings.','CLOSE',()=>hideScanFeedback());
+        return false;
+      }
+      try{
+        if(scannerView){scannerView=false;document.body.classList.remove('scanner-mode','scanner-has-guest');const cleanUrl=new URL(location.href);cleanUrl.searchParams.delete('scanner');history.replaceState({scanner:false,event_id:state.eventId},'',cleanUrl.pathname+cleanUrl.search+cleanUrl.hash);$('refreshBtn').classList.remove('hidden');$('backBtn').textContent='← All events';}
+        const result=await post('/api/admin',{action:'event_qr_lookup',qr:value});
+        await setEvent(Number(result.event_id));await openPage('settings');toast('Admin event settings opened: '+result.event.name);
+      }catch(err){showScanFeedback('danger','EVENT QR FAILED',err.message,'CLOSE',()=>hideScanFeedback());}
+      return false;
     }
-    try {const r=await post('/api/guest',{event_id:state.eventId,qr:value});state.guest=r.guest;renderScannedGuest();}
-    catch(e){$('scanResult').innerHTML=showNotice(e.message,'error');}
+    try{
+      const r=await post('/api/guest',{event_id:state.eventId,qr:value});
+      state.guest=r.guest;
+      document.body.classList.add('scanner-has-guest');
+      renderScannedGuest();
+      return true;
+    }catch(e){
+      state.guest=null;
+      document.body.classList.add('scanner-has-guest');
+      if($('scanResult'))$('scanResult').innerHTML='';
+      const transient=Number(e?.status)>=500||/(network|did not respond|unreadable response|unexpected response|connection|busy|timed out|failed to fetch|within \d+s)/i.test(String(e?.message||''));
+      if(transient){
+        showScanFeedback('danger','NETWORK / SERVER ERROR','Guest verification could not be completed. Do not admit this guest until the pass is verified. '+e.message,'RETRY VERIFY',()=>lookupGuest(value));
+      }else{
+        showScanFeedback('warning','PASS NOT ACCEPTED',e.message||'This pass could not be verified. Ask the guest to show their current pass.','NEXT GUEST',releaseGuestScanLock);
+      }
+      return false;
+    }
   }
   function guestAdminEditor(g){
     if(!g.canManage)return '';
@@ -1266,44 +1294,193 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     try{const payload={action:'guest_action',event_id:state.eventId,guest_id:g.id,operation:operation==='reset_food_status'?'reset_status':operation};if(operation==='reset_food_status')payload.target='food';const r=await post('/api/admin',payload);toast(r.message||'Action completed');await lookupGuest(r.guest&&r.guest.passCode?r.guest.passCode:g.passCode);}
     catch(err){toast(err.message,true);}
   }
+  function showScanFeedback(tone,title,message,primaryLabel,primaryAction,secondaryLabel='',secondaryAction=null) {
+    let layer=$('scanFeedbackLayer');
+    if(!layer){layer=document.createElement('div');layer.id='scanFeedbackLayer';layer.className='scan-feedback-backdrop';document.body.appendChild(layer);}
+    if(state.scanResumeTimer){clearTimeout(state.scanResumeTimer);state.scanResumeTimer=null;}
+    const icon=tone==='success'?'✓':(tone==='warning'?'!':'×');
+    layer.innerHTML='<section class="scan-feedback-card '+safe(tone)+'" role="alertdialog" aria-modal="true" aria-labelledby="scanFeedbackTitle" aria-describedby="scanFeedbackMessage">'+
+      '<div class="scan-feedback-icon" aria-hidden="true">'+icon+'</div>'+
+      '<h2 id="scanFeedbackTitle">'+safe(title)+'</h2>'+
+      '<p id="scanFeedbackMessage">'+safe(message)+'</p>'+
+      (primaryLabel?'<button class="btn '+(tone==='danger'?'danger':(tone==='success'?'success':'primary'))+'" id="scanFeedbackPrimary" type="button">'+safe(primaryLabel)+'</button>':'')+
+      (secondaryLabel?'<button class="btn" id="scanFeedbackSecondary" type="button">'+safe(secondaryLabel)+'</button>':'')+
+      '</section>';
+    const primary=$('scanFeedbackPrimary');
+    if(primary&&primaryAction)primary.addEventListener('click',async()=>{
+      primary.disabled=true;
+      try{await primaryAction();}catch(err){primary.disabled=false;toast(err?.message||'Action could not be completed.',true);}
+    });
+    const secondary=$('scanFeedbackSecondary');
+    if(secondary&&secondaryAction)secondary.addEventListener('click',async()=>{
+      secondary.disabled=true;
+      try{await secondaryAction();}catch(err){secondary.disabled=false;toast(err?.message||'Action could not be completed.',true);}
+    });
+    if(tone==='success'){
+      state.scanResumeTimer=window.setTimeout(()=>{state.scanResumeTimer=null;if(state.scanHandling)releaseGuestScanLock();else hideScanFeedback();},1400);
+    }
+  }
+  function hideScanFeedback(){
+    if(state.scanResumeTimer){clearTimeout(state.scanResumeTimer);state.scanResumeTimer=null;}
+    $('scanFeedbackLayer')?.remove();
+  }
+  function beginGuestScanLock(qr,source) {
+    if(state.scanHandling)return false;
+    state.scanHandling=true;state.scanSource=source||'camera';state.scanCurrentQr=String(qr||'').trim();
+    state.scanPendingAction=null;state.scanActionBusy=false;
+    document.body.classList.add('scanner-has-guest');
+    const activeScanner=state.scanner;
+    if(activeScanner&&activeScanner.isScanning){
+      try{activeScanner.pause(true);state.scannerPaused=true;}
+      catch(err){state.scannerPaused=false;stopScanner().catch(()=>{});}
+    }
+    if($('scanResult'))$('scanResult').innerHTML='<div class="notice">QR captured. Verification in progress — one guest at a time.</div>';
+    return true;
+  }
+  function releaseGuestScanLock() {
+    if(state.scanActionBusy)return false;
+    hideScanFeedback();
+    state.scanHandling=false;state.scanCurrentQr='';state.scanSource='';state.scanPendingAction=null;
+    document.body.classList.remove('scanner-has-guest');
+    if($('scanResult'))$('scanResult').innerHTML='<div class="notice">Ready for the next guest. Present one QR at a time.</div>';
+    const activeScanner=state.scanner;
+    if(activeScanner&&activeScanner.isScanning&&state.scannerPaused){
+      try{activeScanner.resume();state.scannerPaused=false;}
+      catch(err){state.scannerPaused=false;stopScanner().then(()=>{if($('scanResult'))$('scanResult').innerHTML=showNotice('The camera could not resume. Tap Start QR scanner to continue.','error');}).catch(()=>{});}
+    }else if($('startCamera')){
+      $('startCamera').disabled=false;$('startCamera').textContent='Start QR scanner';
+    }
+    if($('stopCamera'))$('stopCamera').disabled=!(activeScanner&&activeScanner.isScanning);
+    return true;
+  }
+  async function fetchFreshGuest(passCode) {
+    const result=await post('/api/guest',{event_id:state.eventId,qr:passCode});
+    if(!result||!result.guest)throw new Error('The server did not return the updated guest record.');
+    return result.guest;
+  }
+  function isActionConfirmed(action,guest,checkpointId=0) {
+    if(!guest)return false;
+    if(action==='entry')return guest.entryUsed===true;
+    if(action==='food')return guest.foodUsed===true;
+    if(action==='proof_deposit')return guest.proofStatus==='Stored';
+    if(action==='proof_no_proof')return guest.proofStatus==='No proof';
+    if(action==='proof_return')return guest.proofStatus==='Returned';
+    if(action==='exit')return guest.exitRecorded===true;
+    if(action==='checkpoint')return (guest.checkpointScans||[]).some(item=>Number(item.id)===Number(checkpointId));
+    return false;
+  }
+  function completeConfirmedGuestAction(action,guest,serverMessage) {
+    state.guest=guest;
+    renderScannedGuest(serverMessage||'The action was saved and verified in the EventHub record.');
+    const labels={entry:'Entry recorded',proof_deposit:'Proof stored',proof_no_proof:'No proof confirmation stored',food:'Food collection recorded',proof_return:'Proof return recorded',exit:'Exit recorded',checkpoint:'Checkpoint scan recorded'};
+    showScanFeedback('success','SAVED & VERIFIED',(guest.name||'Guest')+' · '+(labels[action]||'Event record')+'. The backend confirmed the updated record.','NEXT GUEST',releaseGuestScanLock);
+  }
+  async function retryPendingScanAction() {
+    if(!state.scanPendingAction)return;
+    await executePendingScanAction(null);
+  }
+  async function executePendingScanAction(button) {
+    if(state.scanActionBusy||!state.scanPendingAction)return;
+    const pending={...state.scanPendingAction};
+    const passCode=String(pending.passCode||'').trim();
+    if(!passCode){showScanFeedback('danger','ACTION NOT CONFIRMED','The current pass code is missing. Verify the guest again before continuing.','RETRY VERIFY',()=>lookupGuest(state.scanCurrentQr));return;}
+    state.scanActionBusy=true;
+    if(button)button.disabled=true;
+    showScanFeedback('warning','SAVING EVENT RECORD','Please keep this guest at the desk. EventHub is saving and verifying the action.');
+    let postError=null;
+    try{
+      const before=await fetchFreshGuest(passCode);
+      if(isActionConfirmed(pending.action,before,pending.checkpointId)){
+        completeConfirmedGuestAction(pending.action,before,'This action was already saved. EventHub verified the existing record, so it was not submitted again.');
+        return;
+      }
+      try{
+        if(pending.action==='checkpoint'){
+          await post('/api/checkpoint_scan',{event_id:state.eventId,checkpoint_id:Number(pending.checkpointId),qr:passCode});
+        }else{
+          await post('/api/action',{event_id:state.eventId,action:pending.action,qr:passCode});
+        }
+      }catch(err){postError=err;}
+      let fresh;
+      try{fresh=await fetchFreshGuest(passCode);}
+      catch(verifyError){
+        const detail=postError?postError.message+' ': '';
+        throw new Error(detail+'The save status could not be checked because the guest record could not be refreshed. Keep the guest here and retry status verification before scanning another pass.');
+      }
+      if(isActionConfirmed(pending.action,fresh,pending.checkpointId)){
+        completeConfirmedGuestAction(pending.action,fresh,postError?'The request response was interrupted, but the backend record confirms this action was saved. No duplicate write was sent.':undefined);
+        return;
+      }
+      if(postError)throw postError;
+      throw new Error('The server did not show this action in the refreshed guest record. It is not confirmed as saved.');
+    }catch(err){
+      showScanFeedback('danger','SAVE NOT CONFIRMED',err?.message||'EventHub could not confirm this record. Do not release this guest yet.','RETRY / CHECK STATUS',retryPendingScanAction);
+    }finally{
+      state.scanActionBusy=false;
+      if(button&&button.isConnected&&state.scanHandling)button.disabled=false;
+    }
+  }
   function renderScannedGuest(message='') {
     const g=state.guest;if(!g)return;
     const actions=[];
     const activePass=g.status==='approved';
     const proofResolved=['Stored','No proof','Returned'].includes(g.proofStatus);
-    if(activePass&&!g.exitRecorded&&!g.entryUsed)actions.push(['entry','Record entry','success']);
-    if(activePass&&g.entryUsed&&!g.exitRecorded&&g.proofStatus==='Not collected') {
-      actions.push(['proof_deposit','Store proof','']);
-      actions.push(['proof_no_proof','No proof provided','']);
+    const role=state.role==='admin'?'admin':(state.staffRole||'global');
+    const canDo=action=>['admin','global','scanner','event_lead'].includes(role)||(role==='entry'&&action==='entry')||(role==='food'&&action==='food')||(role==='proof'&&['proof_deposit','proof_no_proof','proof_return','exit'].includes(action));
+    const canUseCheckpoint=['admin','global','scanner','event_lead','checkpoint'].includes(role);
+    if(activePass&&!g.exitRecorded&&!g.entryUsed&&canDo('entry'))actions.push(['entry','RECORD ENTRY','success']);
+    if(activePass&&g.entryUsed&&!g.exitRecorded&&g.proofStatus==='Not collected'){
+      if(canDo('proof_deposit'))actions.push(['proof_deposit','STORE ID PROOF','']);
+      if(canDo('proof_no_proof'))actions.push(['proof_no_proof','NO PROOF PROVIDED','']);
     }
-    if(foodCollectionIsEnabled()&&activePass&&g.entryUsed&&!g.exitRecorded&&!g.foodUsed&&proofResolved)actions.push(['food','Record food collection','success']);
-    if(activePass&&g.entryUsed&&!g.exitRecorded&&g.proofStatus==='Stored')actions.push(['proof_return','Return stored proof','']);
-    if(activePass&&g.entryUsed&&(g.proofStatus==='Returned'||g.proofStatus==='No proof')&&!g.exitRecorded)actions.push(['exit','Record exit','']);
-    const customCheckpointHtml=activePass&&!g.exitRecorded&&(state.checkpoints||[]).length?`<section class='guest-edit'><strong>Additional event checkpoints</strong><div class='field'><label>Choose checkpoint</label><select id='customCheckpoint'>${state.checkpoints.map(c=>`<option value='${Number(c.id)}'>${safe(c.name)} · ${safe(c.checkpoint_type)}</option>`).join('')}</select></div><button class='btn primary' id='recordCustomCheckpoint' type='button'>Record checkpoint scan</button></section>`:'';
-    const checkpointHistory=(g.checkpointScans||[]).map(c=>`<div class='sub'>✓ ${safe(c.name)} · ${safe(c.scannedAt||'')}</div>`).join('');
-    $('scanResult').innerHTML=`${message?showNotice(message,'good'):''}<div class="guest-result"><div class="row"><strong>${safe(g.name)}</strong><span class="pill ${g.status==='approved'?'good':'warn'}">${safe(g.status)}</span></div><p class="muted">${safe(g.residence)}${g.roomNumber?' · Room '+safe(g.roomNumber):''} · ${safe(g.food)}</p><div class="wrap"><span class="pill ${g.entryUsed?'good':'warn'}">Entry: ${g.entryUsed?'Recorded':'Pending'}</span><span class="pill ${!foodCollectionIsEnabled()?'':(g.foodUsed?'good':'warn')}">Food: ${foodCollectionIsEnabled()?(g.foodUsed?'Collected':'Pending'):'Not applicable'}</span><span class="pill">Proof: ${safe(g.proofStatus||'Not collected')}</span><span class="pill">Exit: ${g.exitRecorded?'Recorded':'Pending'}</span></div>${g.storageLabel?`<p><strong>Storage:</strong> ${safe(g.storageLabel)}</p>`:''}${checkpointHistory?`<div class='section'><strong>Additional checkpoint history</strong>${checkpointHistory}</div>`:''}${customCheckpointHtml}${guestAdminEditor(g)}${!activePass?'<div class="notice error">This pass is not active. Event-day actions are disabled.</div>':g.exitRecorded?'<div class="notice good">Exit has already been recorded. No further event-day actions are available.</div>':g.entryUsed&&!proofResolved?'<div class="notice">Next step: store the guest’s proof or confirm that no proof was provided. Continue with the proof workflow before exit.</div>':''}<p class="muted">Pass code: ${safe(g.passCode)}</p><div class="actions">${actions.map(([a,l,cl])=>`<button class="btn ${cl}" data-scan-action="${a}">${l}</button>`).join('')||'<span class="pill good">No further actions available</span>'}</div></div>`;
+    if(foodCollectionIsEnabled()&&activePass&&g.entryUsed&&!g.exitRecorded&&!g.foodUsed&&proofResolved&&canDo('food'))actions.push(['food','RECORD FOOD COLLECTION','success']);
+    if(activePass&&g.entryUsed&&!g.exitRecorded&&g.proofStatus==='Stored'&&canDo('proof_return'))actions.push(['proof_return','CONFIRM PROOF RETURN','']);
+    if(activePass&&g.entryUsed&&(g.proofStatus==='Returned'||g.proofStatus==='No proof')&&!g.exitRecorded&&canDo('exit'))actions.push(['exit','RECORD EXIT','']);
+    const customCheckpointHtml=canUseCheckpoint&&activePass&&!g.exitRecorded&&(state.checkpoints||[]).length?
+      '<section class="guest-edit"><strong>Assigned event checkpoint</strong><div class="field"><label for="customCheckpoint">Checkpoint station</label><select id="customCheckpoint">'+
+      state.checkpoints.map(c=>'<option value="'+Number(c.id)+'">'+safe(c.name)+' · '+safe(c.checkpoint_type)+'</option>').join('')+
+      '</select></div><button class="btn primary" id="recordCustomCheckpoint" type="button">RECORD CHECKPOINT SCAN</button></section>':'';
+    const checkpointHistory=(g.checkpointScans||[]).map(c=>'<div class="sub">✓ '+safe(c.name)+' · '+safe(c.scannedAt||'')+'</div>').join('');
+    const statusHtml='<div class="scan-status-grid">'+
+      '<div class="scan-status-item"><span>Entry</span><strong>'+(g.entryUsed?'✓ Recorded':'Pending')+'</strong></div>'+
+      '<div class="scan-status-item"><span>Food</span><strong>'+(foodCollectionIsEnabled()?(g.foodUsed?'✓ Collected':'Pending'):'Not applicable')+'</strong></div>'+
+      '<div class="scan-status-item"><span>Proof</span><strong>'+safe(g.proofStatus||'Not collected')+'</strong></div>'+
+      '<div class="scan-status-item"><span>Exit</span><strong>'+(g.exitRecorded?'✓ Recorded':'Pending')+'</strong></div></div>';
+    const noAction=!actions.length&&!customCheckpointHtml;
+    $('scanResult').innerHTML=(message?showNotice(message,'good'):'')+
+      '<div class="guest-result"><div class="row scan-guest-heading"><strong>'+safe(g.name)+'</strong><span class="pill '+(activePass?'good':'warn')+'">'+safe(g.status)+'</span></div>'+
+      '<p class="muted">'+safe(g.residence||'')+(g.roomNumber?' · Room '+safe(g.roomNumber):'')+' · '+safe(g.food||'')+'</p>'+statusHtml+
+      (g.storageLabel?'<p><strong>Proof location:</strong> '+safe(g.storageLabel)+'</p>':'')+
+      (checkpointHistory?'<div class="section"><strong>Checkpoint history</strong>'+checkpointHistory+'</div>':'')+
+      customCheckpointHtml+
+      (!activePass?'<div class="notice error">This pass is not active. Event-day actions are disabled.</div>':g.exitRecorded?'<div class="notice good">Exit is already recorded. No further event-day actions are available.</div>':g.entryUsed&&!proofResolved?'<div class="notice">Next step: store the guest’s ID proof or confirm that no proof was provided.</div>':'')+
+      '<div class="actions">'+(actions.map(([a,l,cl])=>'<button class="btn '+cl+'" data-scan-action="'+a+'">'+l+'</button>').join('')||'')+
+      (noAction?'<button class="btn primary scan-next-guest" id="nextGuestButton" type="button">NEXT GUEST</button>':'')+'</div>'+
+      (g.canManage?guestAdminEditor(g):'')+'</div>';
     document.querySelectorAll('[data-scan-action]').forEach(b=>b.addEventListener('click',()=>recordAction(b.dataset.scanAction,b)));
     $('recordCustomCheckpoint')?.addEventListener('click',recordCustomCheckpoint);
+    $('nextGuestButton')?.addEventListener('click',releaseGuestScanLock);
     $('scanGuestEditForm')?.addEventListener('submit',saveScannedGuest);
     $('scanReissuePass')?.addEventListener('click',()=>scannedGuestAction('reissue_pass'));
     $('scanRevokePass')?.addEventListener('click',()=>scannedGuestAction('revoke_pass'));
     $('scanReactivatePass')?.addEventListener('click',()=>scannedGuestAction('reactivate_pass'));
     $('scanResetEntry')?.addEventListener('click',()=>scannedGuestAction('reset_entry_and_storage'));
     $('scanResetFood')?.addEventListener('click',()=>scannedGuestAction('reset_food_status'));
+    if(noAction)showScanFeedback('warning','NO ACTION PENDING',(g.name||'This guest')+' has no remaining action available for your assigned desk. Review the status, then continue.','NEXT GUEST',releaseGuestScanLock);
   }
-  async function recordCustomCheckpoint(){
+  async function recordCustomCheckpoint() {
     const g=state.guest,checkpointId=Number($('customCheckpoint')?.value||0),button=$('recordCustomCheckpoint');
-    if(!g||!checkpointId||!button)return;
-    button.disabled=true;
-    try{const r=await post('/api/checkpoint_scan',{event_id:state.eventId,checkpoint_id:checkpointId,qr:g.passCode});toast(r.message||'Checkpoint scan recorded');await lookupGuest(g.passCode);}
-    catch(err){toast(err.message,true);button.disabled=false;}
+    if(!g||!checkpointId||!button){toast('Choose an assigned checkpoint first.',true);return;}
+    if(!state.scanHandling)beginGuestScanLock(g.passCode,'manual');
+    state.scanPendingAction={action:'checkpoint',checkpointId,passCode:g.passCode};
+    await executePendingScanAction(button);
   }
   async function recordAction(action,button) {
     if(action==='food'&&!foodCollectionIsEnabled()){toast('Food collection is disabled for this event.',true);return;}
-    if(!state.guest || state.guest.status!=='approved' || state.guest.exitRecorded) { toast('This pass is no longer eligible for event-day actions.',true); return; }
-    button.disabled=true;
-    try{const r=await post('/api/action',{event_id:state.eventId,action,qr:state.guest.passCode});const g=r.guest||{};await lookupGuest(state.guest.passCode);toast(r.message||`${action.replaceAll('_',' ')} recorded`);}
-    catch(e){toast(e.message,true);button.disabled=false;}
+    if(!state.guest||state.guest.status!=='approved'||state.guest.exitRecorded){toast('This pass is no longer eligible for event-day actions.',true);return;}
+    if(!state.scanHandling)beginGuestScanLock(state.guest.passCode,'manual');
+    state.scanPendingAction={action,checkpointId:0,passCode:state.guest.passCode};
+    await executePendingScanAction(button);
   }
   async function renderApprovals(host) {
     const readOnly=state.event?.status==='archived';
