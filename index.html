@@ -907,35 +907,60 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     const sponsor=sponsorEnabled&&sponsorUrl?'<section class="sponsor-card" aria-label="'+safe(t.sponsor_label||'Proud sponsor')+'"><span class="sponsor-label">'+safe(t.sponsor_label||'PROUD SPONSOR')+'</span><img src="'+safe(sponsorUrl)+'" alt="'+safe(t.sponsor_alt||'Event sponsor')+'" loading="lazy"></section>':'';
     return banner+'<section class="hero"><div class="eyebrow">'+safe(t.hero_badge||(state.role==='admin'?'Event workspace':state.role==='volunteer'?'Volunteer workspace':'Event information'))+'</div><h1>'+safe(e.name)+'</h1><p>'+safe(e.description||'Event details will be announced soon.')+'</p><div class="meta-grid"><div class="meta"><b>Date</b><span>'+safe(e.event_date||'To be announced')+'</span></div><div class="meta"><b>Time</b><span>'+safe(e.event_time||'To be announced')+'</span></div><div class="meta"><b>Venue</b><span>'+safe(e.venue||'To be announced')+'</span></div></div><div class="actions">'+guestActions+adminActions+'</div></section>'+sponsor;
   }
+  async function loadVolunteerDashboard() {
+    const host=$('volunteerDashboardData');
+    if(!host||!state.eventId)return;
+    const refreshButton=$('refreshShiftSummary');
+    if(refreshButton){refreshButton.disabled=true;refreshButton.textContent='Refreshing…';}
+    host.innerHTML='<div class="empty">Loading your event-day assignment…</div>';
+    try{
+      const data=await post('/api/volunteer_dashboard',{event_id:state.eventId});
+      if(!host.isConnected)return;
+      const role=data.staff_role||state.staffRole||'global',stats=data.stats||{};
+      const roleNames={global:'Core volunteer',event_lead:'Event lead',scanner:'Full scanner',entry:'Entry desk',food:'Food desk',proof:'Proof & exit desk',checkpoint:'Assigned checkpoint desk'};
+      const metrics=data.can_view_event_stats?[
+        ['Approved',stats.approved],['Entered',stats.checkedIn],['Awaiting entry',stats.awaitingEntry],
+        ...(stats.foodCollectionEnabled?[['Meals served',stats.foodServed]]:[]),['Pending approvals',stats.pendingApprovals]
+      ]:[['Your checkpoint scans',stats.myCheckpointScans||0],['Assigned stations',(data.checkpoints||[]).length]];
+      const metricsHtml=metrics.map(([label,value])=>'<div class="volunteer-metric"><strong>'+safe(value??0)+'</strong><span>'+safe(label)+'</span></div>').join('');
+      const checkpointRows=(data.checkpoints||[]).map(cp=>'<div class="volunteer-checkpoint"><span><strong>'+safe(cp.name)+'</strong><small>'+safe(cp.type)+' · '+Number(cp.scans||0)+' of your scans</small></span><span class="pill '+(cp.enabled?'good':'warn')+'">'+(cp.enabled?'READY':'DISABLED')+'</span></div>').join('')||'<p class="muted">'+(role==='checkpoint'?'No checkpoint has been assigned to you yet. Ask the admin to assign your station.':'No additional checkpoints are enabled for your role.')+'</p>';
+      const activity=(data.myRecentActions||[]).map(item=>'<div class="volunteer-activity"><span>'+safe(String(item.action||'').replaceAll('_',' '))+'</span><small>'+safe(item.createdAt||'')+'</small></div>').join('')||'<p class="muted">Your recorded actions will appear here during the shift.</p>';
+      host.innerHTML='<div class="section-title"><div><div class="eyebrow">Live assignment</div><h3>Shift snapshot</h3></div><button class="btn small" type="button" id="refreshShiftSummary">↻ Refresh</button></div>'+
+        '<div class="volunteer-metrics">'+metricsHtml+'</div>'+
+        '<div class="volunteer-detail-grid"><article class="card"><h3>Your station</h3>'+checkpointRows+'</article><article class="card"><h3>Your recent activity</h3>'+activity+'</article></div>';
+      $('refreshShiftSummary')?.addEventListener('click',loadVolunteerDashboard);
+    }catch(err){
+      if(host.isConnected)host.innerHTML='<div class="notice">Your shift summary is temporarily unavailable: '+safe(err.message)+'. The QR scanner remains available; ask an admin to check your assignment if this continues.</div><button class="btn small" type="button" id="retryShiftSummary">Retry summary</button>';
+      $('retryShiftSummary')?.addEventListener('click',loadVolunteerDashboard);
+    }
+  }
   async function renderHome() {
     state.page='home';
     if(state.role==='admin') {
       main.innerHTML=eventHero()+workspaceNav()+`<section class="section" id="workspaceContent"></section>`;
       bindNavigation(); await renderAdminPage('overview');
     } else if(state.role==='volunteer') {
-      main.innerHTML=eventHero()+`
-        <section class="section">
-          <div class="section-title"><h2>Volunteer event-day desk</h2><span class="status active">Volunteer access</span></div>
-          <div class="eventday-actions">
-            <article class="eventday-primary"><div class="eyebrow">Fast access</div><h2 style="margin:7px 0">QR Scanner</h2>
-              <p class="muted">Scan guest passes and follow the next available event checkpoint. Camera stays off until you open the scanner.</p>
-              <div class="actions"><button class="btn primary" data-page="scanner">Open dedicated scanner →</button></div>
-            </article>
-            <article class="card"><h3>🎫 My staff pass</h3><p>Open the same event QR pass used by guests.</p>
-              <div class="actions"><button class="btn" data-page="pass">Open my QR pass</button></div>
-            </article>
-          </div>
-          <article class="card"><h3>Event-day workflow</h3><p>Scan the pass first. EventHub displays only the actions currently allowed for that guest.</p>
-            <div class="workflow-steps">
-              <div class="workflow-step"><b>1 · Entry</b><span>Verify pass and record arrival</span></div>
-              <div class="workflow-step"><b>2 · Proof</b><span>Store ID proof or mark no proof</span></div>
-              <div class="workflow-step"><b>3 · Food</b><span>Record meal collection</span></div>
-              <div class="workflow-step"><b>4 · Exit</b><span>Return proof, then record exit</span></div>
-            </div>
-          </article>
-          <div class="notice">Use the dedicated scanner screen for scanning. Stop the camera or return to the workspace when finished; the camera is released when you leave the scanner.</div>
-        </section><section id="workspaceContent"></section>`;
-      bindNavigation();
+      const role=state.staffRole||'global';
+      const roleLabels={global:'Core volunteer · all events',event_lead:'Event lead',scanner:'Full event scanner',entry:'Entry desk',food:'Food desk',proof:'Proof & exit desk',checkpoint:'Assigned checkpoint desk'};
+      const roleInstructions={
+        global:'You have core access across EventHub events. Select the correct event before scanning.',
+        event_lead:'You can oversee the selected event and complete its event-day workflow.',
+        scanner:'You can complete the full guest workflow: entry, proof, food, exit and enabled checkpoints.',
+        entry:'Your station is entry only. Verify the pass and record arrival.',
+        food:'Your station is food collection only. EventHub checks the required entry and proof status.',
+        proof:'Your station handles ID proof storage, no-proof confirmation, proof return and exit.',
+        checkpoint:'You can scan only at the checkpoint stations assigned to you by the event admin.'
+      };
+      const roleLabel=roleLabels[role]||'Event volunteer';
+      main.innerHTML=eventHero()+
+        '<section class="section volunteer-desk">'+
+          '<div class="section-title"><div><div class="eyebrow">YOUR EVENT-DAY ASSIGNMENT</div><h2>Volunteer desk</h2></div><span class="status active">'+safe(roleLabel)+'</span></div>'+
+          '<article class="volunteer-command"><div class="volunteer-command-copy"><div class="eyebrow">READY FOR YOUR SHIFT?</div><h2>'+safe(roleLabel)+'</h2><p>'+safe(roleInstructions[role]||'Use the scanner for your assigned event-day tasks.')+'</p><p class="volunteer-scope">'+(role==='global'?'Core access across events.':'Access limited to '+safe(state.event?.name||'this event')+'.')+'</p></div>'+
+          '<div class="volunteer-command-action"><button class="btn primary" data-page="scanner">OPEN QR SCANNER →</button><span class="footnote">One guest at a time. The scanner unlocks only after the record is confirmed.</span></div></article>'+
+          '<section class="volunteer-live" id="volunteerDashboardData"><div class="empty">Loading your shift snapshot…</div></section>'+
+          '<div class="volunteer-shortcuts"><article class="card"><div class="eyebrow">STAFF BADGE</div><h3>🎫 My QR pass</h3><p>Open your EventHub staff pass if the admin needs to verify your staff identity.</p><button class="btn" data-page="pass">OPEN MY PASS</button></article><article class="card"><div class="eyebrow">BACKUP METHOD</div><h3>⌨️ Manual pass lookup</h3><p>Use the manual pass-code option inside the QR scanner when a guest cannot display their QR.</p><button class="btn" data-page="scanner">OPEN MANUAL LOOKUP</button></article></div>'+
+        '</section><section id="workspaceContent"></section>';
+      bindNavigation();loadVolunteerDashboard();
     } else {
       const regStatus=String(state.myRegistration?.status||'unknown');
       let guestCards='';
@@ -944,7 +969,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
       else if(regStatus==='revoked')guestCards='<article class="card"><h3>⚠️ Pass revoked</h3><p>Your previous pass for this event was revoked. Please contact an event admin. A duplicate registration is not available.</p></article>';
       else if(regStatus==='check_failed'||regStatus==='unknown')guestCards='<article class="card"><h3>Registration status unavailable</h3><p>EventHub could not verify your registration. Refresh the event before trying to register, so a duplicate registration is not submitted.</p></article>';
       else if(!registrationIsOpen())guestCards='<article class="card"><h3>🔒 Registration closed</h3><p>Registration for this event is currently closed. Existing registrations and QR passes remain valid. Please contact the event organisers for assistance.</p></article><article class="card"><h3>🎫 My QR pass</h3><p>Open your pass here after approval.</p><div class="actions"><button class="btn" data-page="pass">Open my pass</button></div></article>';
-      else guestCards='<article class="card"><h3>🎟 Registration</h3><p>'+(regStatus==='rejected'?'Your previous registration was rejected. You may submit a new registration.':"Complete this event's registration form. Your pass is sent after approval.")+'</p><div class="actions"><button class="btn primary" data-page="register">Register now</button></div></article><article class="card"><h3>🎫 My QR pass</h3><p>View your pass after your registration is approved.</p><div class="actions"><button class="btn" data-page="pass">Open my pass</button></div></article>';
+      else guestCards='<article class="card"><h3>🎟 Registration</h3><p>'+(regStatus==='rejected'?'Your previous registration was rejected. You may submit a new registration.':"Complete this event's registration form. Your pass is sent after approval.")+'</p><div class="actions"><button class="btn primary" data-page="register">Register now</button></div></article><article class="card"><h3>🎫 My QR pass</h3><p>View your pass after your registration is approved.</p><div class="actions"><button class="btn" data-page="pass">Open my QR pass</button></div></article>';
       main.innerHTML=eventHero()+`<section class="section grid">${guestCards}</section><section id="workspaceContent"></section>`;
       bindNavigation();
     }
