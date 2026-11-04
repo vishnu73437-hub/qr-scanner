@@ -676,7 +676,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     const page=String(state.page||'home').toLowerCase().replace(/[^a-z0-9_-]/g,'-').slice(0,30)||'home';
     return role+'-'+page;
   }
-  function interfaceEditorRoot(){return main;}
+  function interfaceEditorRoot(){return document.body;}
   function interfaceNodes(root){
     const selector='h1,h2,h3,h4,p,button,a,label,summary,span,small,strong,b,em,li,.eyebrow,.footnote,.notice,.status,.tab,.card,.hero,.eventday-primary,.meta,.stat,.list-item,.row,input,textarea,select,img';
     return [...root.querySelectorAll(selector)].filter(el=>!el.closest('#interfaceEditorPanel')&&!el.closest('#interfaceEditorLauncher')&&!el.closest('#toast'));
@@ -717,7 +717,8 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
       el.dataset.interfaceKey=key;
       if(!Object.prototype.hasOwnProperty.call(el.dataset,'interfaceOriginalText'))el.dataset.interfaceOriginalText=interfaceDirectText(el);
       if(!Object.prototype.hasOwnProperty.call(el.dataset,'interfaceOriginalDisplay'))el.dataset.interfaceOriginalDisplay=el.style.display||'';
-      if(!Object.prototype.hasOwnProperty.call(el.dataset,'interfaceOriginalPlaceholder'))el.dataset.interfaceOriginalPlaceholder=el.getAttribute('placeholder')||'';
+      const placeholderAttr=el.tagName==='IMG'?'alt':'placeholder';
+      if(!Object.prototype.hasOwnProperty.call(el.dataset,'interfaceOriginalPlaceholder'))el.dataset.interfaceOriginalPlaceholder=el.getAttribute(placeholderAttr)||'';
       const originalStyle={backgroundColor:el.dataset.interfaceOriginalBg||'',color:el.dataset.interfaceOriginalColor||'',borderRadius:el.dataset.interfaceOriginalRadius||'',padding:el.dataset.interfaceOriginalPadding||'',fontSize:el.dataset.interfaceOriginalFontSize||'',textAlign:el.dataset.interfaceOriginalAlign||''};
       if(!Object.prototype.hasOwnProperty.call(el.dataset,'interfaceOriginalBg'))el.dataset.interfaceOriginalBg=el.style.backgroundColor||'';
       if(!Object.prototype.hasOwnProperty.call(el.dataset,'interfaceOriginalColor'))el.dataset.interfaceOriginalColor=el.style.color||'';
@@ -727,7 +728,8 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
       if(!Object.prototype.hasOwnProperty.call(el.dataset,'interfaceOriginalAlign'))el.dataset.interfaceOriginalAlign=el.style.textAlign||'';
       const item=saved[key]||{};
       interfaceSetDirectText(el,Object.prototype.hasOwnProperty.call(item,'text')?item.text:el.dataset.interfaceOriginalText);
-      if(el.matches('input,textarea,select')||el.hasAttribute('placeholder'))el.setAttribute('placeholder',Object.prototype.hasOwnProperty.call(item,'placeholder')?item.placeholder:el.dataset.interfaceOriginalPlaceholder);
+      if(el.tagName==='IMG')el.setAttribute('alt',Object.prototype.hasOwnProperty.call(item,'placeholder')?item.placeholder:el.dataset.interfaceOriginalPlaceholder);
+      else if(el.matches('input,textarea,select')||el.hasAttribute('placeholder'))el.setAttribute('placeholder',Object.prototype.hasOwnProperty.call(item,'placeholder')?item.placeholder:el.dataset.interfaceOriginalPlaceholder);
       el.style.display=item.hidden===true?'none':el.dataset.interfaceOriginalDisplay;
       el.style.backgroundColor=item.bg||originalStyle.backgroundColor;
       el.style.color=item.color||originalStyle.color;
@@ -746,7 +748,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     const root=interfaceEditorRoot(),scope=currentInterfaceScope();
     interfaceEditorItems=interfaceNodes(root).map(el=>{
       const key=el.dataset.interfaceKey||interfaceNodeKey(el,root);el.dataset.interfaceKey=key;
-      return {el,key,label:interfaceDescribeElement(el,key),originalText:el.dataset.interfaceOriginalText??interfaceDirectText(el),placeholder:el.getAttribute('placeholder')||''};
+      return {el,key,label:interfaceDescribeElement(el,key),originalText:el.dataset.interfaceOriginalText??interfaceDirectText(el),placeholder:el.getAttribute(el.tagName==='IMG'?'alt':'placeholder')||''};
     });
     const selector=$('interfaceEditorComponent');
     if(selector){
@@ -812,7 +814,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
         '<p class="ui-editor-help">Select any visible component to change its wording, visibility, colours, size, spacing and alignment. These settings apply only to this event and this screen. They never change account permissions or scan rules.</p>'+
         '<div class="ui-editor-field"><label for="interfaceEditorComponent">Individual component</label><select id="interfaceEditorComponent"></select></div>'+
         '<div class="ui-editor-field"><label for="interfaceEditorText">Display text (leave unchanged to keep the default)</label><textarea id="interfaceEditorText" maxlength="300"></textarea></div>'+
-        '<div class="ui-editor-field"><label for="interfaceEditorPlaceholder">Input placeholder</label><input id="interfaceEditorPlaceholder" maxlength="140"></div>'+
+        '<div class="ui-editor-field"><label for="interfaceEditorPlaceholder">Input placeholder / image alt text</label><input id="interfaceEditorPlaceholder" maxlength="140"></div>'+
         '<label class="ui-editor-check"><input id="interfaceEditorVisible" type="checkbox" checked> Show this component</label>'+
         '<div class="ui-editor-grid"><div class="ui-editor-field"><label class="ui-editor-check"><input id="interfaceEditorBgEnabled" type="checkbox"> Custom background</label><input id="interfaceEditorBg" type="color" value="#211c2d"></div><div class="ui-editor-field"><label class="ui-editor-check"><input id="interfaceEditorColorEnabled" type="checkbox"> Custom text colour</label><input id="interfaceEditorColor" type="color" value="#f8f5fb"></div></div>'+
         '<div class="ui-editor-grid"><div class="ui-editor-field"><label for="interfaceEditorRadius">Corner radius (0–48 px)</label><input id="interfaceEditorRadius" type="number" min="0" max="48" placeholder="Default"></div><div class="ui-editor-field"><label for="interfaceEditorPadding">Inner spacing (0–60 px)</label><input id="interfaceEditorPadding" type="number" min="0" max="60" placeholder="Default"></div></div>'+
@@ -1679,6 +1681,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
       (primaryLabel?'<button class="btn '+(tone==='danger'?'danger':(tone==='success'?'success':'primary'))+'" id="scanFeedbackPrimary" type="button">'+safe(primaryLabel)+'</button>':'')+
       (secondaryLabel?'<button class="btn" id="scanFeedbackSecondary" type="button">'+safe(secondaryLabel)+'</button>':'')+
       '</section>';
+    interfaceApplyOverrides();
     const primary=$('scanFeedbackPrimary');
     if(primary&&primaryAction)primary.addEventListener('click',async()=>{
       primary.disabled=true;
