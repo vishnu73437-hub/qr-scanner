@@ -6,7 +6,7 @@
 - Final bot.py size: 365,412 bytes.
 - Final candidate bot.py SHA-256: 0510c10f9df31b9f3884c3d168f07f33ed8ecab9ab7a086fbf9033372661a848.
 - Final release ZIP: 89,817 bytes.
-- Final release ZIP SHA-256: 10b2b54cf44fd6568f43927d7eb0ea03f641fd64dac615e2520a31d67c34b5bd.
+- Final release ZIP SHA-256: ff2cc90b1db5bf0db3ee4432c1a5af626471051735f269b030cbb904253dcfd3.
 
 ## Issues found and fixed during the audit
 
