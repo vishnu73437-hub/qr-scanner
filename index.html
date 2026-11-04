@@ -678,7 +678,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
   }
   function interfaceEditorRoot(){return main;}
   function interfaceNodes(root){
-    const selector='h1,h2,h3,h4,p,button,a,label,summary,.eyebrow,.footnote,.notice,.status,.tab,.card,.hero,.eventday-primary,.meta,.stat,input[placeholder],textarea[placeholder],select';
+    const selector='h1,h2,h3,h4,p,button,a,label,summary,span,small,strong,b,em,li,.eyebrow,.footnote,.notice,.status,.tab,.card,.hero,.eventday-primary,.meta,.stat,.list-item,.row,input,textarea,select,img';
     return [...root.querySelectorAll(selector)].filter(el=>!el.closest('#interfaceEditorPanel')&&!el.closest('#interfaceEditorLauncher')&&!el.closest('#toast'));
   }
   function interfaceNodeKey(el,root){
@@ -708,9 +708,9 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
   function interfaceSavedComponents(){
     return parseJSON(state.event?.theme_json,{}).interface_components||{};
   }
-  function interfaceApplyOverrides(){
+  function interfaceApplyOverrides(componentMap=null){
     if(!state.event)return;
-    const root=interfaceEditorRoot(),scope=currentInterfaceScope(),saved=interfaceSavedComponents()[scope]||{};
+    const root=interfaceEditorRoot(),scope=currentInterfaceScope(),saved=(componentMap||interfaceSavedComponents())[scope]||{};
     const nodes=interfaceNodes(root);
     nodes.forEach(el=>{
       const key=el.dataset.interfaceKey||interfaceNodeKey(el,root);
@@ -787,22 +787,17 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     if($('interfaceEditorVisible').checked)delete record.hidden;else record.hidden=true;
     if($('interfaceEditorBgEnabled').checked)record.bg=$('interfaceEditorBg').value;else delete record.bg;
     if($('interfaceEditorColorEnabled').checked)record.color=$('interfaceEditorColor').value;else delete record.color;
-    for(const [input,key,max] of [['interfaceEditorRadius','radius',48],['interfaceEditorPadding','padding',60],['interfaceEditorFontSize','font_size',48]]){
+    for(const [input,key,min,max] of [['interfaceEditorRadius','radius',0,48],['interfaceEditorPadding','padding',0,60],['interfaceEditorFontSize','font_size',10,48]]){
       const raw=$(input).value;
       if(raw==='')delete record[key];
-      else record[key]=Math.max(0,Math.min(max,Math.round(Number(raw)||0)));
+      else record[key]=Math.max(min,Math.min(max,Math.round(Number(raw)||min)));
     }
     const align=$('interfaceEditorAlign').value;if(align)record.align=align;else delete record.align;
     if(Object.keys(record).length)interfaceEditorDraft[interfaceEditorScope][item.key]=record;
     else delete interfaceEditorDraft[interfaceEditorScope][item.key];
     if(!Object.keys(interfaceEditorDraft[interfaceEditorScope]).length)delete interfaceEditorDraft[interfaceEditorScope];
-    const theme=parseJSON(state.event?.theme_json,{});
-    theme.interface_components=interfaceEditorDraft;
-    // Preview from the unsaved draft without changing the stored event record.
-    const originalTheme=state.event.theme_json;
-    state.event.theme_json=JSON.stringify(theme);
-    interfaceApplyOverrides();
-    state.event.theme_json=originalTheme;
+    // Preview from the unsaved draft. Persisting happens only when Save is tapped.
+    interfaceApplyOverrides(interfaceEditorDraft);
   }
   function ensureInterfaceEditor(){
     let launcher=$('interfaceEditorLauncher'),panel=$('interfaceEditorPanel');
@@ -837,7 +832,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
       $('resetInterfaceScreen').addEventListener('click',()=>{
         if(!confirm('Remove all custom changes from this screen? Other screens will stay unchanged.'))return;
         if(interfaceEditorDraft)delete interfaceEditorDraft[interfaceEditorScope];
-        interfaceApplyOverrides();interfaceRefreshInventory();toast('Screen reset in the editor. Save to publish the reset.');
+        interfaceApplyOverrides(interfaceEditorDraft);interfaceRefreshInventory();toast('Screen reset in the editor. Save to publish the reset.');
       });
       $('saveInterfaceComponents').addEventListener('click',saveInterfaceComponents);
     }
