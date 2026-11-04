@@ -11,7 +11,7 @@ This staging branch improves EventHub event-day volunteer and admin workflows. I
 - Keeps a guest selected through the required action and verifies expected state with a fresh backend guest lookup before showing success.
 - On timeout, checks backend state before retrying to avoid duplicate entry, food, proof, exit or checkpoint records.
 - High-contrast full-screen progress, success and failure dialogs keep errors visible. An uncertain save keeps scanning locked and offers Retry / Check Status.
-- Full-scanner/admin/event-lead/proof workflows retain the guest after Entry until proof is stored or No Proof Provided is confirmed. Entry-only volunteers can complete Entry and hand the guest to the Proof desk.
+- Full-scanner/admin/event-lead/entry/proof workflows retain the guest after Entry until proof is stored or No Proof Provided is confirmed. The Entry desk can perform Entry plus proof deposit/no-proof confirmation; the Proof/Exit desk handles proof return and exit.
 - Large primary actions, sticky action controls, compact status grid, collapsed help and manual code fallback keep the volunteer workflow on one screen.
 - Adds role-specific volunteer home/desk information, assigned stations and recent action summaries.
 - Admin-only checkpoint manager creates/edits/enables stations and assigns eligible volunteers by display name.
