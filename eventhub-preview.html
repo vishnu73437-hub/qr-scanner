@@ -31,13 +31,23 @@
 .scanner-mode .scanner-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .scanner-mode .scanner-actions .btn{min-height:52px;font-size:15px}
 .scanner-hint{padding:12px;border-radius:14px;border:1px solid color-mix(in srgb,var(--gold) 40%,var(--line));background:color-mix(in srgb,var(--accent) 10%,var(--panel));font-size:13px;color:var(--text)}
-.scan-feedback-backdrop{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;padding:18px;background:#080610d9;backdrop-filter:blur(8px)}
-.scan-feedback-card{width:min(100%,460px);border:2px solid var(--line);border-radius:24px;padding:24px;background:var(--panel);box-shadow:0 24px 80px #000b;text-align:center;max-height:88dvh;overflow:auto}
-.scan-feedback-card.danger{border-color:var(--danger)}.scan-feedback-card.success{border-color:var(--ok)}.scan-feedback-card.warning{border-color:var(--gold)}
-.scan-feedback-icon{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;margin:0 auto 12px;font-size:34px;font-weight:900;background:#ffffff12}
-.scan-feedback-card h2{font-size:clamp(24px,5vw,34px);line-height:1.05;margin:8px 0 12px}.scan-feedback-card p{color:var(--muted);margin:6px 0 18px;overflow-wrap:anywhere}
-.scan-feedback-card .btn{width:100%;min-height:58px;font-size:17px;font-weight:900;margin-top:8px}
-.scan-feedback-card.danger .scan-feedback-icon{background:#ff626d22;color:var(--danger)}.scan-feedback-card.success .scan-feedback-icon{background:#47cf9122;color:var(--ok)}
+.scan-feedback-backdrop{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;padding:20px 16px calc(20px + env(safe-area-inset-bottom));background:rgba(8,7,18,.72);backdrop-filter:blur(16px) saturate(125%);-webkit-backdrop-filter:blur(16px) saturate(125%);animation:scanBackdropIn .2s ease-out}
+.scan-feedback-card{--feedback-accent:var(--gold);position:relative;isolation:isolate;width:min(100%,430px);max-height:min(82dvh,680px);overflow:auto;text-align:center;padding:30px 26px 24px;border:1px solid color-mix(in srgb,var(--feedback-accent) 34%,var(--line));border-radius:28px;background:linear-gradient(160deg,color-mix(in srgb,var(--panel) 96%,white 4%),var(--panel) 72%);box-shadow:0 28px 90px rgba(0,0,0,.48),inset 0 1px 0 rgba(255,255,255,.09);animation:scanCardIn .28s cubic-bezier(.2,.8,.2,1);overscroll-behavior:contain}
+.scan-feedback-card:before{content:"";position:absolute;z-index:-1;inset:0 18% auto;height:2px;border-radius:0 0 99px 99px;background:linear-gradient(90deg,transparent,var(--feedback-accent),transparent);opacity:.95}
+.scan-feedback-card.danger{--feedback-accent:#ff6878}.scan-feedback-card.success{--feedback-accent:#43d49a}.scan-feedback-card.warning{--feedback-accent:#e7b95f}
+.scan-feedback-kicker{display:block;margin:0 0 15px;color:var(--muted);font-size:10px;font-weight:900;letter-spacing:2px;text-transform:uppercase}
+.scan-feedback-icon{width:66px;height:66px;border-radius:22px;display:grid;place-items:center;margin:0 auto 17px;font-size:29px;font-weight:850;color:var(--feedback-accent);background:color-mix(in srgb,var(--feedback-accent) 13%,transparent);border:1px solid color-mix(in srgb,var(--feedback-accent) 27%,transparent);box-shadow:0 8px 24px color-mix(in srgb,var(--feedback-accent) 12%,transparent)}
+.scan-feedback-card h2{font-size:clamp(21px,5vw,27px);line-height:1.12;letter-spacing:-.5px;margin:0 0 10px;font-weight:850}
+.scan-feedback-card p{max-width:34ch;margin:0 auto 22px;color:var(--muted);font-size:14px;line-height:1.6;overflow-wrap:anywhere}
+.scan-feedback-card .btn{width:100%;min-height:54px;border-radius:16px;font-size:14px;font-weight:850;letter-spacing:.2px;margin-top:9px;box-shadow:0 8px 22px rgba(0,0,0,.16);transition:transform .16s ease,filter .16s ease,opacity .16s ease}
+.scan-feedback-card .btn:active{transform:scale(.985)}.scan-feedback-card .btn:focus-visible{outline:3px solid color-mix(in srgb,var(--feedback-accent) 70%,white);outline-offset:3px}
+.scan-feedback-card .btn:disabled{opacity:.65;cursor:wait;transform:none}
+.scan-feedback-card .btn:not(.danger):not(.success){border:1px solid color-mix(in srgb,var(--feedback-accent) 32%,var(--line))}
+.scan-feedback-card.danger .scan-feedback-icon{color:var(--feedback-accent)}.scan-feedback-card.success .scan-feedback-icon{color:var(--feedback-accent)}
+@keyframes scanBackdropIn{from{opacity:0}to{opacity:1}}
+@keyframes scanCardIn{from{opacity:0;transform:translateY(12px) scale(.975)}to{opacity:1;transform:translateY(0) scale(1)}}
+@media(max-width:480px){.scan-feedback-backdrop{padding-left:14px;padding-right:14px}.scan-feedback-card{padding:26px 20px 20px;border-radius:25px}.scan-feedback-icon{width:60px;height:60px;border-radius:19px}.scan-feedback-card p{font-size:13px}}
+@media(prefers-reduced-motion:reduce){.scan-feedback-backdrop,.scan-feedback-card{animation:none}.scan-feedback-card .btn{transition:none}}
 .scanner-mode .scanner-screen{gap:8px}.scanner-mode .scanner-screen .card{padding:12px}
 .scanner-mode .scanner-screen .scanner-box{min-height:clamp(130px,27vh,230px);padding:6px}
 .scanner-mode .scanner-screen .scanner-box #reader{max-width:520px}
@@ -1364,6 +1374,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     if(state.scanResumeTimer){clearTimeout(state.scanResumeTimer);state.scanResumeTimer=null;}
     const icon=tone==='success'?'✓':(tone==='warning'?'!':'×');
     layer.innerHTML='<section class="scan-feedback-card '+safe(tone)+'" role="alertdialog" aria-modal="true" aria-labelledby="scanFeedbackTitle" aria-describedby="scanFeedbackMessage">'+
+      '<span class="scan-feedback-kicker">EVENTHUB · SCANNER</span>'+
       '<div class="scan-feedback-icon" aria-hidden="true">'+icon+'</div>'+
       '<h2 id="scanFeedbackTitle">'+safe(title)+'</h2>'+
       '<p id="scanFeedbackMessage">'+safe(message)+'</p>'+
