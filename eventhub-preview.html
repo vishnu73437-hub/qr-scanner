@@ -31,6 +31,35 @@
 .scanner-mode .scanner-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .scanner-mode .scanner-actions .btn{min-height:52px;font-size:15px}
 .scanner-hint{padding:12px;border-radius:14px;border:1px solid color-mix(in srgb,var(--gold) 40%,var(--line));background:color-mix(in srgb,var(--accent) 10%,var(--panel));font-size:13px;color:var(--text)}
+.scan-feedback-backdrop{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;padding:18px;background:#080610d9;backdrop-filter:blur(8px)}
+.scan-feedback-card{width:min(100%,460px);border:2px solid var(--line);border-radius:24px;padding:24px;background:var(--panel);box-shadow:0 24px 80px #000b;text-align:center;max-height:88dvh;overflow:auto}
+.scan-feedback-card.danger{border-color:var(--danger)}.scan-feedback-card.success{border-color:var(--ok)}.scan-feedback-card.warning{border-color:var(--gold)}
+.scan-feedback-icon{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;margin:0 auto 12px;font-size:34px;font-weight:900;background:#ffffff12}
+.scan-feedback-card h2{font-size:clamp(24px,5vw,34px);line-height:1.05;margin:8px 0 12px}.scan-feedback-card p{color:var(--muted);margin:6px 0 18px;overflow-wrap:anywhere}
+.scan-feedback-card .btn{width:100%;min-height:58px;font-size:17px;font-weight:900;margin-top:8px}
+.scan-feedback-card.danger .scan-feedback-icon{background:#ff626d22;color:var(--danger)}.scan-feedback-card.success .scan-feedback-icon{background:#47cf9122;color:var(--ok)}
+.scanner-mode .scanner-screen{gap:8px}.scanner-mode .scanner-screen .card{padding:12px}
+.scanner-mode .scanner-screen .scanner-box{min-height:clamp(130px,27vh,230px);padding:6px}
+.scanner-mode .scanner-screen .scanner-box #reader{max-width:520px}
+.scanner-mode .scanner-screen .scanner-box #reader video{max-height:28vh}
+.scanner-mode .scanner-screen .scanner-hint{font-size:12px;padding:9px}
+.scanner-mode .scanner-screen .manual-pass-entry{margin:0}
+.scanner-mode .scanner-screen .manual-pass-entry>summary,.scanner-mode .scanner-screen .scanner-help>summary{cursor:pointer;font-weight:800;color:var(--gold);padding:8px 2px}
+.scanner-mode.scanner-has-guest .scanner-screen .scanner-box{display:none}
+.scanner-mode.scanner-has-guest .scanner-screen .scanner-actions{display:none}
+.scanner-mode .guest-result{margin-top:0;padding:14px}
+.scanner-mode .guest-result .actions{position:sticky;bottom:calc(env(safe-area-inset-bottom) + 4px);z-index:25;display:grid;grid-template-columns:1fr;gap:8px;padding:10px 0 4px;background:linear-gradient(180deg,transparent,var(--panel) 18%)}
+.scanner-mode .guest-result .actions .btn{min-height:60px;font-size:17px;font-weight:900}
+.scanner-mode .guest-result .wrap{gap:5px}
+.scanner-mode .guest-result .section{margin:8px 0}
+.scanner-mode .scan-guest-heading{align-items:flex-start}
+.scanner-mode .scan-guest-heading strong{font-size:clamp(20px,5vw,26px);line-height:1.1;overflow-wrap:anywhere}
+.scan-status-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin:10px 0}
+.scan-status-item{padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:#ffffff08;font-size:12px}
+.scan-status-item strong{display:block;font-size:13px}
+.scan-next-guest{min-height:58px!important;width:100%;font-size:17px!important;font-weight:900}
+@media(max-width:420px){.scan-feedback-card{padding:18px}.scanner-mode .guest-result{padding:11px}.scanner-mode .scanner-screen .section-title h2{font-size:18px}}
+
 @media(max-width:720px){.admin-launchpad{grid-template-columns:1fr}.eventday-actions{grid-template-columns:1fr}.workflow-steps{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .scanner-box{background:#100d1b;border:1px dashed #ffffff3b;border-radius:18px;padding:12px;min-height:220px}.scanner-box #reader{width:100%;max-width:560px;margin:auto}.guest-result{border:1px solid color-mix(in srgb,var(--accent) 42%,var(--line));background:linear-gradient(180deg,var(--panel),#171321);border-radius:18px;padding:16px;margin-top:14px}.pill{display:inline-block;border-radius:24px;padding:4px 8px;background:#ffffff12;color:var(--muted);font-size:11px;font-weight:800;margin:2px}.pill.good{background:#47cf9122;color:#7ce4b3}.pill.warn{background:#ffd16622;color:#ffd166}.table-wrap{overflow-x:auto}table{border-collapse:collapse;width:100%;min-width:540px;font-size:13px}td,th{text-align:left;padding:10px;border-bottom:1px solid var(--line);vertical-align:top}th{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px}.pass-image{width:min(100%,360px);display:block;border-radius:16px;border:1px solid var(--line);margin:12px auto;box-shadow:var(--shadow)}.empty{padding:24px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:18px}.toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#f8f5fb;color:#171321;border-radius:12px;padding:11px 16px;z-index:50;max-width:min(90vw,480px);box-shadow:var(--shadow);font-weight:750}.loading{opacity:.65;pointer-events:none}.schema-field{border:1px solid var(--line);padding:12px;border-radius:14px;margin:8px 0;background:#171321}.settings-accordion{margin:12px 0;border:1px solid var(--line);border-radius:16px;background:var(--panel);overflow:hidden}.settings-accordion>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 16px;font-weight:800}.settings-accordion>summary::-webkit-details-marker{display:none}.settings-accordion>summary:after{content:'＋';color:var(--gold);font-size:18px}.settings-accordion[open]>summary:after{content:'−'}.settings-accordion>.settings-content{padding:0 14px 14px}.settings-accordion .card{box-shadow:none}.settings-quick-save{position:sticky;bottom:8px;z-index:5;display:flex;justify-content:flex-end;padding:8px;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-radius:14px}.schema-field .inline-fields{align-items:end}.footnote{font-size:12px;color:var(--muted);margin-top:12px}.divider{height:1px;background:var(--line);margin:15px 0}
     .brand-mark img{width:100%;height:100%;object-fit:contain;border-radius:12px}.hero-banner{margin:0 0 14px;border-radius:20px;overflow:hidden;border:1px solid var(--line);box-shadow:var(--shadow)}.hero-banner img{display:block;width:100%;max-height:260px;object-fit:cover}.guest-edit{margin-top:10px;padding:10px;border:1px solid var(--line);border-radius:12px}.guest-edit summary{cursor:pointer;font-weight:750;color:var(--gold)}.sponsor-card{margin:14px 0 4px;padding:12px 16px;background:#fff;border:1px solid #d9b15f;border-radius:18px;display:flex;align-items:center;justify-content:center;gap:12px;box-shadow:0 10px 26px #0003;min-height:88px}.sponsor-card img{display:block;width:min(100%,360px);max-height:105px;object-fit:contain}.sponsor-label{font-size:10px;font-weight:900;letter-spacing:1.5px;color:#315078;white-space:nowrap}.theme-deepotsav body{background:radial-gradient(circle at 12% 12%,#d9b15f26 0 2px,transparent 3px),radial-gradient(circle at 88% 20%,#d9b15f22 0 3px,transparent 4px),radial-gradient(ellipse at 50% 0%,#6d328b55,transparent 58%),linear-gradient(145deg,#190d2b,#32104d 52%,#160b25)}body.theme-deepotsav{background:radial-gradient(ellipse at 50% 0%,color-mix(in srgb,var(--accent) 24%,transparent),transparent 58%),var(--bg)}body.theme-deepotsav .hero{background:linear-gradient(125deg,color-mix(in srgb,var(--accent) 24%,var(--panel)),var(--panel) 58%,color-mix(in srgb,var(--gold) 12%,var(--panel)));border-color:var(--gold)}body.theme-deepotsav .brand-mark{background:linear-gradient(135deg,var(--gold),#fff0b2)}
@@ -474,7 +503,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
   const API_BASE = (params.get('api_base') || window.EVENTHUB_API_BASE || (/github\.io$/.test(location.hostname) ? 'https://unwjym.bot-keep.xyz' : location.origin)).replace(/\/$/, '');
   const initialEventId = Number(params.get('event_id') || 0);
   let scannerView = params.get('scanner') === '1';
-  const state = { role:'guest', user:null, activeEvents:[], workspaces:[], eventId:initialEventId, event:null, stats:null, page:'home', guest:null, scanner:null, scannerStarting:false, scannerStopPromise:null, scannerGeneration:0, scanHandling:false, lastScannedQr:'', scanMisses:0, formSchema:[], pass:null, checkpoints:[], myRegistration:null };
+  const state = { role:'guest', staffRole:'', user:null, activeEvents:[], workspaces:[], eventId:initialEventId, event:null, stats:null, page:'home', guest:null, scanner:null, scannerStarting:false, scannerStopPromise:null, scannerGeneration:0, scanHandling:false, scanSource:'', scanCurrentQr:'', scanPendingAction:null, scanActionBusy:false, scanResumeTimer:null, scannerPaused:false, lastScannedQr:'', scanMisses:0, formSchema:[], pass:null, checkpoints:[], myRegistration:null };
   const $ = (id) => document.getElementById(id);
   const main = $('main');
   const safe = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -691,7 +720,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     const elapsed=Date.now()-startedAt;
     if(elapsed>1500) console.warn('[EventHub slow API]',path,'action='+actionName,elapsed+'ms','HTTP',res.status);
     if(!data || typeof data!=='object') throw new Error(`EventHub API ${path} returned an unexpected response.`);
-    if(!res.ok || data.ok===false) throw new Error(data.error || `Request failed (${res.status}).`);
+    if(!res.ok || data.ok===false) { const error=new Error(data.error || `Request failed (${res.status}).`); error.status=res.status; error.apiPath=path; error.apiAction=actionName; throw error; }
     return data;
   }
   // Keep recently fetched, read-only admin data in memory while navigating the
@@ -700,7 +729,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
   const adminReadActions = new Set([
     'stats','guest_search','pending_registrations','storage_config',
     'proof_storage_report','announcement_history','sheets_queue_status',
-    'volunteers','admins','checkpoints'
+    'volunteers','admins','checkpoints','event_volunteers','event_volunteer_candidates','checkpoint_team'
   ]);
   const ADMIN_READ_CACHE_MS = 8000;
   const adminCall = async (action, extra={}) => {
@@ -731,7 +760,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     await stopScanner();
     state.eventId=eid; state.event=null; state.guest=null; state.pass=null; state.myRegistration=null; state.page='home'; updateUrl(eid,true);
     main.innerHTML='<div class="empty">Opening this event…</div>';
-    try { await loadEvent(); }
+    try { await loadRole(); await loadEvent(); }
     catch(err) { main.innerHTML=showNotice(err.message,'error')+'<div class="actions"><button class="btn" id="returnEvents">← All events</button></div>'; $('returnEvents')?.addEventListener('click',clearEvent); throw err; }
   }
   async function clearEvent() {
@@ -741,7 +770,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
   }
   async function loadRole() {
     const data=await post('/api/role', state.eventId?{event_id:state.eventId}:{});
-    state.role=data.role||'guest'; state.user=data.user||null; state.activeEvents=data.events||[]; state.workspaces=data.workspaces||[];
+    state.role=data.role||'guest'; state.staffRole=data.staff_role||''; state.user=data.user||null; state.activeEvents=data.events||[]; state.workspaces=data.workspaces||[];
     return data;
   }
   async function loadEvent() {
@@ -774,6 +803,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
         if(roleResult.status!=='fulfilled') throw roleResult.reason;
         const roleData=roleResult.value;
         state.role=roleData.role||'guest';
+        state.staffRole=roleData.staff_role||'';
         state.user=roleData.user||null;
         state.activeEvents=roleData.events||[];
         state.workspaces=roleData.workspaces||[];
@@ -877,35 +907,60 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     const sponsor=sponsorEnabled&&sponsorUrl?'<section class="sponsor-card" aria-label="'+safe(t.sponsor_label||'Proud sponsor')+'"><span class="sponsor-label">'+safe(t.sponsor_label||'PROUD SPONSOR')+'</span><img src="'+safe(sponsorUrl)+'" alt="'+safe(t.sponsor_alt||'Event sponsor')+'" loading="lazy"></section>':'';
     return banner+'<section class="hero"><div class="eyebrow">'+safe(t.hero_badge||(state.role==='admin'?'Event workspace':state.role==='volunteer'?'Volunteer workspace':'Event information'))+'</div><h1>'+safe(e.name)+'</h1><p>'+safe(e.description||'Event details will be announced soon.')+'</p><div class="meta-grid"><div class="meta"><b>Date</b><span>'+safe(e.event_date||'To be announced')+'</span></div><div class="meta"><b>Time</b><span>'+safe(e.event_time||'To be announced')+'</span></div><div class="meta"><b>Venue</b><span>'+safe(e.venue||'To be announced')+'</span></div></div><div class="actions">'+guestActions+adminActions+'</div></section>'+sponsor;
   }
+  async function loadVolunteerDashboard() {
+    const host=$('volunteerDashboardData');
+    if(!host||!state.eventId)return;
+    const refreshButton=$('refreshShiftSummary');
+    if(refreshButton){refreshButton.disabled=true;refreshButton.textContent='Refreshing…';}
+    host.innerHTML='<div class="empty">Loading your event-day assignment…</div>';
+    try{
+      const data=await post('/api/volunteer_dashboard',{event_id:state.eventId});
+      if(!host.isConnected)return;
+      const role=data.staff_role||state.staffRole||'global',stats=data.stats||{};
+      const roleNames={global:'Core volunteer',event_lead:'Event lead',scanner:'Full scanner',entry:'Entry desk',food:'Food desk',proof:'Proof & exit desk',checkpoint:'Assigned checkpoint desk'};
+      const metrics=data.can_view_event_stats?[
+        ['Approved',stats.approved],['Entered',stats.checkedIn],['Awaiting entry',stats.awaitingEntry],
+        ...(stats.foodCollectionEnabled?[['Meals served',stats.foodServed]]:[]),['Pending approvals',stats.pendingApprovals]
+      ]:[['Your checkpoint scans',stats.myCheckpointScans||0],['Assigned stations',(data.checkpoints||[]).length]];
+      const metricsHtml=metrics.map(([label,value])=>'<div class="volunteer-metric"><strong>'+safe(value??0)+'</strong><span>'+safe(label)+'</span></div>').join('');
+      const checkpointRows=(data.checkpoints||[]).map(cp=>'<div class="volunteer-checkpoint"><span><strong>'+safe(cp.name)+'</strong><small>'+safe(cp.type)+' · '+Number(cp.scans||0)+' of your scans</small></span><span class="pill '+(cp.enabled?'good':'warn')+'">'+(cp.enabled?'READY':'DISABLED')+'</span></div>').join('')||'<p class="muted">'+(role==='checkpoint'?'No checkpoint has been assigned to you yet. Ask the admin to assign your station.':'No additional checkpoints are enabled for your role.')+'</p>';
+      const activity=(data.myRecentActions||[]).map(item=>'<div class="volunteer-activity"><span>'+safe(String(item.action||'').replaceAll('_',' '))+'</span><small>'+safe(item.createdAt||'')+'</small></div>').join('')||'<p class="muted">Your recorded actions will appear here during the shift.</p>';
+      host.innerHTML='<div class="section-title"><div><div class="eyebrow">Live assignment</div><h3>Shift snapshot</h3></div><button class="btn small" type="button" id="refreshShiftSummary">↻ Refresh</button></div>'+
+        '<div class="volunteer-metrics">'+metricsHtml+'</div>'+
+        '<div class="volunteer-detail-grid"><article class="card"><h3>Your station</h3>'+checkpointRows+'</article><article class="card"><h3>Your recent activity</h3>'+activity+'</article></div>';
+      $('refreshShiftSummary')?.addEventListener('click',loadVolunteerDashboard);
+    }catch(err){
+      if(host.isConnected)host.innerHTML='<div class="notice">Your shift summary is temporarily unavailable: '+safe(err.message)+'. The QR scanner remains available; ask an admin to check your assignment if this continues.</div><button class="btn small" type="button" id="retryShiftSummary">Retry summary</button>';
+      $('retryShiftSummary')?.addEventListener('click',loadVolunteerDashboard);
+    }
+  }
   async function renderHome() {
     state.page='home';
     if(state.role==='admin') {
       main.innerHTML=eventHero()+workspaceNav()+`<section class="section" id="workspaceContent"></section>`;
       bindNavigation(); await renderAdminPage('overview');
     } else if(state.role==='volunteer') {
-      main.innerHTML=eventHero()+`
-        <section class="section">
-          <div class="section-title"><h2>Volunteer event-day desk</h2><span class="status active">Volunteer access</span></div>
-          <div class="eventday-actions">
-            <article class="eventday-primary"><div class="eyebrow">Fast access</div><h2 style="margin:7px 0">QR Scanner</h2>
-              <p class="muted">Scan guest passes and follow the next available event checkpoint. Camera stays off until you open the scanner.</p>
-              <div class="actions"><button class="btn primary" data-page="scanner">Open dedicated scanner →</button></div>
-            </article>
-            <article class="card"><h3>🎫 My staff pass</h3><p>Open the same event QR pass used by guests.</p>
-              <div class="actions"><button class="btn" data-page="pass">Open my QR pass</button></div>
-            </article>
-          </div>
-          <article class="card"><h3>Event-day workflow</h3><p>Scan the pass first. EventHub displays only the actions currently allowed for that guest.</p>
-            <div class="workflow-steps">
-              <div class="workflow-step"><b>1 · Entry</b><span>Verify pass and record arrival</span></div>
-              <div class="workflow-step"><b>2 · Proof</b><span>Store ID proof or mark no proof</span></div>
-              <div class="workflow-step"><b>3 · Food</b><span>Record meal collection</span></div>
-              <div class="workflow-step"><b>4 · Exit</b><span>Return proof, then record exit</span></div>
-            </div>
-          </article>
-          <div class="notice">Use the dedicated scanner screen for scanning. Stop the camera or return to the workspace when finished; the camera is released when you leave the scanner.</div>
-        </section><section id="workspaceContent"></section>`;
-      bindNavigation();
+      const role=state.staffRole||'global';
+      const roleLabels={global:'Core volunteer · all events',event_lead:'Event lead',scanner:'Full event scanner',entry:'Entry desk',food:'Food desk',proof:'Proof & exit desk',checkpoint:'Assigned checkpoint desk'};
+      const roleInstructions={
+        global:'You have core access across EventHub events. Select the correct event before scanning.',
+        event_lead:'You can oversee the selected event and complete its event-day workflow.',
+        scanner:'You can complete the full guest workflow: entry, proof, food, exit and enabled checkpoints.',
+        entry:'Your station is entry only. Verify the pass and record arrival.',
+        food:'Your station is food collection only. EventHub checks the required entry and proof status.',
+        proof:'Your station handles ID proof storage, no-proof confirmation, proof return and exit.',
+        checkpoint:'You can scan only at the checkpoint stations assigned to you by the event admin.'
+      };
+      const roleLabel=roleLabels[role]||'Event volunteer';
+      main.innerHTML=eventHero()+
+        '<section class="section volunteer-desk">'+
+          '<div class="section-title"><div><div class="eyebrow">YOUR EVENT-DAY ASSIGNMENT</div><h2>Volunteer desk</h2></div><span class="status active">'+safe(roleLabel)+'</span></div>'+
+          '<article class="volunteer-command"><div class="volunteer-command-copy"><div class="eyebrow">READY FOR YOUR SHIFT?</div><h2>'+safe(roleLabel)+'</h2><p>'+safe(roleInstructions[role]||'Use the scanner for your assigned event-day tasks.')+'</p><p class="volunteer-scope">'+(role==='global'?'Core access across events.':'Access limited to '+safe(state.event?.name||'this event')+'.')+'</p></div>'+
+          '<div class="volunteer-command-action"><button class="btn primary" data-page="scanner">OPEN QR SCANNER →</button><span class="footnote">One guest at a time. The scanner unlocks only after the record is confirmed.</span></div></article>'+
+          '<section class="volunteer-live" id="volunteerDashboardData"><div class="empty">Loading your shift snapshot…</div></section>'+
+          '<div class="volunteer-shortcuts"><article class="card"><div class="eyebrow">STAFF BADGE</div><h3>🎫 My QR pass</h3><p>Open your EventHub staff pass if the admin needs to verify your staff identity.</p><button class="btn" data-page="pass">OPEN MY PASS</button></article><article class="card"><div class="eyebrow">BACKUP METHOD</div><h3>⌨️ Manual pass lookup</h3><p>Use the manual pass-code option inside the QR scanner when a guest cannot display their QR.</p><button class="btn" data-page="scanner">OPEN MANUAL LOOKUP</button></article></div>'+
+        '</section><section id="workspaceContent"></section>';
+      bindNavigation();loadVolunteerDashboard();
     } else {
       const regStatus=String(state.myRegistration?.status||'unknown');
       let guestCards='';
@@ -914,7 +969,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
       else if(regStatus==='revoked')guestCards='<article class="card"><h3>⚠️ Pass revoked</h3><p>Your previous pass for this event was revoked. Please contact an event admin. A duplicate registration is not available.</p></article>';
       else if(regStatus==='check_failed'||regStatus==='unknown')guestCards='<article class="card"><h3>Registration status unavailable</h3><p>EventHub could not verify your registration. Refresh the event before trying to register, so a duplicate registration is not submitted.</p></article>';
       else if(!registrationIsOpen())guestCards='<article class="card"><h3>🔒 Registration closed</h3><p>Registration for this event is currently closed. Existing registrations and QR passes remain valid. Please contact the event organisers for assistance.</p></article><article class="card"><h3>🎫 My QR pass</h3><p>Open your pass here after approval.</p><div class="actions"><button class="btn" data-page="pass">Open my pass</button></div></article>';
-      else guestCards='<article class="card"><h3>🎟 Registration</h3><p>'+(regStatus==='rejected'?'Your previous registration was rejected. You may submit a new registration.':"Complete this event's registration form. Your pass is sent after approval.")+'</p><div class="actions"><button class="btn primary" data-page="register">Register now</button></div></article><article class="card"><h3>🎫 My QR pass</h3><p>View your pass after your registration is approved.</p><div class="actions"><button class="btn" data-page="pass">Open my pass</button></div></article>';
+      else guestCards='<article class="card"><h3>🎟 Registration</h3><p>'+(regStatus==='rejected'?'Your previous registration was rejected. You may submit a new registration.':"Complete this event's registration form. Your pass is sent after approval.")+'</p><div class="actions"><button class="btn primary" data-page="register">Register now</button></div></article><article class="card"><h3>🎫 My QR pass</h3><p>View your pass after your registration is approved.</p><div class="actions"><button class="btn" data-page="pass">Open my QR pass</button></div></article>';
       main.innerHTML=eventHero()+`<section class="section grid">${guestCards}</section><section id="workspaceContent"></section>`;
       bindNavigation();
     }
@@ -1112,14 +1167,37 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     if(state.role!=='admin'&&state.role!=='volunteer'){host.innerHTML=showNotice('Scanner access is restricted to event volunteers and admins.','error');return;}
     if(state.event?.status!=='active'){await stopScanner();host.innerHTML=showNotice('This event is not active. Its records are available for review, but QR scanning and event-day actions are disabled.','error');return;}
     await stopScanner();
-    host.innerHTML=standalone?`<section class="scanner-screen"><section class="card"><div class="section-title"><h2>📷 Event QR Scanner</h2><span class="status active">${safe(state.event.name)}</span></div><p class="muted">The camera starts when you tap Start. Each QR scan pauses detection while that guest is processed, then scanning resumes automatically. EventHub stops the camera when you leave this screen or switch the app to the background.</p><div class="scanner-hint">Camera permission is normally requested only the first time. During guest processing, QR detection pauses to prevent accidental extra scans; it resumes automatically when processing finishes. You can revoke access in your device/app settings.</div><div class="manual-pass-entry"><div class="field"><label for="manualPassCode">Or enter pass code manually</label><input id="manualPassCode" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="120" placeholder="Enter guest pass code"></div><button class="btn primary" type="button" id="verifyManualPass">Verify pass code</button><p class="footnote">Use this if the guest cannot display their QR code or the camera is unavailable.</p></div><div class="scanner-box"><div id="reader"><div class="empty">Camera preview appears here after access is granted.</div></div></div><div class="scanner-actions"><button class="btn primary" id="startCamera">Start QR scanner</button><button class="btn" id="stopCamera" disabled>Stop camera</button></div><div id="scanResult"></div></section><div class="actions"><button class="btn ghost" id="scannerBack">← Back to event workspace</button></div></section>`:`<section class="section card"><div class="section-title"><h2>📷 QR Scanner</h2><span class="status active">${safe(state.event.name)}</span></div><p class="muted">Open the dedicated scanner screen before scanning passes.</p><div class="actions"><button class="btn primary" id="openDedicatedScanner">Open full-screen QR Scanner →</button></div></section>`;
-    $('verifyManualPass')?.addEventListener('click',async()=>{const input=$('manualPassCode'),button=$('verifyManualPass'),code=String(input?.value||'').trim();if(!code){toast('Enter a pass code first.',true);input?.focus();return;}await stopScanner();button.disabled=true;button.textContent='Verifying…';try{await lookupGuest(code);}finally{button.disabled=false;button.textContent='Verify pass code';}});
+    const roleLabels={admin:'Administrator',global:'Core volunteer',scanner:'Full scanner',event_lead:'Event lead',entry:'Entry desk',food:'Food desk',proof:'Proof & exit desk',checkpoint:'Assigned checkpoint desk'};
+    const roleLabel=state.role==='admin'?'Administrator':(roleLabels[state.staffRole||'global']||'Event volunteer');
+    host.innerHTML=standalone?'<section class="scanner-screen"><section class="card scanner-console">'+
+      '<div class="section-title"><div><div class="eyebrow">'+safe(roleLabel)+'</div><h2>📷 Event QR Scanner</h2></div><span class="status active">'+safe(state.event.name)+'</span></div>'+
+      '<p class="muted">One guest at a time. EventHub locks scanning until the required action is confirmed as saved.</p>'+
+      '<div class="scanner-box"><div id="reader"><div class="empty">Camera preview appears here after you start the scanner.</div></div></div>'+
+      '<div class="scanner-actions"><button class="btn primary" id="startCamera">Start QR scanner</button><button class="btn" id="stopCamera" disabled>Stop camera</button></div>'+
+      '<details class="manual-pass-entry"><summary>⌨️ Manual pass-code fallback</summary><div class="field"><label for="manualPassCode">Guest pass code</label><input id="manualPassCode" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="120" placeholder="Enter guest pass code"></div><button class="btn primary" type="button" id="verifyManualPass">Verify pass code</button></details>'+
+      '<details class="scanner-help"><summary>Camera help and troubleshooting</summary><div class="scanner-hint">Camera permission is requested when you tap Start. If permission is denied, allow camera access for Telegram or your browser and retry. EventHub releases the camera when it moves to the background; tap Start when you return.</div></details>'+
+      '<div id="scanResult" aria-live="polite"></div>'+
+    '</section><div class="actions"><button class="btn ghost" id="scannerBack">← Back to event workspace</button></div></section>':'<section class="section card"><div class="section-title"><h2>📷 QR Scanner</h2><span class="status active">'+safe(state.event.name)+'</span></div><p class="muted">Open the dedicated full-screen scanner before scanning passes.</p><div class="actions"><button class="btn primary" id="openDedicatedScanner">Open full-screen QR Scanner →</button></div></section>';
+    $('verifyManualPass')?.addEventListener('click',async()=>{
+      const input=$('manualPassCode'),button=$('verifyManualPass'),code=String(input?.value||'').trim();
+      if(!code){toast('Enter a pass code first.',true);input?.focus();return;}
+      if(!beginGuestScanLock(code,'manual'))return;
+      button.disabled=true;button.textContent='Checking…';
+      try{await lookupGuest(code);}
+      finally{if(button.isConnected){button.disabled=false;button.textContent='Verify pass code';}}
+    });
     $('manualPassCode')?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('verifyManualPass')?.click();}});
     $('startCamera')?.addEventListener('click',startScanner);$('stopCamera')?.addEventListener('click',stopScanner);
     $('openDedicatedScanner')?.addEventListener('click',()=>openScannerStandalone());$('scannerBack')?.addEventListener('click',()=>closeScannerStandalone());
     state.checkpoints=[];
-    try{const cp=await post('/api/checkpoints',{event_id:state.eventId});state.checkpoints=cp.checkpoints||[];}catch(err){toast('Additional checkpoints could not be loaded: '+err.message,true);}
-    // Camera access is intentionally user-initiated via the Start button.
+    try{const cp=await post('/api/checkpoints',{event_id:state.eventId});state.checkpoints=Array.isArray(cp.checkpoints)?cp.checkpoints:[];}
+    catch(err){toast('Assigned checkpoints could not be loaded: '+err.message,true);}
+    if(state.scanHandling&&state.scanCurrentQr){
+      document.body.classList.add('scanner-has-guest');
+      if(state.scanPendingAction)showScanFeedback('danger','ACTION NOT YET CONFIRMED','A previous guest action still needs verification. Retry the save before scanning another guest.','RETRY / CHECK STATUS',retryPendingScanAction,'BACK TO VOLUNTEER DESK',async()=>{hideScanFeedback();await closeScannerStandalone();});
+      else if(state.guest)renderScannedGuest();
+      else showScanFeedback('warning','VERIFICATION INTERRUPTED','This guest pass was not fully checked. Verify it again before admitting the guest.','RETRY VERIFY',()=>lookupGuest(state.scanCurrentQr),'NEXT GUEST',releaseGuestScanLock);
+    }
   }
   async function startScanner() {
     if(state.scannerStarting||state.scanHandling)return;
@@ -1130,50 +1208,30 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
       if(generation!==state.scannerGeneration||!$('reader'))return;
       if(state.scanner?.isScanning)return;
       await loadQrLibrary();
-      // The user may have left the scanner while the CDN library was loading.
-      // Do not request camera permission or start a hidden camera after navigation.
       if(generation!==state.scannerGeneration||!$('reader'))return;
       if(!window.Html5Qrcode)throw new Error('QR_LIBRARY_UNAVAILABLE');
-      if(!state.scanner) state.scanner=new Html5Qrcode('reader');
-      $('startCamera').disabled=true; $('startCamera').textContent='Starting camera…'; $('stopCamera').disabled=false;
+      if(!state.scanner)state.scanner=new Html5Qrcode('reader');
+      $('startCamera').disabled=true;$('startCamera').textContent='Starting camera…';$('stopCamera').disabled=false;
       if(!navigator.mediaDevices?.getUserMedia)throw new Error('CAMERA_UNAVAILABLE');
       await state.scanner.start({facingMode:'environment'},{fps:10,qrbox:{width:250,height:250},aspectRatio:1.0},async text=>{
-        // Keep the camera stream alive between guests. Ignore repeated frames of
-        // the same QR until it has left the camera view, preventing duplicate lookups.
         const scanned=String(text||'').trim();
         if(!scanned||state.scanHandling||scanned===state.lastScannedQr)return;
-        state.scanHandling=true;
-        state.lastScannedQr=scanned;
-        state.scanMisses=0;
-        const activeScanner=state.scanner;
-        // Freeze QR detection and the preview while this guest is being processed.
-        // Keep the camera session alive so permission is not requested again.
-        try{
-          if(activeScanner?.isScanning)activeScanner.pause(true);
-          if($('scanResult'))$('scanResult').innerHTML='<div class="notice">QR captured. Processing this guest — please wait…</div>';
-          await lookupGuest(scanned);
-        } finally {
-          // Resume only the same scanner session. Event-management QR lookup may
-          // intentionally stop it or navigate away, in which case it must stay stopped.
-          if(activeScanner&&state.scanner===activeScanner&&activeScanner.isScanning){
-            try{activeScanner.resume();}catch(resumeError){toast('Guest processed, but the scanner could not resume. Tap Start QR scanner to continue.',true);}
-          }
-          state.scanHandling=false;
-        }
+        state.lastScannedQr=scanned;state.scanMisses=0;
+        if(!beginGuestScanLock(scanned,'camera'))return;
+        await lookupGuest(scanned);
       },()=>{
-        // After several frames without a QR, allow the same pass to be scanned again.
         if(++state.scanMisses>=8){state.lastScannedQr='';state.scanMisses=0;}
       });
       if(generation===state.scannerGeneration&&$('startCamera'))$('startCamera').textContent='Scanning…';
       if(generation!==state.scannerGeneration)await stopScanner();
     } catch(e){
-      const failedScanner=state.scanner;state.scanner=null;
+      const failedScanner=state.scanner;state.scanner=null;state.scannerPaused=false;
       try{if(failedScanner)await failedScanner.clear();}catch(_){}
-      if($('startCamera')){$('startCamera').disabled=false;$('startCamera').textContent=state.guest?'Scan next pass':'Start QR scanner';}
+      if($('startCamera')){$('startCamera').disabled=false;$('startCamera').textContent='Start QR scanner';}
       if($('stopCamera'))$('stopCamera').disabled=true;
       if(generation===state.scannerGeneration){
         const msg=e?.message==='QR_LIBRARY_UNAVAILABLE'?'QR scanner library could not be downloaded. Check your connection or use manual pass-code verification.':e?.name==='NotAllowedError'?'Camera permission was denied. Allow camera access for Telegram or your browser, then tap Start again.':e?.name==='NotFoundError'?'No camera was found on this device. Please use a device with a working camera.':e?.message==='CAMERA_UNAVAILABLE'?'This browser does not support camera access. Open the Mini App in updated Telegram or Chrome.':'Camera could not start. Check permissions and make sure another app is not using the camera.';
-        toast(msg,true);
+        showScanFeedback('danger','CAMERA NOT READY',msg,'TRY AGAIN',()=>startScanner());
       }
     } finally {state.scannerStarting=false;}
   }
@@ -1193,21 +1251,49 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
         try{await stopping;}finally{if(state.scannerStopPromise===stopping)state.scannerStopPromise=null;}
       }
     }
-    if($('startCamera')){$('startCamera').disabled=false;$('startCamera').textContent=state.guest?'Scan next pass':'Start QR scanner';}
+    state.scannerPaused=false;
+    if($('startCamera')){$('startCamera').disabled=false;$('startCamera').textContent='Start QR scanner';}
     if($('stopCamera'))$('stopCamera').disabled=true;
   }
   async function lookupGuest(qr) {
-    const value=String(qr||'').trim(); if(!value){toast('Enter or scan a pass first.',true);return;}
-    $('scanResult').innerHTML='<div class="notice">Checking this QR…</div>';
+    const value=String(qr||'').trim();
+    if(!value){showScanFeedback('warning','NO QR DATA','Enter or scan a guest pass first.','NEXT GUEST',releaseGuestScanLock);return false;}
+    state.scanCurrentQr=state.scanCurrentQr||value;
+    state.guest=null;
+    if($('scanResult'))$('scanResult').innerHTML='<div class="notice">Verifying guest pass…</div>';
     const eventQr=value.match(/^EVENTHUB:EVENT:([1-9][0-9]{0,8}):([0-9a-f]{24})$/);
     if(eventQr){
       await stopScanner();
-      if(state.role!=='admin'){$('scanResult').innerHTML=showNotice('Event-management QR detected. Only an authenticated administrator can open event settings.','error');return;}
-      try{if(scannerView){scannerView=false;document.body.classList.remove('scanner-mode');const cleanUrl=new URL(location.href);cleanUrl.searchParams.delete('scanner');history.replaceState({scanner:false,event_id:state.eventId},'',cleanUrl.pathname+cleanUrl.search+cleanUrl.hash);$('refreshBtn').classList.remove('hidden');$('backBtn').textContent='← All events';}const result=await post('/api/admin',{action:'event_qr_lookup',qr:value});await setEvent(Number(result.event_id));await openPage('settings');toast('Admin event settings opened: '+result.event.name);}
-      catch(err){$('scanResult').innerHTML=showNotice(err.message,'error');}return;
+      state.scanHandling=false;state.scanCurrentQr='';state.scannerPaused=false;
+      if(state.role!=='admin'){
+        showScanFeedback('danger','ADMIN QR DETECTED','This is an event-management QR. Only an authenticated administrator can open event settings.','CLOSE',()=>hideScanFeedback());
+        return false;
+      }
+      try{
+        if(scannerView){scannerView=false;document.body.classList.remove('scanner-mode','scanner-has-guest');const cleanUrl=new URL(location.href);cleanUrl.searchParams.delete('scanner');history.replaceState({scanner:false,event_id:state.eventId},'',cleanUrl.pathname+cleanUrl.search+cleanUrl.hash);$('refreshBtn').classList.remove('hidden');$('backBtn').textContent='← All events';}
+        const result=await post('/api/admin',{action:'event_qr_lookup',qr:value});
+        await setEvent(Number(result.event_id));await openPage('settings');toast('Admin event settings opened: '+result.event.name);
+      }catch(err){showScanFeedback('danger','EVENT QR FAILED',err.message,'CLOSE',()=>hideScanFeedback());}
+      return false;
     }
-    try {const r=await post('/api/guest',{event_id:state.eventId,qr:value});state.guest=r.guest;renderScannedGuest();}
-    catch(e){$('scanResult').innerHTML=showNotice(e.message,'error');}
+    try{
+      const r=await post('/api/guest',{event_id:state.eventId,qr:value});
+      state.guest=r.guest;
+      document.body.classList.add('scanner-has-guest');
+      renderScannedGuest();
+      return true;
+    }catch(e){
+      state.guest=null;
+      document.body.classList.add('scanner-has-guest');
+      if($('scanResult'))$('scanResult').innerHTML='';
+      const transient=Number(e?.status)>=500||/(network|did not respond|unreadable response|unexpected response|connection|busy|timed out|failed to fetch|within \d+s)/i.test(String(e?.message||''));
+      if(transient){
+        showScanFeedback('danger','NETWORK / SERVER ERROR','Guest verification could not be completed. Do not admit this guest until the pass is verified. '+e.message,'RETRY VERIFY',()=>lookupGuest(value),'BACK TO VOLUNTEER DESK',async()=>{hideScanFeedback();await closeScannerStandalone();});
+      }else{
+        showScanFeedback('warning','PASS NOT ACCEPTED',e.message||'This pass could not be verified. Ask the guest to show their current pass.','NEXT GUEST',releaseGuestScanLock);
+      }
+      return false;
+    }
   }
   function guestAdminEditor(g){
     if(!g.canManage)return '';
@@ -1235,44 +1321,193 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     try{const payload={action:'guest_action',event_id:state.eventId,guest_id:g.id,operation:operation==='reset_food_status'?'reset_status':operation};if(operation==='reset_food_status')payload.target='food';const r=await post('/api/admin',payload);toast(r.message||'Action completed');await lookupGuest(r.guest&&r.guest.passCode?r.guest.passCode:g.passCode);}
     catch(err){toast(err.message,true);}
   }
+  function showScanFeedback(tone,title,message,primaryLabel,primaryAction,secondaryLabel='',secondaryAction=null) {
+    let layer=$('scanFeedbackLayer');
+    if(!layer){layer=document.createElement('div');layer.id='scanFeedbackLayer';layer.className='scan-feedback-backdrop';document.body.appendChild(layer);}
+    if(state.scanResumeTimer){clearTimeout(state.scanResumeTimer);state.scanResumeTimer=null;}
+    const icon=tone==='success'?'✓':(tone==='warning'?'!':'×');
+    layer.innerHTML='<section class="scan-feedback-card '+safe(tone)+'" role="alertdialog" aria-modal="true" aria-labelledby="scanFeedbackTitle" aria-describedby="scanFeedbackMessage">'+
+      '<div class="scan-feedback-icon" aria-hidden="true">'+icon+'</div>'+
+      '<h2 id="scanFeedbackTitle">'+safe(title)+'</h2>'+
+      '<p id="scanFeedbackMessage">'+safe(message)+'</p>'+
+      (primaryLabel?'<button class="btn '+(tone==='danger'?'danger':(tone==='success'?'success':'primary'))+'" id="scanFeedbackPrimary" type="button">'+safe(primaryLabel)+'</button>':'')+
+      (secondaryLabel?'<button class="btn" id="scanFeedbackSecondary" type="button">'+safe(secondaryLabel)+'</button>':'')+
+      '</section>';
+    const primary=$('scanFeedbackPrimary');
+    if(primary&&primaryAction)primary.addEventListener('click',async()=>{
+      primary.disabled=true;
+      try{await primaryAction();}catch(err){primary.disabled=false;toast(err?.message||'Action could not be completed.',true);}
+    });
+    const secondary=$('scanFeedbackSecondary');
+    if(secondary&&secondaryAction)secondary.addEventListener('click',async()=>{
+      secondary.disabled=true;
+      try{await secondaryAction();}catch(err){secondary.disabled=false;toast(err?.message||'Action could not be completed.',true);}
+    });
+    if(tone==='success'){
+      state.scanResumeTimer=window.setTimeout(()=>{state.scanResumeTimer=null;if(state.scanHandling)releaseGuestScanLock();else hideScanFeedback();},1400);
+    }
+  }
+  function hideScanFeedback(){
+    if(state.scanResumeTimer){clearTimeout(state.scanResumeTimer);state.scanResumeTimer=null;}
+    $('scanFeedbackLayer')?.remove();
+  }
+  function beginGuestScanLock(qr,source) {
+    if(state.scanHandling)return false;
+    state.scanHandling=true;state.scanSource=source||'camera';state.scanCurrentQr=String(qr||'').trim();
+    state.scanPendingAction=null;state.scanActionBusy=false;
+    document.body.classList.add('scanner-has-guest');
+    const activeScanner=state.scanner;
+    if(activeScanner&&activeScanner.isScanning){
+      try{activeScanner.pause(true);state.scannerPaused=true;}
+      catch(err){state.scannerPaused=false;stopScanner().catch(()=>{});}
+    }
+    if($('scanResult'))$('scanResult').innerHTML='<div class="notice">QR captured. Verification in progress — one guest at a time.</div>';
+    return true;
+  }
+  function releaseGuestScanLock() {
+    if(state.scanActionBusy)return false;
+    hideScanFeedback();
+    state.scanHandling=false;state.scanCurrentQr='';state.scanSource='';state.scanPendingAction=null;
+    document.body.classList.remove('scanner-has-guest');
+    if($('scanResult'))$('scanResult').innerHTML='<div class="notice">Ready for the next guest. Present one QR at a time.</div>';
+    const activeScanner=state.scanner;
+    if(activeScanner&&activeScanner.isScanning&&state.scannerPaused){
+      try{activeScanner.resume();state.scannerPaused=false;}
+      catch(err){state.scannerPaused=false;stopScanner().then(()=>{if($('scanResult'))$('scanResult').innerHTML=showNotice('The camera could not resume. Tap Start QR scanner to continue.','error');}).catch(()=>{});}
+    }else if($('startCamera')){
+      $('startCamera').disabled=false;$('startCamera').textContent='Start QR scanner';
+    }
+    if($('stopCamera'))$('stopCamera').disabled=!(activeScanner&&activeScanner.isScanning);
+    return true;
+  }
+  async function fetchFreshGuest(passCode) {
+    const result=await post('/api/guest',{event_id:state.eventId,qr:passCode});
+    if(!result||!result.guest)throw new Error('The server did not return the updated guest record.');
+    return result.guest;
+  }
+  function isActionConfirmed(action,guest,checkpointId=0) {
+    if(!guest)return false;
+    if(action==='entry')return guest.entryUsed===true;
+    if(action==='food')return guest.foodUsed===true;
+    if(action==='proof_deposit')return guest.proofStatus==='Stored';
+    if(action==='proof_no_proof')return guest.proofStatus==='No proof';
+    if(action==='proof_return')return guest.proofStatus==='Returned';
+    if(action==='exit')return guest.exitRecorded===true;
+    if(action==='checkpoint')return (guest.checkpointScans||[]).some(item=>Number(item.id)===Number(checkpointId));
+    return false;
+  }
+  function completeConfirmedGuestAction(action,guest,serverMessage) {
+    state.guest=guest;
+    renderScannedGuest(serverMessage||'The action was saved and verified in the EventHub record.');
+    const labels={entry:'Entry recorded',proof_deposit:'Proof stored',proof_no_proof:'No proof confirmation stored',food:'Food collection recorded',proof_return:'Proof return recorded',exit:'Exit recorded',checkpoint:'Checkpoint scan recorded'};
+    showScanFeedback('success','SAVED & VERIFIED',(guest.name||'Guest')+' · '+(labels[action]||'Event record')+'. The backend confirmed the updated record.','NEXT GUEST',releaseGuestScanLock);
+  }
+  async function retryPendingScanAction() {
+    if(!state.scanPendingAction)return;
+    await executePendingScanAction(null);
+  }
+  async function executePendingScanAction(button) {
+    if(state.scanActionBusy||!state.scanPendingAction)return;
+    const pending={...state.scanPendingAction};
+    const passCode=String(pending.passCode||'').trim();
+    if(!passCode){showScanFeedback('danger','ACTION NOT CONFIRMED','The current pass code is missing. Verify the guest again before continuing.','RETRY VERIFY',()=>lookupGuest(state.scanCurrentQr));return;}
+    state.scanActionBusy=true;
+    if(button)button.disabled=true;
+    showScanFeedback('warning','SAVING EVENT RECORD','Please keep this guest at the desk. EventHub is saving and verifying the action.');
+    let postError=null;
+    try{
+      const before=await fetchFreshGuest(passCode);
+      if(isActionConfirmed(pending.action,before,pending.checkpointId)){
+        completeConfirmedGuestAction(pending.action,before,'This action was already saved. EventHub verified the existing record, so it was not submitted again.');
+        return;
+      }
+      try{
+        if(pending.action==='checkpoint'){
+          await post('/api/checkpoint_scan',{event_id:state.eventId,checkpoint_id:Number(pending.checkpointId),qr:passCode});
+        }else{
+          await post('/api/action',{event_id:state.eventId,action:pending.action,qr:passCode});
+        }
+      }catch(err){postError=err;}
+      let fresh;
+      try{fresh=await fetchFreshGuest(passCode);}
+      catch(verifyError){
+        const detail=postError?postError.message+' ': '';
+        throw new Error(detail+'The save status could not be checked because the guest record could not be refreshed. Keep the guest here and retry status verification before scanning another pass.');
+      }
+      if(isActionConfirmed(pending.action,fresh,pending.checkpointId)){
+        completeConfirmedGuestAction(pending.action,fresh,postError?'The request response was interrupted, but the backend record confirms this action was saved. No duplicate write was sent.':undefined);
+        return;
+      }
+      if(postError)throw postError;
+      throw new Error('The server did not show this action in the refreshed guest record. It is not confirmed as saved.');
+    }catch(err){
+      showScanFeedback('danger','SAVE NOT CONFIRMED',err?.message||'EventHub could not confirm this record. Do not release this guest yet.','RETRY / CHECK STATUS',retryPendingScanAction,'BACK TO VOLUNTEER DESK',async()=>{hideScanFeedback();await closeScannerStandalone();});
+    }finally{
+      state.scanActionBusy=false;
+      if(button&&button.isConnected&&state.scanHandling)button.disabled=false;
+    }
+  }
   function renderScannedGuest(message='') {
     const g=state.guest;if(!g)return;
     const actions=[];
     const activePass=g.status==='approved';
     const proofResolved=['Stored','No proof','Returned'].includes(g.proofStatus);
-    if(activePass&&!g.exitRecorded&&!g.entryUsed)actions.push(['entry','Record entry','success']);
-    if(activePass&&g.entryUsed&&!g.exitRecorded&&g.proofStatus==='Not collected') {
-      actions.push(['proof_deposit','Store proof','']);
-      actions.push(['proof_no_proof','No proof provided','']);
+    const role=state.role==='admin'?'admin':(state.staffRole||'global');
+    const canDo=action=>['admin','global','scanner','event_lead'].includes(role)||(role==='entry'&&action==='entry')||(role==='food'&&action==='food')||(role==='proof'&&['proof_deposit','proof_no_proof','proof_return','exit'].includes(action));
+    const canUseCheckpoint=['admin','global','scanner','event_lead','checkpoint'].includes(role);
+    if(activePass&&!g.exitRecorded&&!g.entryUsed&&canDo('entry'))actions.push(['entry','RECORD ENTRY','success']);
+    if(activePass&&g.entryUsed&&!g.exitRecorded&&g.proofStatus==='Not collected'){
+      if(canDo('proof_deposit'))actions.push(['proof_deposit','STORE ID PROOF','']);
+      if(canDo('proof_no_proof'))actions.push(['proof_no_proof','NO PROOF PROVIDED','']);
     }
-    if(foodCollectionIsEnabled()&&activePass&&g.entryUsed&&!g.exitRecorded&&!g.foodUsed&&proofResolved)actions.push(['food','Record food collection','success']);
-    if(activePass&&g.entryUsed&&!g.exitRecorded&&g.proofStatus==='Stored')actions.push(['proof_return','Return stored proof','']);
-    if(activePass&&g.entryUsed&&(g.proofStatus==='Returned'||g.proofStatus==='No proof')&&!g.exitRecorded)actions.push(['exit','Record exit','']);
-    const customCheckpointHtml=activePass&&!g.exitRecorded&&(state.checkpoints||[]).length?`<section class='guest-edit'><strong>Additional event checkpoints</strong><div class='field'><label>Choose checkpoint</label><select id='customCheckpoint'>${state.checkpoints.map(c=>`<option value='${Number(c.id)}'>${safe(c.name)} · ${safe(c.checkpoint_type)}</option>`).join('')}</select></div><button class='btn primary' id='recordCustomCheckpoint' type='button'>Record checkpoint scan</button></section>`:'';
-    const checkpointHistory=(g.checkpointScans||[]).map(c=>`<div class='sub'>✓ ${safe(c.name)} · ${safe(c.scannedAt||'')}</div>`).join('');
-    $('scanResult').innerHTML=`${message?showNotice(message,'good'):''}<div class="guest-result"><div class="row"><strong>${safe(g.name)}</strong><span class="pill ${g.status==='approved'?'good':'warn'}">${safe(g.status)}</span></div><p class="muted">${safe(g.residence)}${g.roomNumber?' · Room '+safe(g.roomNumber):''} · ${safe(g.food)}</p><div class="wrap"><span class="pill ${g.entryUsed?'good':'warn'}">Entry: ${g.entryUsed?'Recorded':'Pending'}</span><span class="pill ${!foodCollectionIsEnabled()?'':(g.foodUsed?'good':'warn')}">Food: ${foodCollectionIsEnabled()?(g.foodUsed?'Collected':'Pending'):'Not applicable'}</span><span class="pill">Proof: ${safe(g.proofStatus||'Not collected')}</span><span class="pill">Exit: ${g.exitRecorded?'Recorded':'Pending'}</span></div>${g.storageLabel?`<p><strong>Storage:</strong> ${safe(g.storageLabel)}</p>`:''}${checkpointHistory?`<div class='section'><strong>Additional checkpoint history</strong>${checkpointHistory}</div>`:''}${customCheckpointHtml}${guestAdminEditor(g)}${!activePass?'<div class="notice error">This pass is not active. Event-day actions are disabled.</div>':g.exitRecorded?'<div class="notice good">Exit has already been recorded. No further event-day actions are available.</div>':g.entryUsed&&!proofResolved?'<div class="notice">Next step: store the guest’s proof or confirm that no proof was provided. Continue with the proof workflow before exit.</div>':''}<p class="muted">Pass code: ${safe(g.passCode)}</p><div class="actions">${actions.map(([a,l,cl])=>`<button class="btn ${cl}" data-scan-action="${a}">${l}</button>`).join('')||'<span class="pill good">No further actions available</span>'}</div></div>`;
+    if(foodCollectionIsEnabled()&&activePass&&g.entryUsed&&!g.exitRecorded&&!g.foodUsed&&proofResolved&&canDo('food'))actions.push(['food','RECORD FOOD COLLECTION','success']);
+    if(activePass&&g.entryUsed&&!g.exitRecorded&&g.proofStatus==='Stored'&&canDo('proof_return'))actions.push(['proof_return','CONFIRM PROOF RETURN','']);
+    if(activePass&&g.entryUsed&&(g.proofStatus==='Returned'||g.proofStatus==='No proof')&&!g.exitRecorded&&canDo('exit'))actions.push(['exit','RECORD EXIT','']);
+    const customCheckpointHtml=canUseCheckpoint&&activePass&&!g.exitRecorded&&(state.checkpoints||[]).length?
+      '<section class="guest-edit"><strong>Assigned event checkpoint</strong><div class="field"><label for="customCheckpoint">Checkpoint station</label><select id="customCheckpoint">'+
+      state.checkpoints.map(c=>'<option value="'+Number(c.id)+'">'+safe(c.name)+' · '+safe(c.checkpoint_type)+'</option>').join('')+
+      '</select></div><button class="btn primary" id="recordCustomCheckpoint" type="button">RECORD CHECKPOINT SCAN</button></section>':'';
+    const checkpointHistory=(g.checkpointScans||[]).map(c=>'<div class="sub">✓ '+safe(c.name)+' · '+safe(c.scannedAt||'')+'</div>').join('');
+    const statusHtml='<div class="scan-status-grid">'+
+      '<div class="scan-status-item"><span>Entry</span><strong>'+(g.entryUsed?'✓ Recorded':'Pending')+'</strong></div>'+
+      '<div class="scan-status-item"><span>Food</span><strong>'+(foodCollectionIsEnabled()?(g.foodUsed?'✓ Collected':'Pending'):'Not applicable')+'</strong></div>'+
+      '<div class="scan-status-item"><span>Proof</span><strong>'+safe(g.proofStatus||'Not collected')+'</strong></div>'+
+      '<div class="scan-status-item"><span>Exit</span><strong>'+(g.exitRecorded?'✓ Recorded':'Pending')+'</strong></div></div>';
+    const noAction=!actions.length&&!customCheckpointHtml;
+    $('scanResult').innerHTML=(message?showNotice(message,'good'):'')+
+      '<div class="guest-result"><div class="row scan-guest-heading"><strong>'+safe(g.name)+'</strong><span class="pill '+(activePass?'good':'warn')+'">'+safe(g.status)+'</span></div>'+
+      '<p class="muted">'+safe(g.residence||'')+(g.roomNumber?' · Room '+safe(g.roomNumber):'')+' · '+safe(g.food||'')+'</p>'+statusHtml+
+      (g.storageLabel?'<p><strong>Proof location:</strong> '+safe(g.storageLabel)+'</p>':'')+
+      (checkpointHistory?'<div class="section"><strong>Checkpoint history</strong>'+checkpointHistory+'</div>':'')+
+      customCheckpointHtml+
+      (!activePass?'<div class="notice error">This pass is not active. Event-day actions are disabled.</div>':g.exitRecorded?'<div class="notice good">Exit is already recorded. No further event-day actions are available.</div>':g.entryUsed&&!proofResolved?'<div class="notice">Next step: store the guest’s ID proof or confirm that no proof was provided.</div>':'')+
+      '<div class="actions">'+(actions.map(([a,l,cl])=>'<button class="btn '+cl+'" data-scan-action="'+a+'">'+l+'</button>').join('')||'')+
+      (noAction?'<button class="btn primary scan-next-guest" id="nextGuestButton" type="button">NEXT GUEST</button>':'')+'</div>'+
+      (g.canManage?guestAdminEditor(g):'')+'</div>';
     document.querySelectorAll('[data-scan-action]').forEach(b=>b.addEventListener('click',()=>recordAction(b.dataset.scanAction,b)));
     $('recordCustomCheckpoint')?.addEventListener('click',recordCustomCheckpoint);
+    $('nextGuestButton')?.addEventListener('click',releaseGuestScanLock);
     $('scanGuestEditForm')?.addEventListener('submit',saveScannedGuest);
     $('scanReissuePass')?.addEventListener('click',()=>scannedGuestAction('reissue_pass'));
     $('scanRevokePass')?.addEventListener('click',()=>scannedGuestAction('revoke_pass'));
     $('scanReactivatePass')?.addEventListener('click',()=>scannedGuestAction('reactivate_pass'));
     $('scanResetEntry')?.addEventListener('click',()=>scannedGuestAction('reset_entry_and_storage'));
     $('scanResetFood')?.addEventListener('click',()=>scannedGuestAction('reset_food_status'));
+    if(noAction)showScanFeedback('warning','NO ACTION PENDING',(g.name||'This guest')+' has no remaining action available for your assigned desk. Review the status, then continue.','NEXT GUEST',releaseGuestScanLock);
   }
-  async function recordCustomCheckpoint(){
+  async function recordCustomCheckpoint() {
     const g=state.guest,checkpointId=Number($('customCheckpoint')?.value||0),button=$('recordCustomCheckpoint');
-    if(!g||!checkpointId||!button)return;
-    button.disabled=true;
-    try{const r=await post('/api/checkpoint_scan',{event_id:state.eventId,checkpoint_id:checkpointId,qr:g.passCode});toast(r.message||'Checkpoint scan recorded');await lookupGuest(g.passCode);}
-    catch(err){toast(err.message,true);button.disabled=false;}
+    if(!g||!checkpointId||!button){toast('Choose an assigned checkpoint first.',true);return;}
+    if(!state.scanHandling)beginGuestScanLock(g.passCode,'manual');
+    state.scanPendingAction={action:'checkpoint',checkpointId,passCode:g.passCode};
+    await executePendingScanAction(button);
   }
   async function recordAction(action,button) {
     if(action==='food'&&!foodCollectionIsEnabled()){toast('Food collection is disabled for this event.',true);return;}
-    if(!state.guest || state.guest.status!=='approved' || state.guest.exitRecorded) { toast('This pass is no longer eligible for event-day actions.',true); return; }
-    button.disabled=true;
-    try{const r=await post('/api/action',{event_id:state.eventId,action,qr:state.guest.passCode});const g=r.guest||{};await lookupGuest(state.guest.passCode);toast(r.message||`${action.replaceAll('_',' ')} recorded`);}
-    catch(e){toast(e.message,true);button.disabled=false;}
+    if(!state.guest||state.guest.status!=='approved'||state.guest.exitRecorded){toast('This pass is no longer eligible for event-day actions.',true);return;}
+    if(!state.scanHandling)beginGuestScanLock(state.guest.passCode,'manual');
+    state.scanPendingAction={action,checkpointId:0,passCode:state.guest.passCode};
+    await executePendingScanAction(button);
   }
   async function renderApprovals(host) {
     const readOnly=state.event?.status==='archived';
@@ -2071,22 +2306,65 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
   function renumberSchema(){const rows=[...document.querySelectorAll('[data-schema-index]')];rows.forEach((el,i)=>{el.dataset.schemaIndex=i;const t=el.querySelector('.row strong');if(t)t.textContent='Field '+(i+1);const rm=el.querySelector('[data-remove-schema]');if(rm)rm.dataset.removeSchema=i;const up=el.querySelector('[data-move-schema="up"]');const down=el.querySelector('[data-move-schema="down"]');if(up)up.disabled=i===0;if(down)down.disabled=i===rows.length-1;});}
   async function renderCheckpoints(host) {
     const archived=state.event?.status==='archived';
-    host.innerHTML=`${archived?showNotice('Archived checkpoints are read-only.','error'):''}<div class='section-title'><h2>Checkpoint configuration</h2><button class='btn small' id='refreshCheckpoints'>↻ Refresh</button></div>${archived?'':`<section class='card'><form id='checkpointForm'><div class='inline-fields'><div class='field'><label>Checkpoint name</label><input id='checkpointName' required maxlength='100' placeholder='e.g. Main Entry'></div><div class='field'><label>Checkpoint type</label><select id='checkpointType'><option value='entry'>Entry</option>${foodCollectionIsEnabled()?'<option value="food">Food collection</option>':''}<option value='workshop'>Workshop</option><option value='other'>Other</option></select></div></div><button class='btn primary' type='submit'>＋ Add checkpoint</button></form><div id='checkpointMessage'></div></section>`}<div id='checkpointList' class='list section'></div>`;
+    host.innerHTML=(archived?showNotice('Archived checkpoints are read-only.','error'):'')+
+      '<div class="section-title"><div><div class="eyebrow">Admin only</div><h2>Checkpoint & station assignments</h2></div><button class="btn small" id="refreshCheckpoints">↻ Refresh</button></div>'+
+      (archived?'':'<section class="card"><form id="checkpointForm"><div class="inline-fields"><div class="field"><label for="checkpointName">Checkpoint name</label><input id="checkpointName" required maxlength="100" placeholder="e.g. Main Entrance"></div><div class="field"><label for="checkpointType">Checkpoint type</label><select id="checkpointType"><option value="entry">Entry</option>'+(foodCollectionIsEnabled()?'<option value="food">Food collection</option>':'')+'<option value="workshop">Workshop</option><option value="other">Other</option></select></div></div><button class="btn primary" type="submit">＋ Add checkpoint</button></form><div id="checkpointMessage"></div></section>')+
+      '<div id="checkpointList" class="list section"></div>';
     const load=async()=>{
       try{
-        const r=await adminCall('checkpoints');
-        $('checkpointList').innerHTML=(r.checkpoints||[]).map(c=>`<article class='list-item' data-checkpoint-id='${Number(c.id)}'><div class='row'><strong>${safe(c.name)}</strong><span class='pill ${Number(c.enabled)?'good':'warn'}'>${Number(c.enabled)?'Enabled':'Disabled'}</span></div><div class='sub'>${safe(c.checkpoint_type)} · Checkpoint #${Number(c.id)}</div>${archived?'':`<form data-checkpoint-edit='${Number(c.id)}'><div class='inline-fields'><div class='field'><label>Name</label><input name='name' required maxlength='100' value='${safe(c.name)}'></div><div class='field'><label>Type</label><select name='checkpoint_type'><option value='entry' ${c.checkpoint_type==='entry'?'selected':''}>Entry</option><option value='food' ${c.checkpoint_type==='food'?'selected':''}>Food${foodCollectionIsEnabled()?'':' (disabled for this event)'}</option><option value='workshop' ${c.checkpoint_type==='workshop'?'selected':''}>Workshop</option><option value='other' ${c.checkpoint_type==='other'?'selected':''}>Other</option></select></div></div><label><input name='enabled' type='checkbox' ${Number(c.enabled)?'checked':''} style='width:auto;min-height:0'> Enabled for scanning</label><div class='actions'><button class='btn primary small' type='submit'>Save</button><button class='btn danger small' type='button' data-delete-checkpoint='${Number(c.id)}'>Delete</button></div></form>`}</article>`).join('')||'<div class="empty">No checkpoints created for this event.</div>';
+        const team=await adminCall('checkpoint_team');
+        const checkpoints=Array.isArray(team.checkpoints)?team.checkpoints:[];
+        const candidates=Array.isArray(team.volunteers)?team.volunteers:[];
+        const assignments=Array.isArray(team.assignments)?team.assignments:[];
+        const candidateOptions=candidates.map(v=>{
+          const role=String(v.role||'');
+          const canAssign=!role||role==='volunteer'||role==='checkpoint'||role==='global';
+          const label=safe(v.name)+(v.username?' · @'+safe(v.username):'')+(role?' · '+safe(role.replaceAll('_',' ')):' · not assigned yet');
+          return '<option value="'+Number(v.telegram_id)+'" '+(canAssign?'':'disabled')+'>'+label+'</option>';
+        }).join('');
+        $('checkpointList').innerHTML=checkpoints.map(c=>{
+          const id=Number(c.id),assigned=assignments.filter(a=>Number(a.checkpoint_id)===id);
+          const assignedHtml=assigned.map(v=>'<div class="row" style="gap:8px"><div><strong>'+safe(v.name)+'</strong><div class="sub">'+(v.username?'@'+safe(v.username)+' · ':'')+safe(v.role||'checkpoint')+'</div></div>'+(archived?'':'<button class="btn danger small" type="button" data-remove-checkpoint-volunteer="'+id+'" data-volunteer-id="'+Number(v.telegram_id)+'">Remove</button>')+'</div>').join('');
+          const assignHtml=archived?'':'<section class="staff-assignment-form"><div class="field"><label for="assignCheckpoint-'+id+'">Assign volunteer by name</label><select id="assignCheckpoint-'+id+'" data-checkpoint-person="'+id+'"><option value="">Choose volunteer…</option>'+candidateOptions+'</select></div><button class="btn primary" type="button" data-assign-checkpoint="'+id+'">＋ Assign to this checkpoint</button><p class="footnote">Selecting an unassigned person creates a checkpoint-only event role. A person already assigned to another desk must have their role changed first.</p></section>';
+          const editHtml=archived?'':'<form data-checkpoint-edit="'+id+'"><div class="inline-fields"><div class="field"><label>Name</label><input name="name" required maxlength="100" value="'+safe(c.name)+'"></div><div class="field"><label>Type</label><select name="checkpoint_type"><option value="entry" '+(c.checkpoint_type==='entry'?'selected':'')+'>Entry</option><option value="food" '+(c.checkpoint_type==='food'?'selected':'')+'>Food'+(foodCollectionIsEnabled()?'':' (disabled for this event)')+'</option><option value="workshop" '+(c.checkpoint_type==='workshop'?'selected':'')+'>Workshop</option><option value="other" '+(c.checkpoint_type==='other'?'selected':'')+'>Other</option></select></div></div><label><input name="enabled" type="checkbox" '+(Number(c.enabled)?'checked':'')+' style="width:auto;min-height:0"> Enabled for scanning</label><div class="actions"><button class="btn primary small" type="submit">Save</button><button class="btn danger small" type="button" data-delete-checkpoint="'+id+'">Delete</button></div></form>';
+          return '<article class="list-item" data-checkpoint-id="'+id+'"><div class="row"><strong>'+safe(c.name)+'</strong><span class="pill '+(Number(c.enabled)?'good':'warn')+'">'+(Number(c.enabled)?'Enabled':'Disabled')+'</span></div><div class="sub">'+safe(c.checkpoint_type)+' · Checkpoint #'+id+'</div><section class="section"><strong>Assigned volunteers ('+assigned.length+')</strong>'+(assignedHtml||'<p class="muted">No volunteer assigned yet.</p>')+'</section>'+assignHtml+editHtml+'</article>';
+        }).join('')||'<div class="empty">No checkpoints created for this event.</div>';
         if(!archived){
-          document.querySelectorAll('form[data-checkpoint-edit]').forEach(form=>form.addEventListener('submit',async e=>{e.preventDefault();const btn=form.querySelector('button[type=submit]');btn.disabled=true;const fd=new FormData(form);try{const rr=await adminCall('update_checkpoint',{checkpoint_id:Number(form.dataset.checkpointEdit),name:fd.get('name'),checkpoint_type:fd.get('checkpoint_type'),enabled:fd.get('enabled')==='on'});toast(rr.message||'Checkpoint saved');await load();}catch(err){toast(err.message,true);btn.disabled=false;}}));
-          document.querySelectorAll('[data-delete-checkpoint]').forEach(btn=>btn.addEventListener('click',async()=>{if(!confirm('Delete this checkpoint? Checkpoints with scan history cannot be deleted; disable them instead.'))return;btn.disabled=true;try{const rr=await adminCall('delete_checkpoint',{checkpoint_id:Number(btn.dataset.deleteCheckpoint)});toast(rr.message||'Checkpoint deleted');await load();}catch(err){toast(err.message,true);btn.disabled=false;}}));
+          document.querySelectorAll('form[data-checkpoint-edit]').forEach(form=>form.addEventListener('submit',async e=>{
+            e.preventDefault();const btn=form.querySelector('button[type=submit]');btn.disabled=true;const fd=new FormData(form);
+            try{const rr=await adminCall('update_checkpoint',{checkpoint_id:Number(form.dataset.checkpointEdit),name:fd.get('name'),checkpoint_type:fd.get('checkpoint_type'),enabled:fd.get('enabled')==='on'});toast(rr.message||'Checkpoint saved');await load();}
+            catch(err){toast(err.message,true);btn.disabled=false;}
+          }));
+          document.querySelectorAll('[data-delete-checkpoint]').forEach(btn=>btn.addEventListener('click',async()=>{
+            if(!confirm('Delete this checkpoint? Checkpoints with scan history cannot be deleted; disable them instead.'))return;
+            btn.disabled=true;try{const rr=await adminCall('delete_checkpoint',{checkpoint_id:Number(btn.dataset.deleteCheckpoint)});toast(rr.message||'Checkpoint deleted');await load();}catch(err){toast(err.message,true);btn.disabled=false;}
+          }));
+          document.querySelectorAll('[data-assign-checkpoint]').forEach(btn=>btn.addEventListener('click',async()=>{
+            const checkpointId=Number(btn.dataset.assignCheckpoint),select=$('[data-checkpoint-person="'+checkpointId+'"]'),telegramId=Number(select?.value||0);
+            if(!telegramId){toast('Choose a volunteer by name first.',true);select?.focus();return;}
+            btn.disabled=true;
+            try{const rr=await adminCall('assign_checkpoint_volunteer',{checkpoint_id:checkpointId,telegram_id:telegramId});toast(rr.message||'Volunteer assigned');await load();}
+            catch(err){toast(err.message,true);btn.disabled=false;}
+          }));
+          document.querySelectorAll('[data-remove-checkpoint-volunteer]').forEach(btn=>btn.addEventListener('click',async()=>{
+            if(!confirm('Remove this volunteer from this checkpoint?'))return;
+            btn.disabled=true;
+            try{const rr=await adminCall('remove_checkpoint_volunteer',{checkpoint_id:Number(btn.dataset.removeCheckpointVolunteer),telegram_id:Number(btn.dataset.volunteerId)});toast(rr.message||'Volunteer removed');await load();}
+            catch(err){toast(err.message,true);btn.disabled=false;}
+          }));
         }
+        if(!candidates.length)$('checkpointList').insertAdjacentHTML('afterbegin','<div class="notice">No volunteer names are available yet. Ask each volunteer to open the EventHub Telegram bot once; their name will then appear here.</div>');
       }catch(err){$('checkpointList').innerHTML=showNotice(err.message,'error');}
     };
-    $('refreshCheckpoints').addEventListener('click',load);
-    if(!archived)$('checkpointForm').addEventListener('submit',async e=>{e.preventDefault();const btn=e.currentTarget.querySelector('button[type=submit]');btn.disabled=true;try{const rr=await adminCall('create_checkpoint',{name:$('checkpointName').value,checkpoint_type:$('checkpointType').value});$('checkpointMessage').innerHTML=showNotice(rr.message||'Checkpoint created.','good');$('checkpointForm').reset();await load();}catch(err){$('checkpointMessage').innerHTML=showNotice(err.message,'error');}finally{btn.disabled=false;}});
+    $('refreshCheckpoints')?.addEventListener('click',load);
+    if(!archived)$('checkpointForm')?.addEventListener('submit',async e=>{
+      e.preventDefault();const btn=e.currentTarget.querySelector('button[type=submit]');btn.disabled=true;
+      try{const rr=await adminCall('create_checkpoint',{name:$('checkpointName').value,checkpoint_type:$('checkpointType').value});$('checkpointMessage').innerHTML=showNotice(rr.message||'Checkpoint created.','good');$('checkpointForm').reset();await load();}
+      catch(err){$('checkpointMessage').innerHTML=showNotice(err.message,'error');}
+      finally{btn.disabled=false;}
+    });
     await load();
   }
-
   async function renderAdmins(host) {
     host.innerHTML=`<div class='section-title'><h2>Admin access</h2><button class='btn small' id='refreshAdmins'>↻ Refresh</button></div><section class='card'><form id='addAdminForm'><div class='field'><label>Telegram user ID</label><input id='newAdminId' inputmode='numeric' pattern='[0-9]+' required placeholder='123456789'></div><button class='btn primary' type='submit'>＋ Grant admin access</button></form><p class='footnote'>Only grant admin access to trusted organisers. Botkeep owner/recovery admins are protected.</p></section><div id='adminList' class='list section'></div>`;
     const load=async()=>{
@@ -2101,9 +2379,63 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     await load();
   }
   async function renderStaff(host) {
-    host.innerHTML=`<div class="section-title"><h2>Volunteer access</h2><button class="btn small" id="refreshStaff">Refresh</button></div><section class="card"><form id="addVolunteer"><div class="field"><label>Telegram user ID</label><input id="volunteerId" inputmode="numeric" placeholder="123456789" required></div><button class="btn primary" type="submit">Add volunteer</button></form><p class="footnote">Volunteer accounts are shared across EventHub. Their event data and QR scans remain separate for each selected event.</p></section><div id="volunteerList" class="list section"></div>`;
-    const load=async()=>{try{const r=await adminCall('volunteers');$('volunteerList').innerHTML=(r.volunteers||[]).map(v=>`<div class="list-item row"><div><strong>${v.telegram_id}</strong><div class="sub">Added ${safe(v.added_at||'')}</div></div><button class="btn danger small" data-remove-vol="${v.telegram_id}">Remove</button></div>`).join('')||'<div class="empty">No volunteers assigned.</div>';document.querySelectorAll('[data-remove-vol]').forEach(b=>b.addEventListener('click',async()=>{if(!confirm('Remove volunteer scanner access?'))return;try{const r=await adminCall('remove_volunteer',{telegram_id:Number(b.dataset.removeVol)});toast(r.message);load();}catch(e){toast(e.message,true);}}));}catch(e){$('volunteerList').innerHTML=showNotice(e.message,'error');}};
-    $('refreshStaff').addEventListener('click',load);$('addVolunteer').addEventListener('submit',async e=>{e.preventDefault();try{const r=await adminCall('add_volunteer',{telegram_id:Number($('volunteerId').value)});toast(r.message);$('volunteerId').value='';load();}catch(err){toast(err.message,true);}});await load();
+    const archived=state.event?.status==='archived';
+    host.innerHTML=(archived?showNotice('Archived event team assignments are read-only.','error'):'')+
+      '<div class="section-title"><div><div class="eyebrow">Admin only</div><h2>Volunteer access & desk roles</h2></div><button class="btn small" id="refreshStaff">↻ Refresh</button></div>'+
+      (archived?'':'<section class="card"><h3>Assign volunteer to this event</h3><form id="eventVolunteerForm"><div class="field"><label for="eventVolunteerPerson">Volunteer name</label><select id="eventVolunteerPerson" required><option value="">Loading volunteer names…</option></select></div><div class="field"><label for="eventVolunteerRole">Desk role</label><select id="eventVolunteerRole"><option value="scanner">Full event scanner</option><option value="event_lead">Event lead</option><option value="entry">Entry desk</option><option value="proof">ID proof & exit desk</option>'+(foodCollectionIsEnabled()?'<option value="food">Food desk</option>':'')+'<option value="checkpoint">Additional checkpoint desk</option></select></div><button class="btn primary" type="submit">＋ Assign volunteer</button></form><p class="footnote">Volunteers appear by name after they open the EventHub Telegram bot at least once. Each event role is limited to the selected event.</p><div id="eventVolunteerMessage"></div></section>')+
+      '<section class="card"><h3>Core / global volunteer access</h3><form id="globalVolunteerForm"><div class="field"><label for="globalVolunteerPerson">Volunteer name</label><select id="globalVolunteerPerson" required><option value="">Loading volunteer names…</option></select></div><button class="btn" type="submit">＋ Grant core access</button></form><p class="footnote">Core volunteers can access all active event workspaces. Grant this only to trusted organisers who genuinely need cross-event access.</p></section>'+
+      '<section class="section"><div class="section-title"><h3>Event-specific volunteer team</h3><span class="muted">Selected event only</span></div><div id="eventVolunteerList" class="list"><div class="empty">Loading…</div></div></section>'+
+      '<section class="section"><div class="section-title"><h3>Core / global volunteers</h3><span class="muted">All active events</span></div><div id="globalVolunteerList" class="list"><div class="empty">Loading…</div></div></section>';
+    const load=async()=>{
+      try{
+        const [team,candidateResult]=await Promise.all([adminCall('event_volunteers'),adminCall('event_volunteer_candidates')]);
+        const candidates=Array.isArray(candidateResult.candidates)?candidateResult.candidates:[];
+        const options=candidates.map(v=>'<option value="'+Number(v.telegram_id)+'">'+safe(v.name)+(v.username?' · @'+safe(v.username):'')+'</option>').join('');
+        if($('eventVolunteerPerson'))$('eventVolunteerPerson').innerHTML='<option value="">Choose volunteer by name…</option>'+options;
+        if($('globalVolunteerPerson'))$('globalVolunteerPerson').innerHTML='<option value="">Choose volunteer by name…</option>'+options;
+        $('eventVolunteerList').innerHTML=(team.assignments||[]).map(v=>{
+          const roleLabels={scanner:'Full event scanner',event_lead:'Event lead',entry:'Entry desk',food:'Food desk',proof:'Proof & exit desk',checkpoint:'Checkpoint desk'};
+          return '<article class="list-item row"><div><strong>'+safe(v.display_name||('Telegram user · '+String(v.telegram_id).slice(-5)))+'</strong><div class="sub">'+(v.username?'@'+safe(v.username)+' · ':'')+safe(roleLabels[v.role]||v.role)+' · Assigned '+safe(v.assigned_at||'')+(Number(v.also_global)?' · Also core/global':'')+'</div></div>'+(archived?'':'<button class="btn danger small" type="button" data-remove-event-volunteer="'+Number(v.telegram_id)+'">Remove event access</button>')+'</article>';
+        }).join('')||'<div class="empty">No event-specific volunteers assigned.</div>';
+        $('globalVolunteerList').innerHTML=(team.global_volunteers||[]).map(v=>'<article class="list-item row"><div><strong>'+safe(v.display_name||('Telegram user · '+String(v.telegram_id).slice(-5)))+'</strong><div class="sub">'+(v.username?'@'+safe(v.username)+' · ':'')+'Core access · Added '+safe(v.added_at||'')+'</div></div><button class="btn danger small" type="button" data-remove-global-volunteer="'+Number(v.telegram_id)+'">Remove core access</button></article>').join('')||'<div class="empty">No core/global volunteers assigned.</div>';
+        if(!candidates.length){
+          $('eventVolunteerList').insertAdjacentHTML('afterbegin','<div class="notice">No volunteer names found yet. Ask each volunteer to open the EventHub bot once, then refresh.</div>');
+        }
+        document.querySelectorAll('[data-remove-event-volunteer]').forEach(btn=>btn.addEventListener('click',async()=>{
+          if(!confirm('Remove this person from this event? Other event/global access remains separate.'))return;
+          btn.disabled=true;
+          try{const rr=await adminCall('remove_event_volunteer',{telegram_id:Number(btn.dataset.removeEventVolunteer)});toast(rr.message||'Event access removed');await load();}
+          catch(err){toast(err.message,true);btn.disabled=false;}
+        }));
+        document.querySelectorAll('[data-remove-global-volunteer]').forEach(btn=>btn.addEventListener('click',async()=>{
+          if(!confirm('Remove this person’s core/global volunteer access?'))return;
+          btn.disabled=true;
+          try{const rr=await adminCall('remove_volunteer',{telegram_id:Number(btn.dataset.removeGlobalVolunteer)});toast(rr.message||'Core access removed');await load();}
+          catch(err){toast(err.message,true);btn.disabled=false;}
+        }));
+      }catch(err){
+        $('eventVolunteerList').innerHTML=showNotice(err.message,'error');
+        $('globalVolunteerList').innerHTML=showNotice(err.message,'error');
+      }
+    };
+    $('refreshStaff')?.addEventListener('click',load);
+    $('eventVolunteerForm')?.addEventListener('submit',async e=>{
+      e.preventDefault();const btn=e.currentTarget.querySelector('button[type=submit]'),telegramId=Number($('eventVolunteerPerson').value||0),role=$('eventVolunteerRole').value;
+      if(!telegramId){toast('Choose a volunteer by name.',true);return;}
+      btn.disabled=true;
+      try{const rr=await adminCall('assign_event_volunteer',{telegram_id:telegramId,role});$('eventVolunteerMessage').innerHTML=showNotice(rr.message||'Volunteer assigned.','good');await load();}
+      catch(err){$('eventVolunteerMessage').innerHTML=showNotice(err.message,'error');}
+      finally{btn.disabled=false;}
+    });
+    $('globalVolunteerForm')?.addEventListener('submit',async e=>{
+      e.preventDefault();const btn=e.currentTarget.querySelector('button[type=submit]'),telegramId=Number($('globalVolunteerPerson').value||0);
+      if(!telegramId){toast('Choose a volunteer by name.',true);return;}
+      btn.disabled=true;
+      try{const rr=await adminCall('add_volunteer',{telegram_id:telegramId});toast(rr.message||'Core volunteer access granted');await load();}
+      catch(err){toast(err.message,true);}
+      finally{btn.disabled=false;}
+    });
+    await load();
   }
   async function refresh() { try{await stopScanner();await loadRole();if(state.eventId)await loadEvent();else renderEventList();toast('Updated');}catch(e){toast(e.message,true);} }
   $('refreshBtn').addEventListener('click',refresh);$('backBtn').addEventListener('click',()=>scannerView?closeScannerStandalone():clearEvent());
