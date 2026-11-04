@@ -1194,7 +1194,9 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     catch(err){toast('Assigned checkpoints could not be loaded: '+err.message,true);}
     if(state.scanHandling&&state.scanCurrentQr){
       document.body.classList.add('scanner-has-guest');
-      if(state.scanPendingAction)showScanFeedback('danger','ACTION NOT YET CONFIRMED','A previous guest action still needs verification. Retry the save before scanning another guest.','RETRY / CHECK STATUS',retryPendingScanAction);
+      if(state.scanPendingAction)showScanFeedback('danger','ACTION NOT YET CONFIRMED','A previous guest action still needs verification. Retry the save before scanning another guest.','RETRY / CHECK STATUS',retryPendingScanAction,'BACK TO VOLUNTEER DESK',async()=>{hideScanFeedback();await closeScannerStandalone();});
+      else if(state.guest)renderScannedGuest();
+      else showScanFeedback('warning','VERIFICATION INTERRUPTED','This guest pass was not fully checked. Verify it again before admitting the guest.','RETRY VERIFY',()=>lookupGuest(state.scanCurrentQr),'NEXT GUEST',releaseGuestScanLock);
     }
   }
   async function startScanner() {
@@ -1286,7 +1288,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
       if($('scanResult'))$('scanResult').innerHTML='';
       const transient=Number(e?.status)>=500||/(network|did not respond|unreadable response|unexpected response|connection|busy|timed out|failed to fetch|within \d+s)/i.test(String(e?.message||''));
       if(transient){
-        showScanFeedback('danger','NETWORK / SERVER ERROR','Guest verification could not be completed. Do not admit this guest until the pass is verified. '+e.message,'RETRY VERIFY',()=>lookupGuest(value));
+        showScanFeedback('danger','NETWORK / SERVER ERROR','Guest verification could not be completed. Do not admit this guest until the pass is verified. '+e.message,'RETRY VERIFY',()=>lookupGuest(value),'BACK TO VOLUNTEER DESK',async()=>{hideScanFeedback();await closeScannerStandalone();});
       }else{
         showScanFeedback('warning','PASS NOT ACCEPTED',e.message||'This pass could not be verified. Ask the guest to show their current pass.','NEXT GUEST',releaseGuestScanLock);
       }
@@ -1439,7 +1441,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
       if(postError)throw postError;
       throw new Error('The server did not show this action in the refreshed guest record. It is not confirmed as saved.');
     }catch(err){
-      showScanFeedback('danger','SAVE NOT CONFIRMED',err?.message||'EventHub could not confirm this record. Do not release this guest yet.','RETRY / CHECK STATUS',retryPendingScanAction);
+      showScanFeedback('danger','SAVE NOT CONFIRMED',err?.message||'EventHub could not confirm this record. Do not release this guest yet.','RETRY / CHECK STATUS',retryPendingScanAction,'BACK TO VOLUNTEER DESK',async()=>{hideScanFeedback();await closeScannerStandalone();});
     }finally{
       state.scanActionBusy=false;
       if(button&&button.isConnected&&state.scanHandling)button.disabled=false;
