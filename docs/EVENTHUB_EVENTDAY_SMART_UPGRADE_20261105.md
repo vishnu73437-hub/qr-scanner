@@ -47,3 +47,9 @@ These checks do not replace live Botkeep/API integration tests, Telegram WebApp 
 - Compare the backend candidate with the exact running Botkeep file. Back up the current backend and all persistent SQLite/event database files before replacing anything.
 - Deploy backend and frontend as a coordinated change; do not publish this frontend alone while the live backend is missing the matching checkpoint-team APIs.
 - Test with a dedicated volunteer and test guest, including entry → proof stored/no proof → food → proof return → exit, one checkpoint assignment, duplicate scan, and a simulated network timeout.
+
+## Backend candidate review (5 November 2026)
+
+A separate candidate review is recorded in [EVENTHUB_BACKEND_CANDIDATE_REVIEW_20261105.md](EVENTHUB_BACKEND_CANDIDATE_REVIEW_20261105.md). The reviewed candidate SHA-256 is `c412b7fef9f22de0c3213c88c5852116ac58f345fecd109d5c5b96e9ec974323`. Its two isolated regression scripts were rerun successfully against that candidate after correcting a test portability issue that previously pointed to a different absolute local path.
+
+The backend candidate is still separate from this GitHub branch and has not been reconciled against the exact running Botkeep source. It must not be deployed yet.
