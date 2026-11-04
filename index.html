@@ -670,11 +670,13 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
   // stored in the selected event's theme_json; it never changes role permissions.
   let interfaceEditorDraft=null, interfaceEditorScope='', interfaceEditorItems=[];
   let interfaceEditorObserver=null, interfaceEditorOpen=false, interfaceEditorScheduled=false;
+  let interfacePreviewActive=false,interfacePreviewSnapshot=null;
   function currentInterfaceScope(){
     if(scannerView||state.page==='scanner')return 'scanner';
-    if(state.role==='admin'&&state.page==='registration')return 'guest-register';
-    if(state.role==='admin'&&state.page==='pass')return 'guest-pass';
-    const role=state.role==='admin'?'admin':(state.role==='volunteer'?'volunteer':'guest');
+    const role=interfacePreviewActive?state.role:(state.role==='admin'?'admin':(state.role==='volunteer'?'volunteer':'guest'));
+    if(role==='guest'&&state.page==='register')return 'guest-register';
+    if(role==='admin'&&state.page==='registration')return 'guest-register';
+    if(role==='admin'&&state.page==='pass')return 'guest-pass';
     const page=String(state.page||'home').toLowerCase().replace(/[^a-z0-9_-]/g,'-').slice(0,30)||'home';
     return role+'-'+page;
   }
@@ -815,7 +817,8 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     if(!panel){
       panel=document.createElement('aside');panel.id='interfaceEditorPanel';panel.setAttribute('aria-label','Individual screen and component editor');
       panel.innerHTML='<div class="ui-editor-heading"><div><span class="ui-editor-scope" id="interfaceEditorScope"></span><h2>Customize this screen</h2></div><button class="btn small" id="closeInterfaceEditor" type="button">✕</button></div>'+
-        '<p class="ui-editor-help">Select any visible component to change its wording, visibility, colours, size, spacing and alignment. These settings apply only to this event and this screen. They never change account permissions or scan rules.</p>'+
+        '<p class="ui-editor-help">Choose a role preview, then select any visible component to edit its text, visibility, colours, size and spacing. Previews are read-only; permissions and real event actions are never changed.</p>'+
+        '<div class="ui-editor-grid"><div class="ui-editor-field"><label for="interfaceEditorPreviewRole">Preview role</label><select id="interfaceEditorPreviewRole"><option value="admin">Admin</option><option value="guest">Guest</option><option value="volunteer">Volunteer</option></select></div><div class="ui-editor-field"><label for="interfaceEditorPreviewPage">Preview screen</label><select id="interfaceEditorPreviewPage"><option value="home">Home screen</option><option value="register">Registration form</option></select></div></div>'+
         '<div class="ui-editor-field"><label for="interfaceEditorComponent">Individual component</label><select id="interfaceEditorComponent"></select></div>'+
         '<div class="ui-editor-field"><label for="interfaceEditorText">Display text (leave unchanged to keep the default)</label><textarea id="interfaceEditorText" maxlength="300"></textarea></div>'+
         '<div class="ui-editor-field"><label for="interfaceEditorPlaceholder">Input placeholder / image alt text</label><input id="interfaceEditorPlaceholder" maxlength="140"></div>'+
@@ -827,6 +830,8 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
       document.body.appendChild(panel);
       $('closeInterfaceEditor').addEventListener('click',closeInterfaceEditor);$('closeInterfaceEditor2').addEventListener('click',closeInterfaceEditor);
       $('interfaceEditorComponent').addEventListener('change',interfaceEditorPopulate);
+      $('interfaceEditorPreviewRole').addEventListener('change',switchInterfacePreview);
+      $('interfaceEditorPreviewPage').addEventListener('change',switchInterfacePreview);
       ['interfaceEditorText','interfaceEditorPlaceholder','interfaceEditorVisible','interfaceEditorBgEnabled','interfaceEditorBg','interfaceEditorColorEnabled','interfaceEditorColor','interfaceEditorRadius','interfaceEditorPadding','interfaceEditorFontSize','interfaceEditorAlign'].forEach(id=>{
         $(id).addEventListener('input',interfaceEditorReadDraft);$(id).addEventListener('change',interfaceEditorReadDraft);
       });
@@ -856,7 +861,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
         }
       },true);
     }
-    const active=state.role==='admin'&&!!state.event;
+    const active=(state.role==='admin'||interfacePreviewActive)&&!!state.event;
     launcher.classList.toggle('visible',active);
     launcher.textContent='✎ Customize screen';
     if(!active)closeInterfaceEditor();
@@ -864,16 +869,60 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
   function openInterfaceEditor(){
     if(state.role!=='admin'||!state.event)return;
     ensureInterfaceEditor();interfaceEditorDraft=interfaceClone(interfaceSavedComponents());
+    interfacePreviewActive=false;interfacePreviewSnapshot=null;
+    $('interfaceEditorPreviewRole').value='admin';$('interfaceEditorPreviewPage').value='home';
     interfaceEditorScope=currentInterfaceScope();
     $('interfaceEditorScope').textContent=interfaceEditorScope.replace(/-/g,' ');
     $('interfaceEditorPanel').classList.add('open');interfaceEditorOpen=true;document.body.classList.add('interface-component-editing');
     interfaceRefreshInventory();
+  }
+  async function switchInterfacePreview(){
+    if(state.role!=='admin'&&!interfacePreviewActive)return;
+    const role=$('interfaceEditorPreviewRole').value;
+    const page=$('interfaceEditorPreviewPage').value;
+    if(role!=='admin'&&role!=='guest'&&role!=='volunteer')return;
+    if(page==='register'&&role!=='guest'){$('interfaceEditorPreviewPage').value='home';}
+    if(!interfacePreviewSnapshot)interfacePreviewSnapshot={role:state.role,staffRole:state.staffRole,page:state.page,myRegistration:state.myRegistration};
+    interfacePreviewActive=role!=='admin';
+    state.role=role;
+    state.staffRole=role==='volunteer'?'global':'';
+    state.myRegistration=null;
+    state.page=role==='guest'&&$('interfaceEditorPreviewPage').value==='register'?'register':'home';
+    try{
+      await renderHome();
+      if(state.role==='guest'&&state.page==='register')await renderRegistration($('workspaceContent'),true);
+      if(interfacePreviewActive){
+        main.querySelectorAll('form').forEach(form=>form.addEventListener('submit',event=>{event.preventDefault();event.stopImmediatePropagation();},true));
+      }
+      interfaceEditorScope=currentInterfaceScope();
+      $('interfaceEditorScope').textContent=interfaceEditorScope.replace(/-/g,' ');
+      interfaceApplyOverrides(interfaceEditorDraft);
+      ensureInterfaceEditor();
+      interfaceRefreshInventory();
+      toast(role==='admin'?'Admin screen preview':'Read-only '+role+' preview');
+    }catch(error){
+      toast('Could not render this preview: '+(error.message||'Unknown error'),true);
+    }
+  }
+  async function restoreInterfacePreview(){
+    if(!interfacePreviewSnapshot)return;
+    const snapshot=interfacePreviewSnapshot;
+    interfacePreviewSnapshot=null;interfacePreviewActive=false;
+    state.role=snapshot.role;state.staffRole=snapshot.staffRole;state.page=snapshot.page;state.myRegistration=snapshot.myRegistration;
+    try{
+      await renderHome();
+      if(snapshot.role==='admin'&&snapshot.page&&snapshot.page!=='overview'&&snapshot.page!=='home')await renderAdminPage(snapshot.page);
+    }catch(error){toast('Returned to admin view, but the previous screen could not be restored.',true);}
+    interfaceEditorScope=currentInterfaceScope();
+    interfaceApplyOverrides();
+    ensureInterfaceEditor();
   }
   function closeInterfaceEditor(){
     const panel=$('interfaceEditorPanel');if(panel)panel.classList.remove('open');
     document.querySelectorAll('[data-interface-selected="1"]').forEach(el=>el.removeAttribute('data-interface-selected'));
     document.body.classList.remove('interface-component-editing');
     interfaceEditorOpen=false;
+    if(interfacePreviewSnapshot)void restoreInterfacePreview();
   }
   async function saveInterfaceComponents(){
     const button=$('saveInterfaceComponents');if(!button||button.disabled)return;
