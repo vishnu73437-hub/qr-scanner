@@ -111,3 +111,42 @@ Earlier resource screenshot showed approximately 116 MB of 512 MB memory, 0.63% 
 ## Change log
 - 2026-11-03: Isolated audit results and safe deployment checklist documented.
 - Live deployment: NOT performed by this audit.
+
+
+## Follow-up audit — 4 November 2026
+
+### GitHub Pages frontend changes committed
+Both `index.html` and `eventhub-preview.html` are synchronized (current blob SHA: `e47c9b34f33d192fbd486654186a85de7df3b842`).
+
+- The API request timeout now remains active through JSON response parsing.
+- `update_event` and other long admin actions have a 120-second client timeout.
+- An aborted `update_event` request tells the admin that the outcome may be uncertain and advises checking saved values before retrying.
+- Saving settings while the visual editor is not shown omits `pass_layout` instead of sending `null`, so an existing layout is not erased.
+- Duplicate settings-form submissions are blocked while a save is in progress.
+- A confirmed save is distinguished from a later page-refresh failure.
+- The admin sees a warning if the backend reports an unsynchronized event mirror or audit write.
+- Frontend inline JavaScript syntax checks passed in the isolated audit.
+
+### Backend release candidate prepared and tested offline
+The updated Botkeep source candidate adds:
+- validation and retention of the per-event Canva `pass_layout`;
+- portrait-renderer support for layer positions, sizes, visibility, colour, alignment and rotation, while keeping QR square and upright;
+- wrapped venue text and the corrected right-side venue panel;
+- a bounded registry lock wait for `update_event`;
+- best-effort local event-database mirroring using the request's existing connection;
+- an audit fallback to the shared registry when the event-local database is locked.
+
+Isolated regression tests passed for:
+- saved Canva layout surviving an incoming `pass_layout: null`;
+- QR geometry and out-of-bounds rejection;
+- a 1024 × 1536 PNG pass preview;
+- `update_event` returning in about one second with a deliberately locked secondary event database instead of waiting 30 seconds;
+- registry audit fallback and subsequent local mirror synchronization after lock release;
+- preservation of an existing guest row, pass code, QR token, approval status, and entry/food flags;
+- a bounded 503 response for a locked primary database.
+
+### Production deployment remains unverified
+- The Botkeep source candidate has **not** been installed or restarted on the live Botkeep service.
+- No production SQLite database was opened or modified by the isolated tests.
+- No real guest registration, QR issuance/reissue, bulk pass send, Telegram polling, Google Sheets delivery, or physical camera scan was performed.
+- Do not mark the backend deployed until the existing Botkeep entry point and working directory are confirmed, backups are taken, and the live `/health` endpoint plus controlled smoke tests pass.
