@@ -503,7 +503,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
   const API_BASE = (params.get('api_base') || window.EVENTHUB_API_BASE || (/github\.io$/.test(location.hostname) ? 'https://unwjym.bot-keep.xyz' : location.origin)).replace(/\/$/, '');
   const initialEventId = Number(params.get('event_id') || 0);
   let scannerView = params.get('scanner') === '1';
-  const state = { role:'guest', staffRole:'', user:null, activeEvents:[], workspaces:[], eventId:initialEventId, event:null, stats:null, page:'home', guest:null, scanner:null, scannerStarting:false, scannerStopPromise:null, scannerGeneration:0, scanHandling:false, scanSource:'', scanCurrentQr:'', scanPendingAction:null, scanActionBusy:false, scanLookupBusy:false, scanResumeTimer:null, scannerPaused:false, lastScannedQr:'', scanMisses:0, formSchema:[], pass:null, checkpoints:[], myRegistration:null };
+  const state = { role:'guest', staffRole:'', user:null, activeEvents:[], workspaces:[], eventId:initialEventId, event:null, stats:null, page:'home', guest:null, scanner:null, scannerStarting:false, scannerStopPromise:null, scannerGeneration:0, scanHandling:false, scanSource:'', scanCurrentQr:'', scanPendingAction:null, scanActionBusy:false, scanLookupBusy:false, scanProofPending:false, scanResumeTimer:null, scannerPaused:false, lastScannedQr:'', scanMisses:0, formSchema:[], pass:null, checkpoints:[], myRegistration:null };
   const $ = (id) => document.getElementById(id);
   const main = $('main');
   const safe = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -1155,6 +1155,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
   }
   async function closeScannerStandalone(push=true) {
     if(state.scanLookupBusy){showScanFeedback('warning','VERIFYING GUEST','Please wait until the server finishes checking this pass. The scanner remains locked.','',null);return false;}
+    if(state.scanProofPending){showScanFeedback('warning','PROOF STILL REQUIRED','Store the guest ID proof or explicitly record No Proof Provided before leaving this guest.','CONTINUE TO PROOF',()=>hideScanFeedback());return false;}
     if(state.scanActionBusy){showScanFeedback('warning','SAVE IN PROGRESS','Please wait for the server to confirm this event record. The scanner remains locked.','',null);return false;}
     if(state.scanPendingAction){showScanFeedback('danger','SAVE NOT CONFIRMED','This guest action still needs verification. Retry or check its status before leaving the scanner.','RETRY / CHECK STATUS',retryPendingScanAction);return false;}
     if(state.scanHandling){hideScanFeedback();state.scanHandling=false;state.scanCurrentQr='';state.scanSource='';state.guest=null;document.body.classList.remove('scanner-has-guest');}
@@ -1199,7 +1200,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     if(state.scanHandling&&state.scanCurrentQr){
       document.body.classList.add('scanner-has-guest');
       if(state.scanPendingAction)showScanFeedback('danger','ACTION NOT YET CONFIRMED','A previous guest action still needs verification. Retry the save before scanning another guest.','RETRY / CHECK STATUS',retryPendingScanAction);
-      else if(state.guest)renderScannedGuest();
+      else if(state.guest){renderScannedGuest();if(state.scanProofPending)showScanFeedback('warning','PROOF STILL REQUIRED','Store the guest ID proof or explicitly record No Proof Provided before scanning the next guest.','CONTINUE TO PROOF',()=>hideScanFeedback());}
       else showScanFeedback('warning','VERIFICATION INTERRUPTED','This guest pass was not fully checked. Verify it again before admitting the guest.','RETRY VERIFY',()=>lookupGuest(state.scanCurrentQr),'NEXT GUEST',releaseGuestScanLock);
     }
   }
@@ -1362,7 +1363,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
   function beginGuestScanLock(qr,source) {
     if(state.scanHandling)return false;
     state.scanHandling=true;state.scanSource=source||'camera';state.scanCurrentQr=String(qr||'').trim();
-    state.scanPendingAction=null;state.scanActionBusy=false;state.scanLookupBusy=false;
+    state.scanPendingAction=null;state.scanActionBusy=false;state.scanLookupBusy=false;state.scanProofPending=false;
     document.body.classList.add('scanner-has-guest');
     const activeScanner=state.scanner;
     if(activeScanner&&activeScanner.isScanning){
@@ -1373,7 +1374,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     return true;
   }
   function releaseGuestScanLock() {
-    if(state.scanActionBusy)return false;
+    if(state.scanActionBusy||state.scanPendingAction||state.scanProofPending)return false;
     hideScanFeedback();
     state.scanHandling=false;state.scanCurrentQr='';state.scanSource='';state.scanPendingAction=null;
     document.body.classList.remove('scanner-has-guest');
@@ -1414,7 +1415,9 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     const role=state.role==='admin'?'admin':(state.staffRole||'global');
     const canHandleProof=['admin','global','scanner','event_lead','proof'].includes(role);
     const proofResolved=['Stored','No proof','Returned'].includes(proofStatus);
+    if(action==='proof_deposit'||action==='proof_no_proof')state.scanProofPending=false;
     if(action==='entry'&&canHandleProof&&!proofResolved){
+      state.scanProofPending=true;
       showScanFeedback('warning','ENTRY RECORDED — PROOF REQUIRED',(guest.name||'This guest')+' is checked in. Keep this guest selected and store the ID proof, or explicitly record that no proof was provided. The scanner will remain locked until that step is confirmed.','CONTINUE TO PROOF',()=>hideScanFeedback());
       return;
     }
@@ -1473,6 +1476,8 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     const proofResolved=['Stored','No proof','Returned'].includes(g.proofStatus);
     const role=state.role==='admin'?'admin':(state.staffRole||'global');
     const canDo=action=>['admin','global','scanner','event_lead'].includes(role)||(role==='entry'&&action==='entry')||(role==='food'&&action==='food')||(role==='proof'&&['proof_deposit','proof_no_proof','proof_return','exit'].includes(action));
+    if(proofResolved)state.scanProofPending=false;
+    else if(state.scanHandling&&activePass&&g.entryUsed&&!g.exitRecorded&&(canDo('proof_deposit')||canDo('proof_no_proof')))state.scanProofPending=true;
     const canUseCheckpoint=['admin','global','scanner','event_lead','checkpoint'].includes(role);
     if(activePass&&!g.exitRecorded&&!g.entryUsed&&canDo('entry'))actions.push(['entry','RECORD ENTRY','success']);
     if(activePass&&g.entryUsed&&!g.exitRecorded&&!proofResolved){
@@ -2475,10 +2480,11 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     }
   });
   window.addEventListener('popstate',async()=>{
-    if(state.scanLookupBusy||state.scanActionBusy||state.scanPendingAction){
+    if(state.scanLookupBusy||state.scanActionBusy||state.scanPendingAction||state.scanProofPending){
       if(scannerView){const restoreUrl=new URL(location.href);restoreUrl.searchParams.set('scanner','1');history.pushState({scanner:true,event_id:state.eventId},'',restoreUrl.pathname+restoreUrl.search+restoreUrl.hash);}
       if(state.scanActionBusy)showScanFeedback('warning','SAVE IN PROGRESS','Please wait for backend confirmation. Do not leave or scan another guest.','',null);
       else if(state.scanLookupBusy)showScanFeedback('warning','VERIFYING GUEST','Please wait until pass verification finishes. Do not admit this guest yet.','',null);
+      else if(state.scanProofPending)showScanFeedback('warning','PROOF STILL REQUIRED','Complete ID proof storage or explicitly record No Proof Provided before continuing.','CONTINUE TO PROOF',()=>hideScanFeedback());
       else showScanFeedback('danger','SAVE NOT CONFIRMED','This action has not yet been confirmed. Retry or check its status before continuing.','RETRY / CHECK STATUS',retryPendingScanAction);
       return;
     }
