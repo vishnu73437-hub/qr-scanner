@@ -16,11 +16,12 @@
 4. **Orphaned checkpoint assignment after removing core access:** cleanup preserves an assignment only when that same event still has an event-specific checkpoint role. It removes stale assignments belonging to event-scoped entry/food/proof/scanner roles and assignments with no event role, while preserving legitimate checkpoint-role assignments.
 5. **Blocked-status regression:** /api/role previously reset the blocked flag when the Mini App opened. It now refreshes last-seen/name metadata without clearing a blocked flag; an actual /start interaction can reactivate the user.
 6. **Shared blocked-status propagation:** Telegram delivery failures indicating blocked/deactivated/chat-not-found now upsert blocked status into both the shared registry and current event database. This makes Admin picker filters consistent with announcement delivery results, including when a user had no registry row yet.
+7. **Entry-to-proof hand-off:** Entry-role volunteers can now record Entry and then store proof or explicitly confirm No Proof Provided. The backend still denies food, proof return and exit to the Entry role; the scanner remains locked until proof is resolved, while the Proof/Exit role handles return and exit.
 
 ## Isolated checks rerun against the final packaged source
 
 - Python bytecode compilation for bot.py and both tests: PASS.
-- test_staff_roles.py: PASS, including role resolution, role-to-action matrix, dashboard route, cross-event isolation and Mini App blocked-state preservation.
+- test_staff_roles.py: PASS, including role resolution, role-to-action matrix, dashboard route, cross-event isolation and Mini App blocked-state preservation, and Entry-to-proof role gating.
 - test_checkpoint_assignments.py: PASS, including no-assignment fail-closed checks, exact-station authorization, blocked candidate filtering, blocked endpoint rejection guards, blocked-status propagation to both databases, name selection, isolated SQLite query execution, and core-access cleanup that preserves only an event-specific checkpoint role.
 - Package SHA-256 values recorded in SHA256SUMS.txt and recomputed after packaging.
 
