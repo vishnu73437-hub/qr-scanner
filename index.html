@@ -456,6 +456,8 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
 #interfaceEditorPanel .ui-editor-actions .btn{width:100%;font-size:12px;padding:9px 8px}
 #interfaceEditorPanel .ui-editor-scope{display:inline-flex;border:1px solid var(--line);border-radius:20px;padding:4px 9px;color:var(--gold);font-size:10px;font-weight:900;letter-spacing:.8px;text-transform:uppercase}
 [data-interface-key]{scroll-margin-top:90px}
+body.interface-component-editing [data-interface-key]{cursor:crosshair}
+[data-interface-selected="1"]{outline:2px dashed var(--gold)!important;outline-offset:3px;position:relative;z-index:1}
 @media(max-width:480px){#interfaceEditorLauncher{right:10px;bottom:calc(10px + env(safe-area-inset-bottom));padding:11px 13px;font-size:12px}#interfaceEditorPanel{right:8px;bottom:calc(66px + env(safe-area-inset-bottom));width:calc(100vw - 16px);max-height:76dvh;padding:13px}}
 
 </style>
@@ -659,7 +661,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     setDeepotsavFireworks(typeof t.interface_fireworks==='boolean'?t.interface_fireworks:isDiwali);
     document.querySelector('meta[name="theme-color"]').content=background;
     const title=document.getElementById('brandTitle'), subtitle=document.getElementById('brandSubtitle'), mark=document.getElementById('brandMark');
-    if(title)title.textContent=t.app_title||'KSMU HOSTEL 5 EVENTS';if(subtitle)subtitle.textContent=t.app_subtitle||'EVENT MANAGEMENT';
+    if(title){title.textContent=t.app_title||'KSMU HOSTEL 5 EVENTS';title.dataset.interfaceOriginalText=title.textContent;}if(subtitle){subtitle.textContent=t.app_subtitle||'EVENT MANAGEMENT';subtitle.dataset.interfaceOriginalText=subtitle.textContent;}
     if(mark){const logo=t.brand_logo_image||t.brand_logo_url;if(logo)mark.innerHTML='<img src="'+safe(logo)+'" alt="" loading="lazy">';else mark.textContent=isHalloween?'🎃':(isDiwali?'🪔':'✦');}
   }
 
@@ -765,7 +767,9 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     return interfaceEditorItems.find(item=>item.key===key)||null;
   }
   function interfaceEditorPopulate(){
+    document.querySelectorAll('[data-interface-selected="1"]').forEach(el=>el.removeAttribute('data-interface-selected'));
     const item=interfaceEditorSelected();if(!item)return;
+    item.el.setAttribute('data-interface-selected','1');
     const saved=interfaceEditorDraft?.[interfaceEditorScope]?.[item.key]||{};
     $('interfaceEditorText').value=Object.prototype.hasOwnProperty.call(saved,'text')?saved.text:item.originalText;
     $('interfaceEditorPlaceholder').value=Object.prototype.hasOwnProperty.call(saved,'placeholder')?saved.placeholder:item.placeholder;
@@ -838,6 +842,20 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
       });
       $('saveInterfaceComponents').addEventListener('click',saveInterfaceComponents);
     }
+    if(!document.documentElement.dataset.interfaceEditCaptureBound){
+      document.documentElement.dataset.interfaceEditCaptureBound='1';
+      document.addEventListener('click',event=>{
+        if(!interfaceEditorOpen)return;
+        const target=event.target?.closest?.('[data-interface-key]');
+        if(!target||target.closest('#interfaceEditorPanel')||target.closest('#interfaceEditorLauncher'))return;
+        if(!interfaceNodes(interfaceEditorRoot()).includes(target))return;
+        const key=target.dataset.interfaceKey,selector=$('interfaceEditorComponent');
+        if(selector&&[...selector.options].some(option=>option.value===key)){
+          event.preventDefault();event.stopPropagation();event.stopImmediatePropagation();
+          selector.value=key;interfaceEditorPopulate();
+        }
+      },true);
+    }
     const active=state.role==='admin'&&!!state.event;
     launcher.classList.toggle('visible',active);
     launcher.textContent='✎ Customize screen';
@@ -848,11 +866,13 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     ensureInterfaceEditor();interfaceEditorDraft=interfaceClone(interfaceSavedComponents());
     interfaceEditorScope=currentInterfaceScope();
     $('interfaceEditorScope').textContent=interfaceEditorScope.replace(/-/g,' ');
-    $('interfaceEditorPanel').classList.add('open');interfaceEditorOpen=true;
+    $('interfaceEditorPanel').classList.add('open');interfaceEditorOpen=true;document.body.classList.add('interface-component-editing');
     interfaceRefreshInventory();
   }
   function closeInterfaceEditor(){
     const panel=$('interfaceEditorPanel');if(panel)panel.classList.remove('open');
+    document.querySelectorAll('[data-interface-selected="1"]').forEach(el=>el.removeAttribute('data-interface-selected'));
+    document.body.classList.remove('interface-component-editing');
     interfaceEditorOpen=false;
   }
   async function saveInterfaceComponents(){
