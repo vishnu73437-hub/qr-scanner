@@ -721,13 +721,13 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
       if(!Object.prototype.hasOwnProperty.call(el.dataset,'interfaceOriginalDisplay'))el.dataset.interfaceOriginalDisplay=el.style.display||'';
       const placeholderAttr=el.tagName==='IMG'?'alt':'placeholder';
       if(!Object.prototype.hasOwnProperty.call(el.dataset,'interfaceOriginalPlaceholder'))el.dataset.interfaceOriginalPlaceholder=el.getAttribute(placeholderAttr)||'';
-      const originalStyle={backgroundColor:el.dataset.interfaceOriginalBg||'',color:el.dataset.interfaceOriginalColor||'',borderRadius:el.dataset.interfaceOriginalRadius||'',padding:el.dataset.interfaceOriginalPadding||'',fontSize:el.dataset.interfaceOriginalFontSize||'',textAlign:el.dataset.interfaceOriginalAlign||''};
       if(!Object.prototype.hasOwnProperty.call(el.dataset,'interfaceOriginalBg'))el.dataset.interfaceOriginalBg=el.style.backgroundColor||'';
       if(!Object.prototype.hasOwnProperty.call(el.dataset,'interfaceOriginalColor'))el.dataset.interfaceOriginalColor=el.style.color||'';
       if(!Object.prototype.hasOwnProperty.call(el.dataset,'interfaceOriginalRadius'))el.dataset.interfaceOriginalRadius=el.style.borderRadius||'';
       if(!Object.prototype.hasOwnProperty.call(el.dataset,'interfaceOriginalPadding'))el.dataset.interfaceOriginalPadding=el.style.padding||'';
       if(!Object.prototype.hasOwnProperty.call(el.dataset,'interfaceOriginalFontSize'))el.dataset.interfaceOriginalFontSize=el.style.fontSize||'';
       if(!Object.prototype.hasOwnProperty.call(el.dataset,'interfaceOriginalAlign'))el.dataset.interfaceOriginalAlign=el.style.textAlign||'';
+      const originalStyle={backgroundColor:el.dataset.interfaceOriginalBg||'',color:el.dataset.interfaceOriginalColor||'',borderRadius:el.dataset.interfaceOriginalRadius||'',padding:el.dataset.interfaceOriginalPadding||'',fontSize:el.dataset.interfaceOriginalFontSize||'',textAlign:el.dataset.interfaceOriginalAlign||''};
       const item=saved[key]||{};
       interfaceSetDirectText(el,Object.prototype.hasOwnProperty.call(item,'text')?item.text:el.dataset.interfaceOriginalText);
       if(el.tagName==='IMG')el.setAttribute('alt',Object.prototype.hasOwnProperty.call(item,'placeholder')?item.placeholder:el.dataset.interfaceOriginalPlaceholder);
