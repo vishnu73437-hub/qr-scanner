@@ -1,0 +1,29 @@
+name: EventHub frontend checks
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches:
+      - eventhub-*
+      - eventhub/**
+
+permissions:
+  contents: read
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Parse inline JavaScript and verify frontend parity
+        run: python scripts/check_frontend.py
