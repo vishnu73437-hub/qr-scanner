@@ -1831,11 +1831,18 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
           venue:$('editVenue').value,theme:nextTheme
         });
         theme={...theme,...nextTheme};
-        if(message)message.innerHTML=showNotice(result.message||'Event settings saved. Refreshing…','good');
+        const mirrorWarning=result.mirror_synced===false||result.audit_recorded===false;
+        if(message)message.innerHTML=showNotice(result.message||'Event settings saved. Refreshing…',mirrorWarning?'error':'good');
         try{
           await loadEvent();
-          await renderAdminPage('settings');
-          toast('Event, Mini App branding and QR pass design saved');
+          if(mirrorWarning){
+            const liveMessage=$('settingsMessage');
+            if(liveMessage)liveMessage.innerHTML=showNotice(result.message||'The event registry saved your settings, but a secondary database or audit write needs attention. Check Botkeep logs before retrying.','error');
+            toast('Settings saved with a backend warning. Check the message before retrying.',true);
+          }else{
+            await renderAdminPage('settings');
+            toast('Event, Mini App branding and QR pass design saved');
+          }
         }catch(refreshErr){
           const liveMessage=$('settingsMessage');
           const note='Your settings were saved successfully, but this screen could not refresh. Reopen Event Settings to verify the latest values. '+(refreshErr?.message||'');
@@ -1911,10 +1918,12 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
           venue:$('editVenue').value,theme:nextTheme,registration_schema:arr
         });
         theme={...theme,...nextTheme};
-        $('schemaMessage').innerHTML=showNotice(result.message||'Registration form saved.','good');
+        const mirrorWarning=result.mirror_synced===false||result.audit_recorded===false;
+        $('schemaMessage').innerHTML=showNotice(result.message||'Registration form saved.',mirrorWarning?'error':'good');
         try{const d=await post('/api/event_details',{event_id:state.eventId});state.event=d.event;}
         catch(refreshErr){$('schemaMessage').innerHTML=showNotice('Registration form saved, but the event details could not be refreshed. Reopen this section to verify. '+(refreshErr?.message||''),'good');}
-        toast('Registration form saved');
+        if(mirrorWarning)toast('Form saved with a backend warning. Check the message before retrying.',true);
+        else toast('Registration form saved');
       }catch(err){$('schemaMessage').innerHTML=showNotice(err?.message||'Registration form could not be saved.','error');}
       finally{button.disabled=false;button.textContent=original;}
     });
