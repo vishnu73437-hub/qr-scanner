@@ -503,7 +503,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
   const API_BASE = (params.get('api_base') || window.EVENTHUB_API_BASE || (/github\.io$/.test(location.hostname) ? 'https://unwjym.bot-keep.xyz' : location.origin)).replace(/\/$/, '');
   const initialEventId = Number(params.get('event_id') || 0);
   let scannerView = params.get('scanner') === '1';
-  const state = { role:'guest', staffRole:'', user:null, activeEvents:[], workspaces:[], eventId:initialEventId, event:null, stats:null, page:'home', guest:null, scanner:null, scannerStarting:false, scannerStopPromise:null, scannerGeneration:0, scanHandling:false, scanSource:'', scanCurrentQr:'', scanPendingAction:null, scanActionBusy:false, scanResumeTimer:null, scannerPaused:false, lastScannedQr:'', scanMisses:0, formSchema:[], pass:null, checkpoints:[], myRegistration:null };
+  const state = { role:'guest', staffRole:'', user:null, activeEvents:[], workspaces:[], eventId:initialEventId, event:null, stats:null, page:'home', guest:null, scanner:null, scannerStarting:false, scannerStopPromise:null, scannerGeneration:0, scanHandling:false, scanSource:'', scanCurrentQr:'', scanPendingAction:null, scanActionBusy:false, scanLookupBusy:false, scanResumeTimer:null, scannerPaused:false, lastScannedQr:'', scanMisses:0, formSchema:[], pass:null, checkpoints:[], myRegistration:null };
   const $ = (id) => document.getElementById(id);
   const main = $('main');
   const safe = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -1154,6 +1154,10 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     await renderScanner(main,true);
   }
   async function closeScannerStandalone(push=true) {
+    if(state.scanLookupBusy){showScanFeedback('warning','VERIFYING GUEST','Please wait until the server finishes checking this pass. The scanner remains locked.','',null);return false;}
+    if(state.scanActionBusy){showScanFeedback('warning','SAVE IN PROGRESS','Please wait for the server to confirm this event record. The scanner remains locked.','',null);return false;}
+    if(state.scanPendingAction){showScanFeedback('danger','SAVE NOT CONFIRMED','This guest action still needs verification. Retry or check its status before leaving the scanner.','RETRY / CHECK STATUS',retryPendingScanAction);return false;}
+    if(state.scanHandling){hideScanFeedback();state.scanHandling=false;state.scanCurrentQr='';state.scanSource='';state.guest=null;document.body.classList.remove('scanner-has-guest');}
     await stopScanner();
     scannerView=false;document.body.classList.remove('scanner-mode');
     const u=new URL(location.href);u.searchParams.delete('scanner');
@@ -1194,7 +1198,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     catch(err){toast('Assigned checkpoints could not be loaded: '+err.message,true);}
     if(state.scanHandling&&state.scanCurrentQr){
       document.body.classList.add('scanner-has-guest');
-      if(state.scanPendingAction)showScanFeedback('danger','ACTION NOT YET CONFIRMED','A previous guest action still needs verification. Retry the save before scanning another guest.','RETRY / CHECK STATUS',retryPendingScanAction,'BACK TO VOLUNTEER DESK',async()=>{hideScanFeedback();await closeScannerStandalone();});
+      if(state.scanPendingAction)showScanFeedback('danger','ACTION NOT YET CONFIRMED','A previous guest action still needs verification. Retry the save before scanning another guest.','RETRY / CHECK STATUS',retryPendingScanAction);
       else if(state.guest)renderScannedGuest();
       else showScanFeedback('warning','VERIFICATION INTERRUPTED','This guest pass was not fully checked. Verify it again before admitting the guest.','RETRY VERIFY',()=>lookupGuest(state.scanCurrentQr),'NEXT GUEST',releaseGuestScanLock);
     }
@@ -1258,6 +1262,10 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
   async function lookupGuest(qr) {
     const value=String(qr||'').trim();
     if(!value){showScanFeedback('warning','NO QR DATA','Enter or scan a guest pass first.','NEXT GUEST',releaseGuestScanLock);return false;}
+    state.scanLookupBusy=true;
+    try{return await lookupGuestCore(value);}finally{state.scanLookupBusy=false;}
+  }
+  async function lookupGuestCore(value) {
     state.scanCurrentQr=state.scanCurrentQr||value;
     state.guest=null;
     if($('scanResult'))$('scanResult').innerHTML='<div class="notice">Verifying guest pass…</div>';
@@ -1288,7 +1296,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
       if($('scanResult'))$('scanResult').innerHTML='';
       const transient=Number(e?.status)>=500||/(network|did not respond|unreadable response|unexpected response|connection|busy|timed out|failed to fetch|within \d+s)/i.test(String(e?.message||''));
       if(transient){
-        showScanFeedback('danger','NETWORK / SERVER ERROR','Guest verification could not be completed. Do not admit this guest until the pass is verified. '+e.message,'RETRY VERIFY',()=>lookupGuest(value),'BACK TO VOLUNTEER DESK',async()=>{hideScanFeedback();await closeScannerStandalone();});
+        showScanFeedback('danger','NETWORK / SERVER ERROR','Guest verification could not be completed. Do not admit this guest until the pass is verified. '+e.message,'RETRY VERIFY',()=>lookupGuest(value));
       }else{
         showScanFeedback('warning','PASS NOT ACCEPTED',e.message||'This pass could not be verified. Ask the guest to show their current pass.','NEXT GUEST',releaseGuestScanLock);
       }
@@ -1344,7 +1352,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
       try{await secondaryAction();}catch(err){secondary.disabled=false;toast(err?.message||'Action could not be completed.',true);}
     });
     if(tone==='success'){
-      state.scanResumeTimer=window.setTimeout(()=>{state.scanResumeTimer=null;if(state.scanHandling)releaseGuestScanLock();else hideScanFeedback();},1400);
+      state.scanResumeTimer=window.setTimeout(()=>{state.scanResumeTimer=null;if(state.scanHandling)releaseGuestScanLock();else hideScanFeedback();},2300);
     }
   }
   function hideScanFeedback(){
@@ -1354,7 +1362,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
   function beginGuestScanLock(qr,source) {
     if(state.scanHandling)return false;
     state.scanHandling=true;state.scanSource=source||'camera';state.scanCurrentQr=String(qr||'').trim();
-    state.scanPendingAction=null;state.scanActionBusy=false;
+    state.scanPendingAction=null;state.scanActionBusy=false;state.scanLookupBusy=false;
     document.body.classList.add('scanner-has-guest');
     const activeScanner=state.scanner;
     if(activeScanner&&activeScanner.isScanning){
@@ -1397,6 +1405,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     return false;
   }
   function completeConfirmedGuestAction(action,guest,serverMessage) {
+    state.scanPendingAction=null;state.scanActionBusy=false;
     state.guest=guest;
     renderScannedGuest(serverMessage||'The action was saved and verified in the EventHub record.');
     const labels={entry:'Entry recorded',proof_deposit:'Proof stored',proof_no_proof:'No proof confirmation stored',food:'Food collection recorded',proof_return:'Proof return recorded',exit:'Exit recorded',checkpoint:'Checkpoint scan recorded'};
@@ -1441,7 +1450,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
       if(postError)throw postError;
       throw new Error('The server did not show this action in the refreshed guest record. It is not confirmed as saved.');
     }catch(err){
-      showScanFeedback('danger','SAVE NOT CONFIRMED',err?.message||'EventHub could not confirm this record. Do not release this guest yet.','RETRY / CHECK STATUS',retryPendingScanAction,'BACK TO VOLUNTEER DESK',async()=>{hideScanFeedback();await closeScannerStandalone();});
+      showScanFeedback('danger','SAVE NOT CONFIRMED',err?.message||'EventHub could not confirm this record. Do not release this guest yet.','RETRY / CHECK STATUS',retryPendingScanAction);
     }finally{
       state.scanActionBusy=false;
       if(button&&button.isConnected&&state.scanHandling)button.disabled=false;
@@ -2325,7 +2334,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
         $('checkpointList').innerHTML=checkpoints.map(c=>{
           const id=Number(c.id),assigned=assignments.filter(a=>Number(a.checkpoint_id)===id);
           const assignedHtml=assigned.map(v=>'<div class="row" style="gap:8px"><div><strong>'+safe(v.name)+'</strong><div class="sub">'+(v.username?'@'+safe(v.username)+' · ':'')+safe(v.role||'checkpoint')+'</div></div>'+(archived?'':'<button class="btn danger small" type="button" data-remove-checkpoint-volunteer="'+id+'" data-volunteer-id="'+Number(v.telegram_id)+'">Remove</button>')+'</div>').join('');
-          const assignHtml=archived?'':'<section class="staff-assignment-form"><div class="field"><label for="assignCheckpoint-'+id+'">Assign volunteer by name</label><select id="assignCheckpoint-'+id+'" data-checkpoint-person="'+id+'"><option value="">Choose volunteer…</option>'+candidateOptions+'</select></div><button class="btn primary" type="button" data-assign-checkpoint="'+id+'">＋ Assign to this checkpoint</button><p class="footnote">Selecting an unassigned person creates a checkpoint-only event role. A person already assigned to another desk must have their role changed first.</p></section>';
+          const assignHtml=archived?'':'<section class="staff-assignment-form"><div class="field"><label for="assignCheckpoint-'+id+'">Assign volunteer by name</label><select id="assignCheckpoint-'+id+'" data-checkpoint-person="'+id+'"><option value="">Choose volunteer…</option>'+candidateOptions+'</select></div>'+(Number(c.enabled)?'<button class="btn primary" type="button" data-assign-checkpoint="'+id+'">＋ Assign to this checkpoint</button>':'<div class="notice">Enable this checkpoint before assigning volunteers.</div>')+'<p class="footnote">Select a volunteer by name. Each assigned volunteer can scan only this station and other stations explicitly assigned to them.</p></section>';
           const editHtml=archived?'':'<form data-checkpoint-edit="'+id+'"><div class="inline-fields"><div class="field"><label>Name</label><input name="name" required maxlength="100" value="'+safe(c.name)+'"></div><div class="field"><label>Type</label><select name="checkpoint_type"><option value="entry" '+(c.checkpoint_type==='entry'?'selected':'')+'>Entry</option><option value="food" '+(c.checkpoint_type==='food'?'selected':'')+'>Food'+(foodCollectionIsEnabled()?'':' (disabled for this event)')+'</option><option value="workshop" '+(c.checkpoint_type==='workshop'?'selected':'')+'>Workshop</option><option value="other" '+(c.checkpoint_type==='other'?'selected':'')+'>Other</option></select></div></div><label><input name="enabled" type="checkbox" '+(Number(c.enabled)?'checked':'')+' style="width:auto;min-height:0"> Enabled for scanning</label><div class="actions"><button class="btn primary small" type="submit">Save</button><button class="btn danger small" type="button" data-delete-checkpoint="'+id+'">Delete</button></div></form>';
           return '<article class="list-item" data-checkpoint-id="'+id+'"><div class="row"><strong>'+safe(c.name)+'</strong><span class="pill '+(Number(c.enabled)?'good':'warn')+'">'+(Number(c.enabled)?'Enabled':'Disabled')+'</span></div><div class="sub">'+safe(c.checkpoint_type)+' · Checkpoint #'+id+'</div><section class="section"><strong>Assigned volunteers ('+assigned.length+')</strong>'+(assignedHtml||'<p class="muted">No volunteer assigned yet.</p>')+'</section>'+assignHtml+editHtml+'</article>';
         }).join('')||'<div class="empty">No checkpoints created for this event.</div>';
@@ -2353,7 +2362,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
             catch(err){toast(err.message,true);btn.disabled=false;}
           }));
         }
-        if(!candidates.length)$('checkpointList').insertAdjacentHTML('afterbegin','<div class="notice">No volunteer names are available yet. Ask each volunteer to open the EventHub Telegram bot once; their name will then appear here.</div>');
+        if(!candidates.length)$('checkpointList').insertAdjacentHTML('afterbegin','<div class="notice">No eligible volunteers found. Add them under Admin → Event volunteers or Core volunteers first. Ask them to open EventHub once so their Telegram name is available.</div>');
       }catch(err){$('checkpointList').innerHTML=showNotice(err.message,'error');}
     };
     $('refreshCheckpoints')?.addEventListener('click',load);
@@ -2456,6 +2465,14 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     }
   });
   window.addEventListener('popstate',async()=>{
+    if(state.scanLookupBusy||state.scanActionBusy||state.scanPendingAction){
+      if(scannerView){const restoreUrl=new URL(location.href);restoreUrl.searchParams.set('scanner','1');history.pushState({scanner:true,event_id:state.eventId},'',restoreUrl.pathname+restoreUrl.search+restoreUrl.hash);}
+      if(state.scanActionBusy)showScanFeedback('warning','SAVE IN PROGRESS','Please wait for backend confirmation. Do not leave or scan another guest.','',null);
+      else if(state.scanLookupBusy)showScanFeedback('warning','VERIFYING GUEST','Please wait until pass verification finishes. Do not admit this guest yet.','',null);
+      else showScanFeedback('danger','SAVE NOT CONFIRMED','This action has not yet been confirmed. Retry or check its status before continuing.','RETRY / CHECK STATUS',retryPendingScanAction);
+      return;
+    }
+    if(state.scanHandling){hideScanFeedback();state.scanHandling=false;state.scanCurrentQr='';state.scanSource='';state.scanPendingAction=null;state.guest=null;document.body.classList.remove('scanner-has-guest');}
     const nextParams=new URLSearchParams(location.search);
     const nextId=Number(nextParams.get('event_id')||0);
     const wantsScanner=nextParams.get('scanner')==='1';
