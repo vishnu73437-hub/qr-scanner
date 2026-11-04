@@ -22,7 +22,7 @@ A professional, clean, responsive event operations dashboard. Keep event brandin
 
 ## Implementation status — 4 November 2026
 
-- **Staging frontend:** admin-only dashboard visual refresh completed; read-only Botkeep API / primary registry health indicator added; `index.html` and `eventhub-preview.html` are synchronized.
+- **Staging frontend:** admin dashboard refresh and read-only Botkeep / database status card completed; scanner camera is released when the app is backgrounded; `index.html` and `eventhub-preview.html` are synchronized.
 - **Frontend static checks:** inline application script parses successfully; 216 literal element lookups were matched to existing static HTML IDs; no missing literal IDs were found.
 - **Backend candidate:** `EventHub_Canva_Backend_Upgrade_20261104.zip` includes the pass-layout renderer and bounded SQLite lock-handling changes. Its standard `python -m unittest discover -s tests -v` suite passes four test groups, including seven isolated regression assertions.
 - **Not yet verified:** no live Botkeep install/restart, production DB backup verification, Telegram polling test, Google Sheets live test, or real Android / iPhone / tablet / desktop browser acceptance test has been performed in this work session.
