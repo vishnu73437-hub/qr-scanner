@@ -420,6 +420,33 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
 .admin-easy-toolbar .toolbar-links .quick-link{display:inline-flex;align-items:center;justify-content:center}
 .admin-easy-toolbar .toolbar-actions{min-width:0}
 </style>
+
+<style id="eventhub-pro-dashboard-v1">
+/* EventHub 2.0 — admin-only professional dashboard polish. No guest/pass/scanner data logic is changed. */
+body.eventhub-pro-admin #workspaceContent{min-width:0}
+body.eventhub-pro-admin #workspaceContent .section-title{gap:12px;align-items:center;margin:4px 0 16px}
+body.eventhub-pro-admin #workspaceContent .section-title h2{font-size:clamp(19px,2.2vw,25px);letter-spacing:-.025em;font-weight:850}
+body.eventhub-pro-admin #workspaceContent .stat-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:14px 0 18px}
+body.eventhub-pro-admin #workspaceContent .stat{min-width:0;padding:18px 16px;border:1px solid rgba(255,255,255,.13);border-radius:18px;background:linear-gradient(145deg,rgba(255,255,255,.095),rgba(255,255,255,.035));box-shadow:0 8px 22px rgba(0,0,0,.12)}
+body.eventhub-pro-admin #workspaceContent .stat strong{display:block;font-size:clamp(24px,3vw,34px);line-height:1.08;letter-spacing:-.035em;font-variant-numeric:tabular-nums;color:var(--gold,#ffd166)}
+body.eventhub-pro-admin #workspaceContent .stat span{display:block;margin-top:8px;font-size:12px;line-height:1.35;color:var(--muted);font-weight:650}
+body.eventhub-pro-admin #workspaceContent .eventday-actions{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(260px,1fr);gap:14px;margin:16px 0}
+body.eventhub-pro-admin #workspaceContent .eventday-primary{border-radius:20px;padding:22px;background:linear-gradient(135deg,color-mix(in srgb,var(--panel2) 88%,white 12%),var(--panel));border:1px solid color-mix(in srgb,var(--gold) 34%,transparent);box-shadow:0 12px 28px rgba(0,0,0,.18)}
+body.eventhub-pro-admin #workspaceContent .eventday-primary h2{font-size:25px;letter-spacing:-.03em}
+body.eventhub-pro-admin #workspaceContent .admin-launchpad{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:18px 0}
+body.eventhub-pro-admin #workspaceContent .admin-launch-group{min-width:0;padding:17px;border-radius:18px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.045)}
+body.eventhub-pro-admin #workspaceContent .admin-launch-group h3{font-size:14px;letter-spacing:.01em;margin:0 0 12px}
+body.eventhub-pro-admin #workspaceContent .admin-launch-links{display:flex;flex-wrap:wrap;gap:8px}
+body.eventhub-pro-admin #workspaceContent .admin-launch-links .btn{flex:1 1 auto;min-width:105px;min-height:40px;border-radius:12px;font-size:12px}
+body.eventhub-pro-admin .tabs{gap:8px;padding:5px 2px 12px;scrollbar-width:thin}
+body.eventhub-pro-admin .tabs .tab{border-radius:12px;min-height:42px;padding:10px 14px;font-weight:700}
+body.eventhub-pro-admin .tabs .tab.active{box-shadow:0 5px 16px rgba(0,0,0,.18);outline:1px solid color-mix(in srgb,var(--gold) 35%,transparent)}
+body.eventhub-pro-admin #workspaceContent .card,body.eventhub-pro-admin #workspaceContent .list-item{border-radius:17px}
+body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro-admin .tabs button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+@media(max-width:760px){body.eventhub-pro-admin #workspaceContent .admin-launchpad{grid-template-columns:repeat(2,minmax(0,1fr))}body.eventhub-pro-admin #workspaceContent .eventday-actions{grid-template-columns:1fr}}
+@media(max-width:520px){body.eventhub-pro-admin #workspaceContent .stat-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}body.eventhub-pro-admin #workspaceContent .stat{padding:15px 12px}body.eventhub-pro-admin #workspaceContent .admin-launchpad{grid-template-columns:1fr}body.eventhub-pro-admin #workspaceContent .admin-launch-group{padding:14px}}
+@media(prefers-reduced-motion:reduce){body.eventhub-pro-admin #workspaceContent *,body.eventhub-pro-admin .tabs *{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+</style>
 </head>
 <body>
 <div class="shell" id="app">
@@ -868,6 +895,7 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
     else if(page==='scanner' && state.role==='volunteer') await openScannerStandalone();
   }
   async function renderAdminPage(page) {
+    document.body.classList.add('eventhub-pro-admin');
     state.page=page; if(page!=='scanner') await stopScanner(); const host=$('workspaceContent'); if(!host)return;
     document.querySelectorAll('[data-admin-page]').forEach(b=>b.classList.toggle('active',b.dataset.adminPage===page));
     if(page==='scanner') { await openScannerStandalone(); return; }
