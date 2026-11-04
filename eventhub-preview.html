@@ -46,7 +46,16 @@
 .scan-feedback-card.danger .scan-feedback-icon{color:var(--feedback-accent)}.scan-feedback-card.success .scan-feedback-icon{color:var(--feedback-accent)}
 .scan-feedback-spinner{display:block;width:27px;height:27px;border:3px solid rgba(232,187,99,.24);border-top-color:#e8bb63;border-radius:50%;animation:scanSpin .8s linear infinite}
 @keyframes scanSpin{to{transform:rotate(360deg)}}
-.scan-feedback-card .scan-feedback-kicker{color:#aeb1c2}
+.scan-feedback-card{width:min(100%,var(--ui-dialog-width,430px));border-radius:var(--ui-dialog-radius,28px);background:var(--ui-dialog-bg,radial-gradient(ellipse at 50% 0%,#292b40 0%,#1c1e2d 48%,#151622 100%));color:var(--ui-dialog-text,#f8f7fc);border-color:color-mix(in srgb,var(--ui-dialog-border,#e5b85c) 42%,#34364a)}
+.scan-feedback-card p{color:var(--ui-dialog-muted,#c5c7d4)}
+.scan-feedback-card .btn{border-radius:var(--ui-button-radius,16px)}
+.scan-feedback-card:before{background:linear-gradient(90deg,transparent,var(--ui-dialog-accent,#e5b85c),transparent)}
+.scan-feedback-card .scan-feedback-icon{color:var(--ui-dialog-accent,#e5b85c);border-color:color-mix(in srgb,var(--ui-dialog-accent,#e5b85c) 27%,transparent);background:color-mix(in srgb,var(--ui-dialog-accent,#e5b85c) 13%,transparent)}
+body.interface-compact .card{padding:14px}body.interface-compact .section{gap:8px}
+body.interface-no-motion *,body.interface-no-motion *:before,body.interface-no-motion *:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+body.interface-header-centered .brand{justify-content:center;text-align:center}body.interface-header-centered .brand-mark{margin-inline:auto}
+body.interface-header-compact header{padding-top:8px;padding-bottom:8px}body.interface-header-compact .brand-mark{width:38px;height:38px}
+.scan-feedback-card .scan-feedback-kicker{color:var(--ui-dialog-muted,#aeb1c2)}
 @keyframes scanBackdropIn{from{opacity:0}to{opacity:1}}
 @keyframes scanCardIn{from{opacity:0;transform:translateY(12px) scale(.975)}to{opacity:1;transform:translateY(0) scale(1)}}
 @media(max-width:480px){.scan-feedback-backdrop{padding-left:14px;padding-right:14px}.scan-feedback-card{padding:26px 20px 20px;border-radius:25px}.scan-feedback-icon{width:60px;height:60px;border-radius:19px}.scan-feedback-card p{font-size:13px}}
@@ -585,8 +594,22 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     const root=document.documentElement;
     root.style.setProperty('--bg',background);root.style.setProperty('--panel',primary);root.style.setProperty('--panel2',shade(primary,.10));
     root.style.setProperty('--accent',accent);root.style.setProperty('--gold',gold);
+    const uiNumber=(value,fallback,min,max)=>{const n=Number(value);return Number.isFinite(n)?Math.max(min,Math.min(max,n)):fallback;};
+    root.style.setProperty('--ui-dialog-bg',themeColour(t.interface_dialog_bg,'#1C1E2D'));
+    root.style.setProperty('--ui-dialog-text',themeColour(t.interface_dialog_text,'#F8F7FC'));
+    root.style.setProperty('--ui-dialog-muted',themeColour(t.interface_dialog_muted,'#C5C7D4'));
+    root.style.setProperty('--ui-dialog-accent',themeColour(t.interface_dialog_accent,gold));
+    root.style.setProperty('--ui-dialog-border',themeColour(t.interface_dialog_border,'#E5B85C'));
+    root.style.setProperty('--ui-dialog-radius',uiNumber(t.interface_dialog_radius,28,14,36)+'px');
+    root.style.setProperty('--ui-button-radius',uiNumber(t.interface_button_radius,16,8,24)+'px');
+    root.style.setProperty('--ui-dialog-width',uiNumber(t.interface_dialog_width,430,320,520)+'px');
+    root.style.setProperty('--ui-font-scale',uiNumber(t.interface_font_scale,100,90,115)+'%');
+    document.body.classList.toggle('interface-compact',t.interface_density==='compact');
+    document.body.classList.toggle('interface-no-motion',t.interface_motion_enabled===false);
+    document.body.classList.toggle('interface-header-centered',t.interface_header_style==='centered');
+    document.body.classList.toggle('interface-header-compact',t.interface_header_style==='compact');
     document.body.classList.toggle('theme-deepotsav',isDiwali);document.body.classList.toggle('theme-halloween',isHalloween);
-    setDeepotsavFireworks(isDiwali);
+    setDeepotsavFireworks(typeof t.interface_fireworks==='boolean'?t.interface_fireworks:isDiwali);
     document.querySelector('meta[name="theme-color"]').content=background;
     const title=document.getElementById('brandTitle'), subtitle=document.getElementById('brandSubtitle'), mark=document.getElementById('brandMark');
     if(title)title.textContent=t.app_title||'KSMU HOSTEL 5 EVENTS';if(subtitle)subtitle.textContent=t.app_subtitle||'EVENT MANAGEMENT';
@@ -1377,7 +1400,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     if(state.scanResumeTimer){clearTimeout(state.scanResumeTimer);state.scanResumeTimer=null;}
     const isSaving=/^SAVING EVENT RECORD$/i.test(String(title||''));
     const icon=tone==='success'?'✓':(tone==='warning'?'!':'×');
-    layer.innerHTML='<section class="scan-feedback-card '+safe(tone)+'" role="alertdialog" aria-modal="true" aria-labelledby="scanFeedbackTitle" aria-describedby="scanFeedbackMessage">'+
+    layer.innerHTML='<section data-animation="'+safe(parseJSON(state.event?.theme_json,{}).interface_dialog_animation||'soft')+'" class="scan-feedback-card '+safe(tone)+'" role="alertdialog" aria-modal="true" aria-labelledby="scanFeedbackTitle" aria-describedby="scanFeedbackMessage">'+
       '<span class="scan-feedback-kicker">EVENTHUB · SCANNER</span>'+
       '<div class="scan-feedback-icon'+(isSaving?' is-saving':'')+'" aria-hidden="true">'+(isSaving?'<span class="scan-feedback-spinner"></span>':icon)+'</div>'+
       '<h2 id="scanFeedbackTitle">'+safe(title)+'</h2>'+
@@ -1834,6 +1857,34 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
           <div class="field"><label>Sponsor image description</label><input id="editSponsorAlt" maxlength="120" value="${safe(theme.sponsor_alt||'Doc Tutorials')}"></div>
           <div class="divider"></div><h3>Mini App colours and QR pass design</h3>
           <div class="inline-fields"><div class="field"><label>Primary colour</label><input id="editPrimary" type="color" value="${safe(theme.primary||(isDiwali?'#32104d':'#25113b'))}"></div><div class="field"><label>Accent colour</label><input id="editAccent" type="color" value="${safe(theme.accent||(isDiwali?'#d9b15f':'#ff7518'))}"></div><div class="field"><label>Background colour</label><input id="editBackground" type="color" value="${safe(theme.background||(isDiwali?'#190d2b':'#170F24'))}"></div><div class="field"><label>Gold / highlight</label><input id="editGold" type="color" value="${safe(theme.gold||(isDiwali?'#d9b15f':'#ffd166'))}"></div></div>
+          <div class="divider"></div><h3>🎨 Interface Studio — app-wide appearance</h3>
+          <p class="muted">These controls apply to this event's Mini App, including scanner dialogs. Changes are saved with this event and can be previewed before saving.</p>
+          <div class="inline-fields">
+            <div class="field"><label>Popup / dialog surface</label><input id="editUiDialogBg" type="color" value="${safe(theme.interface_dialog_bg||'#1C1E2D')}"></div>
+            <div class="field"><label>Popup text</label><input id="editUiDialogText" type="color" value="${safe(theme.interface_dialog_text||'#F8F7FC')}"></div>
+            <div class="field"><label>Secondary text</label><input id="editUiDialogMuted" type="color" value="${safe(theme.interface_dialog_muted||'#C5C7D4')}"></div>
+          </div>
+          <div class="inline-fields">
+            <div class="field"><label>Popup accent</label><input id="editUiDialogAccent" type="color" value="${safe(theme.interface_dialog_accent||theme.gold||'#E5B85C')}"></div>
+            <div class="field"><label>Popup border</label><input id="editUiDialogBorder" type="color" value="${safe(theme.interface_dialog_border||'#E5B85C')}"></div>
+          </div>
+          <div class="inline-fields">
+            <div class="field"><label>Popup corner radius (14–36 px)</label><input id="editUiDialogRadius" type="number" min="14" max="36" value="${Number(theme.interface_dialog_radius??28)}"></div>
+            <div class="field"><label>Button corner radius (8–24 px)</label><input id="editUiButtonRadius" type="number" min="8" max="24" value="${Number(theme.interface_button_radius??16)}"></div>
+            <div class="field"><label>Popup max width (320–520 px)</label><input id="editUiDialogWidth" type="number" min="320" max="520" value="${Number(theme.interface_dialog_width??430)}"></div>
+          </div>
+          <div class="inline-fields">
+            <div class="field"><label>Font scale (%)</label><input id="editUiFontScale" type="number" min="90" max="115" value="${Number(theme.interface_font_scale??100)}"></div>
+            <div class="field"><label>Content density</label><select id="editUiDensity"><option value="comfortable" ${(theme.interface_density||'comfortable')==='comfortable'?'selected':''}>Comfortable</option><option value="compact" ${theme.interface_density==='compact'?'selected':''}>Compact</option></select></div>
+            <div class="field"><label>Header layout</label><select id="editUiHeaderStyle"><option value="standard" ${(theme.interface_header_style||'standard')==='standard'?'selected':''}>Standard</option><option value="compact" ${theme.interface_header_style==='compact'?'selected':''}>Compact</option><option value="centered" ${theme.interface_header_style==='centered'?'selected':''}>Centered</option></select></div>
+          </div>
+          <div class="inline-fields">
+            <div class="field"><label>Popup animation</label><select id="editUiDialogAnimation"><option value="soft" ${(theme.interface_dialog_animation||'soft')==='soft'?'selected':''}>Soft</option><option value="pop" ${theme.interface_dialog_animation==='pop'?'selected':''}>Pop</option><option value="none" ${theme.interface_dialog_animation==='none'?'selected':''}>None</option></select></div>
+            <div class="field"><label><input id="editUiMotion" type="checkbox" style="width:auto;min-height:0" ${theme.interface_motion_enabled!==false?'checked':''}> Enable motion effects</label></div>
+            <div class="field"><label><input id="editUiFireworks" type="checkbox" style="width:auto;min-height:0" ${(typeof theme.interface_fireworks==='boolean'?theme.interface_fireworks:isDiwali)?'checked':''}> Enable event fireworks</label></div>
+          </div>
+          <div class="notice" id="interfacePreview" aria-live="polite"><strong>Live interface preview</strong><div style="margin:12px auto 0;max-width:360px;padding:18px;border-radius:var(--ui-dialog-radius,28px);background:var(--ui-dialog-bg,#1C1E2D);color:var(--ui-dialog-text,#F8F7FC);border:1px solid var(--ui-dialog-border,#E5B85C);text-align:center"><span style="display:inline-grid;place-items:center;width:42px;height:42px;border-radius:14px;background:color-mix(in srgb,var(--ui-dialog-accent,#E5B85C) 18%,transparent);color:var(--ui-dialog-accent,#E5B85C);font-size:22px">✓</span><h3 style="margin:10px 0 6px">SAVED & VERIFIED</h3><p style="color:var(--ui-dialog-muted,#C5C7D4);font-size:13px;margin:0 0 12px">This is how scanner alerts will look.</p><span style="display:inline-block;padding:10px 18px;border-radius:var(--ui-button-radius,16px);background:var(--accent);color:#fff;font-weight:800">NEXT GUEST</span></div></div>
+          <div class="divider"></div><h3>QR pass design</h3>
           <div class="inline-fields"><div class="field"><label>Pass background</label><input id="editPassBackground" type="color" value="${safe(theme.pass_background||theme.background||(isDiwali?'#190d2b':'#170F24'))}"></div><div class="field"><label>Pass accent</label><input id="editPassAccent" type="color" value="${safe(theme.pass_accent||theme.accent||(isDiwali?'#d9b15f':'#ff7518'))}"></div><div class="field"><label>Pass highlight</label><input id="editPassGold" type="color" value="${safe(theme.pass_gold||theme.gold||(isDiwali?'#d9b15f':'#ffd166'))}"></div></div>
           <div class="field"><label>Pass subtitle (blank uses event description)</label><textarea id="editPassSubtitle" maxlength="240">${safe(theme.pass_subtitle||'')}</textarea></div>
 
@@ -2110,6 +2161,13 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
 
     function collectTheme(){const collected={
       primary:$('editPrimary').value,accent:$('editAccent').value,background:$('editBackground').value,gold:$('editGold').value,
+      interface_dialog_bg:$('editUiDialogBg').value,interface_dialog_text:$('editUiDialogText').value,interface_dialog_muted:$('editUiDialogMuted').value,
+      interface_dialog_accent:$('editUiDialogAccent').value,interface_dialog_border:$('editUiDialogBorder').value,
+      interface_dialog_radius:Number($('editUiDialogRadius').value),interface_button_radius:Number($('editUiButtonRadius').value),
+      interface_dialog_width:Number($('editUiDialogWidth').value),interface_font_scale:Number($('editUiFontScale').value),
+      interface_density:$('editUiDensity').value,interface_header_style:$('editUiHeaderStyle').value,
+      interface_dialog_animation:$('editUiDialogAnimation').value,interface_motion_enabled:$('editUiMotion').checked,
+      interface_fireworks:$('editUiFireworks').checked,
       pass_background:$('editPassBackground').value,pass_accent:$('editPassAccent').value,pass_gold:$('editPassGold').value,
       app_title:$('editAppTitle').value,app_subtitle:$('editAppSubtitle').value,brand_logo_url:$('editBrandLogo').value,
       brand_logo_image:$('editBrandLogoImage').value,hero_banner_url:$('editHeroBanner').value,hero_banner_image:$('editHeroBannerImage').value,hero_badge:$('editHeroBadge').value,
