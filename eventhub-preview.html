@@ -344,6 +344,13 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
 
   
 .pass-visual-editor.canva-editor-highlight{outline:3px solid var(--gold);box-shadow:0 0 0 8px color-mix(in srgb,var(--gold) 18%,transparent),0 14px 36px #0005;transition:outline .2s,box-shadow .2s}
+/* Compact, touch-friendly read-only service diagnostics */
+.service-health{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:14px 0;min-width:0}
+.service-health-copy{min-width:0;flex:1}
+.service-health .section-title{margin:0 0 6px}
+#serviceHealthDetails{overflow-wrap:anywhere;margin:4px 0}
+.service-health .footnote{margin:6px 0 0}
+@media(max-width:520px){.service-health{align-items:stretch;flex-direction:column}.service-health .actions,.service-health .actions .btn{width:100%}.service-health .actions .btn{min-height:44px}}
 /* Accessible visual pass editor */
 .pass-visual-editor{overflow:hidden}
 .pass-editor-grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(260px,.95fr);gap:18px;align-items:start;margin-top:14px}
@@ -624,6 +631,36 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     if(!/^#[0-9a-f]{6}$/i.test(hex)) return hex;
     const n=parseInt(hex.slice(1),16), r=Math.max(0,Math.min(255,(n>>16)+Math.round(255*amount))),g=Math.max(0,Math.min(255,((n>>8)&255)+Math.round(255*amount))),b=Math.max(0,Math.min(255,(n&255)+Math.round(255*amount)));
     return '#'+[r,g,b].map(x=>x.toString(16).padStart(2,'0')).join('');
+  }
+  // Read-only Botkeep health probe. This checks the API and primary registry only;
+  // it never sends Telegram credentials or reads guest records.
+  async function checkServiceHealth() {
+    const stateNode=$('serviceHealthState'),details=$('serviceHealthDetails'),btn=$('checkServiceHealth');
+    if(!stateNode||!details)return;
+    if(btn){btn.disabled=true;btn.textContent='Checking…';}
+    stateNode.className='status';stateNode.textContent='Checking';
+    details.textContent='Contacting the Botkeep API and checking the primary registry…';
+    const controller=typeof AbortController!=='undefined'?new AbortController():null;
+    const timer=controller?setTimeout(()=>controller.abort(),8000):null;
+    const startedAt=Date.now();
+    try {
+      if(!API_BASE)throw new Error('API address is not configured.');
+      const response=await fetch(API_BASE+'/health',{method:'GET',headers:{'Accept':'application/json'},cache:'no-store',signal:controller?.signal});
+      let data;
+      try{data=await response.json();}catch(_){throw new Error('The health endpoint returned an unreadable response.');}
+      if(!response.ok||data?.ok!==true)throw new Error(data?.error||('Health check failed (HTTP '+response.status+').'));
+      if(!stateNode.isConnected||!details.isConnected)return;
+      const elapsed=Date.now()-startedAt;
+      stateNode.className='status active';stateNode.textContent='Healthy';
+      details.textContent='Botkeep API: online · Primary registry: '+String(data.database||'available')+' · '+elapsed+' ms · Checked '+new Date().toLocaleTimeString();
+    } catch(err) {
+      if(!stateNode.isConnected||!details.isConnected)return;
+      stateNode.className='status';stateNode.textContent='Needs attention';
+      details.textContent=(err?.name==='AbortError'?'Health check timed out after 8 seconds.':(err?.message||'The service could not be reached.'))+' · Checked '+new Date().toLocaleTimeString();
+    } finally {
+      if(timer)clearTimeout(timer);
+      if(btn&&btn.isConnected){btn.disabled=false;btn.textContent='Check service';}
+    }
   }
   async function post(path, payload={}) {
     if(!API_BASE) throw new Error('API address is not configured. Ask the EventHub admin to configure the Botkeep API URL.');
@@ -909,12 +946,21 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
           <article class="eventday-primary"><div class="eyebrow">Main event-day action</div><h2 style="margin:7px 0">QR Scanner</h2><p class="muted">Open a dedicated full-screen scanner for entry, proof handling, ${foodCollectionIsEnabled()?'food collection and ':''}exit.</p><div class="actions"><button class="btn primary" data-admin-page="scanner">Open QR Scanner →</button></div></article>
           <article class="card"><h3>Google Sheets sync</h3><p id="sheetsStatus">Sync queue status has not been checked.</p><div class="actions"><button class="btn primary small" id="syncSheetsNow">Queue guest sync</button><button class="btn small" id="refreshSheetsStatus">Check sync status</button></div></article>
         </div>
+        <article class="card service-health" aria-label="EventHub service health">
+          <div class="service-health-copy"><div class="section-title"><h3>System health</h3><span class="status" id="serviceHealthState">Not checked</span></div>
+            <p class="muted" id="serviceHealthDetails" role="status" aria-live="polite">Check whether the Botkeep API and primary registry database are responding.</p>
+            <p class="footnote">Read-only check. It does not change event settings, registrations, QR passes or guest records.</p>
+          </div>
+          <div class="actions"><button class="btn small" type="button" id="checkServiceHealth">Check service</button></div>
+        </article>
         <div class="admin-launchpad">
           <section class="admin-launch-group"><h3>👥 Guest operations</h3><div class="admin-launch-links"><button class="btn" data-admin-page="approvals">Approvals</button><button class="btn" data-admin-page="guests">Guest list</button><button class="btn" data-admin-page="registration">Registration preview</button><button class="btn" data-admin-page="pass">Staff QR pass</button></div></section>
           <section class="admin-launch-group"><h3>🎟 Event-day operations</h3><div class="admin-launch-links"><button class="btn" data-admin-page="storage">Proof storage</button><button class="btn" data-admin-page="checkpoints">Checkpoints</button><button class="btn" data-admin-page="staff">Volunteers</button><button class="btn primary" data-admin-page="scanner">QR Scanner</button></div></section>
           <section class="admin-launch-group"><h3>⚙️ Event management</h3><div class="admin-launch-links"><button class="btn" data-admin-page="announcements">Announcements</button><button class="btn" data-admin-page="settings">Event settings</button><button class="btn" data-admin-page="admins">Admin access</button><button class="btn" id="refreshStats">Refresh stats</button></div></section>
         </div>
         <p class="footnote">All sections are scoped to the selected event. Admin-only controls remain available only to authenticated admins.</p>`;
+      $('checkServiceHealth')?.addEventListener('click',checkServiceHealth);
+      checkServiceHealth();
       $('refreshStats')?.addEventListener('click',()=>renderAdminPage('overview'));
       $('refreshFoodSummary')?.addEventListener('click',()=>renderAdminPage('overview'));
       $('downloadFoodSummary')?.addEventListener('click',()=>{
