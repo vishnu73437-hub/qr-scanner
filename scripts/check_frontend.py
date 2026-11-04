@@ -58,6 +58,8 @@ def main():
         "admin checkpoint name picker": "Assign volunteer by name",
         "sticky volunteer action controls": "position:sticky;bottom:calc(env(safe-area-inset-bottom) + 4px)",
         "guest mode hides nonessential camera controls": ".scanner-mode.scanner-has-guest .scanner-screen .manual-pass-entry",
+        "checkpoint access retry path": "RETRY ACCESS CHECK",
+        "checkpoint preflight fail closed": "STATION ACCESS UNAVAILABLE",
     }
     missing = [label for label, fragment in required_contracts.items() if fragment not in source]
     if missing:
