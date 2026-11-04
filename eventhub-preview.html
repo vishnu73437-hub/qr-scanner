@@ -31,7 +31,11 @@
 .scanner-mode .scanner-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .scanner-mode .scanner-actions .btn{min-height:52px;font-size:15px}
 .scanner-hint{padding:12px;border-radius:14px;border:1px solid color-mix(in srgb,var(--gold) 40%,var(--line));background:color-mix(in srgb,var(--accent) 10%,var(--panel));font-size:13px;color:var(--text)}
-@media(max-width:720px){.admin-launchpad{grid-template-columns:1fr}.eventday-actions{grid-template-columns:1fr}.workflow-steps{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    .volunteer-command{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(220px,.7fr);gap:18px;align-items:center;border:1px solid color-mix(in srgb,var(--accent) 50%,var(--line));background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 20%,var(--panel)),var(--panel));padding:22px;border-radius:20px;box-shadow:var(--shadow)}
+    .volunteer-command h2{font-size:clamp(23px,4vw,32px);margin:7px 0}.volunteer-command p{color:var(--muted);margin:6px 0}.volunteer-command .volunteer-scope{font-size:12px;color:var(--gold);font-weight:700}.volunteer-command-action{display:grid;gap:8px;align-content:center}.volunteer-command-action .btn{min-height:52px;font-size:16px}.volunteer-shortcuts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:14px 0}.volunteer-shortcuts .card{display:flex;flex-direction:column;align-items:flex-start}.volunteer-shortcuts .btn{margin-top:auto}.volunteer-live{margin:18px 0}.volunteer-metrics{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:12px 0}.volunteer-metric{min-width:0;padding:14px;border:1px solid var(--line);background:var(--panel);border-radius:16px}.volunteer-metric strong{display:block;font-size:25px;overflow-wrap:anywhere}.volunteer-metric span{display:block;color:var(--muted);font-size:12px;margin-top:3px}.volunteer-detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.volunteer-detail-grid .card{min-width:0}.volunteer-checkpoint,.volunteer-activity{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}.volunteer-checkpoint:last-child,.volunteer-activity:last-child{border:0}.volunteer-checkpoint strong,.volunteer-checkpoint small{display:block}.volunteer-checkpoint small,.volunteer-activity small{color:var(--muted);font-size:11px}.volunteer-flow{margin:16px 0}.admin-attention-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:14px 0}.admin-attention-card{display:flex;flex-direction:column;align-items:flex-start;gap:7px;min-width:0;border:1px solid var(--line);background:var(--panel);border-radius:17px;padding:16px}.admin-attention-card>strong{font-size:30px;line-height:1.1}.admin-attention-card>span{font-size:12px;color:var(--muted);min-height:34px}.staff-assignment-card{margin:14px 0}.staff-assignment-form{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;align-items:end;gap:12px}.staff-assignment-form .field{margin:0}.staff-list{display:grid;gap:8px}.staff-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 14px;border:1px solid var(--line);background:var(--panel);border-radius:15px}.staff-row-main{display:flex;flex-direction:column;gap:3px;min-width:0}.staff-row-main small{font-size:11px;color:var(--muted);overflow-wrap:anywhere}.staff-role-label{display:inline-flex;align-self:flex-start;border-radius:20px;padding:3px 8px;background:color-mix(in srgb,var(--accent) 18%,transparent);font-size:11px;font-weight:800;color:var(--gold)}.staff-global-note{color:var(--gold)!important}.staff-global-access{margin-top:20px}
+    @media(max-width:760px){.volunteer-command{grid-template-columns:1fr}.volunteer-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-attention-grid{grid-template-columns:1fr}.staff-assignment-form{grid-template-columns:1fr}.volunteer-shortcuts{grid-template-columns:1fr}.volunteer-detail-grid{grid-template-columns:1fr}.staff-row{align-items:flex-start;flex-direction:column}.staff-row .btn{width:100%}}
+    
+    @media(max-width:720px){.admin-launchpad{grid-template-columns:1fr}.eventday-actions{grid-template-columns:1fr}.workflow-steps{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .scanner-box{background:#100d1b;border:1px dashed #ffffff3b;border-radius:18px;padding:12px;min-height:220px}.scanner-box #reader{width:100%;max-width:560px;margin:auto}.guest-result{border:1px solid color-mix(in srgb,var(--accent) 42%,var(--line));background:linear-gradient(180deg,var(--panel),#171321);border-radius:18px;padding:16px;margin-top:14px}.pill{display:inline-block;border-radius:24px;padding:4px 8px;background:#ffffff12;color:var(--muted);font-size:11px;font-weight:800;margin:2px}.pill.good{background:#47cf9122;color:#7ce4b3}.pill.warn{background:#ffd16622;color:#ffd166}.table-wrap{overflow-x:auto}table{border-collapse:collapse;width:100%;min-width:540px;font-size:13px}td,th{text-align:left;padding:10px;border-bottom:1px solid var(--line);vertical-align:top}th{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px}.pass-image{width:min(100%,360px);display:block;border-radius:16px;border:1px solid var(--line);margin:12px auto;box-shadow:var(--shadow)}.empty{padding:24px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:18px}.toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#f8f5fb;color:#171321;border-radius:12px;padding:11px 16px;z-index:50;max-width:min(90vw,480px);box-shadow:var(--shadow);font-weight:750}.loading{opacity:.65;pointer-events:none}.schema-field{border:1px solid var(--line);padding:12px;border-radius:14px;margin:8px 0;background:#171321}.settings-accordion{margin:12px 0;border:1px solid var(--line);border-radius:16px;background:var(--panel);overflow:hidden}.settings-accordion>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 16px;font-weight:800}.settings-accordion>summary::-webkit-details-marker{display:none}.settings-accordion>summary:after{content:'＋';color:var(--gold);font-size:18px}.settings-accordion[open]>summary:after{content:'−'}.settings-accordion>.settings-content{padding:0 14px 14px}.settings-accordion .card{box-shadow:none}.settings-quick-save{position:sticky;bottom:8px;z-index:5;display:flex;justify-content:flex-end;padding:8px;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-radius:14px}.schema-field .inline-fields{align-items:end}.footnote{font-size:12px;color:var(--muted);margin-top:12px}.divider{height:1px;background:var(--line);margin:15px 0}
     .brand-mark img{width:100%;height:100%;object-fit:contain;border-radius:12px}.hero-banner{margin:0 0 14px;border-radius:20px;overflow:hidden;border:1px solid var(--line);box-shadow:var(--shadow)}.hero-banner img{display:block;width:100%;max-height:260px;object-fit:cover}.guest-edit{margin-top:10px;padding:10px;border:1px solid var(--line);border-radius:12px}.guest-edit summary{cursor:pointer;font-weight:750;color:var(--gold)}.sponsor-card{margin:14px 0 4px;padding:12px 16px;background:#fff;border:1px solid #d9b15f;border-radius:18px;display:flex;align-items:center;justify-content:center;gap:12px;box-shadow:0 10px 26px #0003;min-height:88px}.sponsor-card img{display:block;width:min(100%,360px);max-height:105px;object-fit:contain}.sponsor-label{font-size:10px;font-weight:900;letter-spacing:1.5px;color:#315078;white-space:nowrap}.theme-deepotsav body{background:radial-gradient(circle at 12% 12%,#d9b15f26 0 2px,transparent 3px),radial-gradient(circle at 88% 20%,#d9b15f22 0 3px,transparent 4px),radial-gradient(ellipse at 50% 0%,#6d328b55,transparent 58%),linear-gradient(145deg,#190d2b,#32104d 52%,#160b25)}body.theme-deepotsav{background:radial-gradient(ellipse at 50% 0%,color-mix(in srgb,var(--accent) 24%,transparent),transparent 58%),var(--bg)}body.theme-deepotsav .hero{background:linear-gradient(125deg,color-mix(in srgb,var(--accent) 24%,var(--panel)),var(--panel) 58%,color-mix(in srgb,var(--gold) 12%,var(--panel)));border-color:var(--gold)}body.theme-deepotsav .brand-mark{background:linear-gradient(135deg,var(--gold),#fff0b2)}
 /* DEEPOTSAV-only festive backdrop: warm diyas, rangoli geometry and golden bokeh */
@@ -474,7 +478,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
   const API_BASE = (params.get('api_base') || window.EVENTHUB_API_BASE || (/github\.io$/.test(location.hostname) ? 'https://unwjym.bot-keep.xyz' : location.origin)).replace(/\/$/, '');
   const initialEventId = Number(params.get('event_id') || 0);
   let scannerView = params.get('scanner') === '1';
-  const state = { role:'guest', user:null, activeEvents:[], workspaces:[], eventId:initialEventId, event:null, stats:null, page:'home', guest:null, scanner:null, scannerStarting:false, scannerStopPromise:null, scannerGeneration:0, scanHandling:false, formSchema:[], pass:null, checkpoints:[], myRegistration:null };
+  const state = { role:'guest', staffRole:'', user:null, activeEvents:[], workspaces:[], eventId:initialEventId, event:null, stats:null, page:'home', guest:null, scanner:null, scannerStarting:false, scannerStopPromise:null, scannerGeneration:0, scanHandling:false, formSchema:[], pass:null, checkpoints:[], myRegistration:null };
   const $ = (id) => document.getElementById(id);
   const main = $('main');
   const safe = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -696,7 +700,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
   const adminReadActions = new Set([
     'stats','guest_search','pending_registrations','storage_config',
     'proof_storage_report','announcement_history','sheets_queue_status',
-    'volunteers','admins','checkpoints'
+    'volunteers','event_volunteers','admins','checkpoints'
   ]);
   const ADMIN_READ_CACHE_MS = 8000;
   const adminCall = async (action, extra={}) => {
@@ -727,7 +731,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     await stopScanner();
     state.eventId=eid; state.event=null; state.guest=null; state.pass=null; state.myRegistration=null; state.page='home'; updateUrl(eid,true);
     main.innerHTML='<div class="empty">Opening this event…</div>';
-    try { await loadEvent(); }
+    try { await loadRole(); await loadEvent(); }
     catch(err) { main.innerHTML=showNotice(err.message,'error')+'<div class="actions"><button class="btn" id="returnEvents">← All events</button></div>'; $('returnEvents')?.addEventListener('click',clearEvent); throw err; }
   }
   async function clearEvent() {
@@ -737,7 +741,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
   }
   async function loadRole() {
     const data=await post('/api/role', state.eventId?{event_id:state.eventId}:{});
-    state.role=data.role||'guest'; state.user=data.user||null; state.activeEvents=data.events||[]; state.workspaces=data.workspaces||[];
+    state.role=data.role||'guest'; state.staffRole=data.staff_role||''; state.user=data.user||null; state.activeEvents=data.events||[]; state.workspaces=data.workspaces||[];
     return data;
   }
   async function loadEvent() {
@@ -770,6 +774,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
         if(roleResult.status!=='fulfilled') throw roleResult.reason;
         const roleData=roleResult.value;
         state.role=roleData.role||'guest';
+        state.staffRole=roleData.staff_role||'';
         state.user=roleData.user||null;
         state.activeEvents=roleData.events||[];
         state.workspaces=roleData.workspaces||[];
@@ -878,29 +883,35 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
       main.innerHTML=eventHero()+workspaceNav()+`<section class="section" id="workspaceContent"></section>`;
       bindNavigation(); await renderAdminPage('overview');
     } else if(state.role==='volunteer') {
-      main.innerHTML=eventHero()+`
-        <section class="section">
-          <div class="section-title"><h2>Volunteer event-day desk</h2><span class="status active">Volunteer access</span></div>
-          <div class="eventday-actions">
-            <article class="eventday-primary"><div class="eyebrow">Fast access</div><h2 style="margin:7px 0">QR Scanner</h2>
-              <p class="muted">Scan guest passes and follow the next available event checkpoint. Camera stays off until you open the scanner.</p>
-              <div class="actions"><button class="btn primary" data-page="scanner">Open dedicated scanner →</button></div>
-            </article>
-            <article class="card"><h3>🎫 My staff pass</h3><p>Open the same event QR pass used by guests.</p>
-              <div class="actions"><button class="btn" data-page="pass">Open my QR pass</button></div>
-            </article>
-          </div>
-          <article class="card"><h3>Event-day workflow</h3><p>Scan the pass first. EventHub displays only the actions currently allowed for that guest.</p>
-            <div class="workflow-steps">
-              <div class="workflow-step"><b>1 · Entry</b><span>Verify pass and record arrival</span></div>
-              <div class="workflow-step"><b>2 · Proof</b><span>Store ID proof or mark no proof</span></div>
-              <div class="workflow-step"><b>3 · Food</b><span>Record meal collection</span></div>
-              <div class="workflow-step"><b>4 · Exit</b><span>Return proof, then record exit</span></div>
-            </div>
-          </article>
-          <div class="notice">Use the dedicated scanner screen for scanning. Stop the camera or return to the workspace when finished; the camera is released when you leave the scanner.</div>
-        </section><section id="workspaceContent"></section>`;
+      const role=state.staffRole||'global';
+      const roleLabels={global:'Core volunteer · all events',event_lead:'Event lead',scanner:'Full event scanner',entry:'Entry desk',food:'Food desk',proof:'ID proof & exit desk',checkpoint:'Additional checkpoints'};
+      const roleInstructions={
+        global:'You have trusted core access across EventHub events. Use the selected event workspace for all guest operations.',
+        event_lead:'You can use the full guest workflow and view this event’s live operational totals.',
+        scanner:'You can validate guest passes and complete the full event-day workflow.',
+        entry:'Your assignment is limited to checking passes and recording guest entry.',
+        food:'Your assignment is limited to meal collection. Entry and proof checks must already be complete.',
+        proof:'Your assignment covers proof storage, no-proof confirmation, proof return and guest exit.',
+        checkpoint:'Your assignment is limited to additional checkpoints configured by the event admin.'
+      };
+      const roleLabel=roleLabels[role]||'Event volunteer';
+      const roleDescription=roleInstructions[role]||'Use the scanner to complete your assigned event-day tasks.';
+      main.innerHTML=eventHero()+
+        '<section class="section volunteer-desk">'+
+          '<div class="section-title"><div><div class="eyebrow">Your assignment</div><h2>Volunteer event-day desk</h2></div><span class="status active">'+safe(roleLabel)+'</span></div>'+
+          '<article class="volunteer-command"><div class="volunteer-command-copy"><div class="eyebrow">Ready for your shift?</div><h2>'+safe(roleLabel)+'</h2><p>'+safe(roleDescription)+'</p><p class="volunteer-scope">'+(role==='global'?'Core access is available across events.':'This volunteer assignment is restricted to the selected event.')+'</p></div>'+
+          '<div class="volunteer-command-action"><button class="btn primary" data-page="scanner">Open QR Scanner <span aria-hidden="true">→</span></button><span class="footnote">Camera starts only when you open the scanner.</span></div></article>'+
+          '<div class="volunteer-shortcuts">'+
+            '<article class="card"><div class="eyebrow">Your staff badge</div><h3>🎫 My QR pass</h3><p>Open the standard EventHub staff pass. It uses the same guest QR validation system.</p><button class="btn" data-page="pass">Open my pass</button></article>'+
+            '<article class="card"><div class="eyebrow">Fallback</div><h3>⌨️ Manual pass lookup</h3><p>Use the scanner’s manual pass-code field when a guest’s camera display is damaged or difficult to scan.</p><button class="btn" data-page="scanner">Open manual lookup</button></article>'+
+          '</div>'+
+          '<section class="volunteer-live" id="volunteerDashboardData"><div class="empty">Loading your event-day summary…</div></section>'+
+          '<article class="card volunteer-flow"><div class="section-title"><h3>Guest workflow</h3><span class="muted">EventHub checks the order automatically</span></div>'+
+            '<div class="workflow-steps"><div class="workflow-step"><b>1 · Entry</b><span>Validate the pass and record arrival.</span></div><div class="workflow-step"><b>2 · Proof</b><span>Store ID proof or confirm none was provided.</span></div><div class="workflow-step"><b>3 · Food</b><span>Record the meal after required checks.</span></div><div class="workflow-step"><b>4 · Exit</b><span>Return stored proof before recording exit.</span></div></div></article>'+
+          '<div class="notice">For reliable scanning, keep this page open during your shift. Leaving the scanner or sending EventHub to the background releases the camera; tap Start again when you return.</div>'+
+        '</section><section id="workspaceContent"></section>';
       bindNavigation();
+      loadVolunteerDashboard();
     } else {
       const regStatus=String(state.myRegistration?.status||'unknown');
       let guestCards='';
@@ -911,6 +922,37 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
       else guestCards='<article class="card"><h3>🎟 Registration</h3><p>'+(regStatus==='rejected'?'Your previous registration was rejected. You may submit a new registration.':"Complete this event's registration form. Your pass is sent after approval.")+'</p><div class="actions"><button class="btn primary" data-page="register">Register now</button></div></article><article class="card"><h3>🎫 My QR pass</h3><p>View your pass after your registration is approved.</p><div class="actions"><button class="btn" data-page="pass">Open my pass</button></div></article>';
       main.innerHTML=eventHero()+`<section class="section grid">${guestCards}</section><section id="workspaceContent"></section>`;
       bindNavigation();
+    }
+  }
+  async function loadVolunteerDashboard() {
+    const host=$('volunteerDashboardData');
+    if(!host||!state.eventId)return;
+    host.innerHTML='<div class="empty">Refreshing event-day totals…</div>';
+    try {
+      const data=await post('/api/volunteer_dashboard',{event_id:state.eventId});
+      if(!host.isConnected)return;
+      const stats=data.stats||{}, role=data.staff_role||state.staffRole||'scanner';
+      const roleLabels={global:'Core volunteer',event_lead:'Event lead',scanner:'Full scanner',entry:'Entry desk',food:'Food desk',proof:'Proof & exit desk',checkpoint:'Checkpoint desk'};
+      const metricCards=data.can_view_event_stats?[
+        ['Approved guests',stats.approved],['Checked in',stats.checkedIn],['Awaiting entry',stats.awaitingEntry],
+        [stats.foodCollectionEnabled?'Meals served':'Food collection',stats.foodCollectionEnabled?stats.foodServed:'Off'],
+        ['Pending approvals',stats.pendingApprovals]
+      ]:[
+        ['Your role',roleLabels[role]||'Volunteer'],['Your checkpoint scans',stats.myCheckpointScans||0],
+        ['Available checkpoints',(data.checkpoints||[]).length],['Recent actions',(data.myRecentActions||[]).length]
+      ];
+      const metricHtml=metricCards.map(([label,value])=>'<div class="volunteer-metric"><strong>'+safe(value??0)+'</strong><span>'+safe(label)+'</span></div>').join('');
+      const checkpointHtml=(data.checkpoints||[]).map(c=>'<div class="volunteer-checkpoint"><span><strong>'+safe(c.name)+'</strong><small>'+safe(c.type)+' · '+Number(c.scans||0)+' scans visible to your role</small></span><span class="pill '+(c.enabled?'good':'')+'">'+(c.enabled?'Ready':'Disabled')+'</span></div>').join('')||'<p class="muted">No additional checkpoints are enabled for this event.</p>';
+      const actionLabel=(action)=>String(action||'').toLowerCase().replaceAll('_',' ').replace(/\b\w/g,c=>c.toUpperCase());
+      const activityHtml=(data.myRecentActions||[]).map(a=>'<div class="volunteer-activity"><span>'+safe(actionLabel(a.action))+'</span><small>'+safe(a.createdAt||'')+'</small></div>').join('')||'<p class="muted">Your EventHub actions will appear here during the shift.</p>';
+      host.innerHTML='<div class="section-title"><div><div class="eyebrow">Live workspace</div><h3>Shift snapshot</h3></div><button class="btn small" id="refreshVolunteerDesk">↻ Refresh</button></div>'+
+        '<div class="volunteer-metrics">'+metricHtml+'</div>'+
+        '<div class="volunteer-detail-grid"><article class="card"><h3>Event checkpoints</h3>'+checkpointHtml+'</article><article class="card"><h3>Your recent activity</h3>'+activityHtml+'</article></div>'+
+        (!data.can_view_event_stats?'<p class="footnote">Event-wide totals are visible to event leads and core organisers. Your personal activity and assigned checkpoint tools are shown here.</p>':'');
+      $('refreshVolunteerDesk')?.addEventListener('click',loadVolunteerDashboard);
+    } catch(err) {
+      if(host.isConnected)host.innerHTML=showNotice('The volunteer dashboard could not refresh: '+err.message,'error')+'<div class="actions"><button class="btn small" id="retryVolunteerDesk">Try again</button></div>';
+      $('retryVolunteerDesk')?.addEventListener('click',loadVolunteerDashboard);
     }
   }
   function workspaceNav() {
@@ -937,7 +979,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     document.querySelectorAll('[data-admin-page]').forEach(b=>b.classList.toggle('active',b.dataset.adminPage===page));
     if(page==='scanner') { await openScannerStandalone(); return; }
     if(page==='overview') {
-      let statsError='';const r=await adminCall('stats').catch(e=>{statsError=e.message;return {stats:{}};}); const s=r.stats||{};
+      let statsError='',pendingError='',teamError='';const results=await Promise.all([adminCall('stats').catch(e=>{statsError=e.message;return {stats:{}};}),adminCall('pending_registrations').catch(e=>{pendingError=e.message;return {pending_count:0};}),adminCall('event_volunteers').catch(e=>{teamError=e.message;return {assignments:[],global_volunteers:[]};})]);const r=results[0],pendingResult=results[1],teamResult=results[2],s=r.stats||{};const pendingCount=Number(pendingResult.pending_count??pendingResult.registrations?.length??0);const eventVolunteerCount=(teamResult.assignments||[]).length;const coreVolunteerCount=(teamResult.global_volunteers||[]).length;
       host.innerHTML=`<div class="section-title"><h2>Event-day control centre</h2><span class="status ${safe(state.event.status||'active')}">${safe(state.event.status||'active')} · This event</span></div>
         <div class="stat-grid">${[['Approved guests','approvedGuests'],['Checked in','checkedIn'],[foodCollectionIsEnabled()?'Meals served':'Food collection',foodCollectionIsEnabled()?'mealsServed':'foodNA'],['Volunteers','volunteers']].map(([l,k])=>`<div class="stat"><strong>${k==='foodNA'?'Not applicable':Number(s[k]||0)}</strong><span>${l}</span></div>`).join('')}</div>
         ${statsError?showNotice('Live statistics are unavailable: '+statsError,'error'):''}
@@ -959,6 +1001,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
           <section class="admin-launch-group"><h3>⚙️ Event management</h3><div class="admin-launch-links"><button class="btn" data-admin-page="announcements">Announcements</button><button class="btn" data-admin-page="settings">Event settings</button><button class="btn" data-admin-page="admins">Admin access</button><button class="btn" id="refreshStats">Refresh stats</button></div></section>
         </div>
         <p class="footnote">All sections are scoped to the selected event. Admin-only controls remain available only to authenticated admins.</p>`;
+      const adminStatGrid=host.querySelector('.stat-grid');if(adminStatGrid){const attention=document.createElement('div');attention.className='admin-attention-grid';attention.innerHTML='<article class="admin-attention-card"><div class="eyebrow">Guest operations</div><strong>'+(pendingError?'—':pendingCount)+'</strong><span>Pending approvals</span><button class="btn small" data-admin-page="approvals">Review registration queue →</button></article><article class="admin-attention-card"><div class="eyebrow">Selected event</div><strong>'+(teamError?'—':eventVolunteerCount+coreVolunteerCount)+'</strong><span>Volunteer entries · '+eventVolunteerCount+' event-assigned, '+coreVolunteerCount+' core/global</span><button class="btn small" data-admin-page="staff">Manage event team →</button></article><article class="admin-attention-card"><div class="eyebrow">Data quality</div><strong>'+Number(s.missingOrInvalidFoodPreference||0)+'</strong><span>Missing / invalid food preferences</span><button class="btn small" data-admin-page="guests">Review guest records →</button></article>';adminStatGrid.insertAdjacentElement('afterend',attention);}      if(pendingError)toast('Approval queue count is unavailable: '+pendingError,true);if(teamError)toast('Volunteer team count is unavailable: '+teamError,true);
       $('checkServiceHealth')?.addEventListener('click',checkServiceHealth);
       checkServiceHealth();
       $('refreshStats')?.addEventListener('click',()=>renderAdminPage('overview'));
@@ -1209,15 +1252,18 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     const actions=[];
     const activePass=g.status==='approved';
     const proofResolved=['Stored','No proof','Returned'].includes(g.proofStatus);
-    if(activePass&&!g.exitRecorded&&!g.entryUsed)actions.push(['entry','Record entry','success']);
+    const role=state.staffRole||'global';
+    const canDo=(action)=>['admin','global','scanner','event_lead'].includes(role)||(role==='entry'&&action==='entry')||(role==='food'&&action==='food')||(role==='proof'&&['proof_deposit','proof_no_proof','proof_return','exit'].includes(action));
+    const canUseCheckpoint=['admin','global','scanner','event_lead','checkpoint'].includes(role);
+    if(activePass&&!g.exitRecorded&&!g.entryUsed&&canDo('entry'))actions.push(['entry','Record entry','success']);
     if(activePass&&g.entryUsed&&!g.exitRecorded&&g.proofStatus==='Not collected') {
-      actions.push(['proof_deposit','Store proof','']);
-      actions.push(['proof_no_proof','No proof provided','']);
+      if(canDo('proof_deposit'))actions.push(['proof_deposit','Store proof','']);
+      if(canDo('proof_no_proof'))actions.push(['proof_no_proof','No proof provided','']);
     }
-    if(foodCollectionIsEnabled()&&activePass&&g.entryUsed&&!g.exitRecorded&&!g.foodUsed&&proofResolved)actions.push(['food','Record food collection','success']);
-    if(activePass&&g.entryUsed&&!g.exitRecorded&&g.proofStatus==='Stored')actions.push(['proof_return','Return stored proof','']);
-    if(activePass&&g.entryUsed&&(g.proofStatus==='Returned'||g.proofStatus==='No proof')&&!g.exitRecorded)actions.push(['exit','Record exit','']);
-    const customCheckpointHtml=activePass&&!g.exitRecorded&&(state.checkpoints||[]).length?`<section class='guest-edit'><strong>Additional event checkpoints</strong><div class='field'><label>Choose checkpoint</label><select id='customCheckpoint'>${state.checkpoints.map(c=>`<option value='${Number(c.id)}'>${safe(c.name)} · ${safe(c.checkpoint_type)}</option>`).join('')}</select></div><button class='btn primary' id='recordCustomCheckpoint' type='button'>Record checkpoint scan</button></section>`:'';
+    if(foodCollectionIsEnabled()&&activePass&&g.entryUsed&&!g.exitRecorded&&!g.foodUsed&&proofResolved&&canDo('food'))actions.push(['food','Record food collection','success']);
+    if(activePass&&g.entryUsed&&!g.exitRecorded&&g.proofStatus==='Stored'&&canDo('proof_return'))actions.push(['proof_return','Return stored proof','']);
+    if(activePass&&g.entryUsed&&(g.proofStatus==='Returned'||g.proofStatus==='No proof')&&!g.exitRecorded&&canDo('exit'))actions.push(['exit','Record exit','']);
+    const customCheckpointHtml=canUseCheckpoint&&activePass&&!g.exitRecorded&&(state.checkpoints||[]).length?`<section class='guest-edit'><strong>Additional event checkpoints</strong><div class='field'><label>Choose checkpoint</label><select id='customCheckpoint'>${state.checkpoints.map(c=>`<option value='${Number(c.id)}'>${safe(c.name)} · ${safe(c.checkpoint_type)}</option>`).join('')}</select></div><button class='btn primary' id='recordCustomCheckpoint' type='button'>Record checkpoint scan</button></section>`:'';
     const checkpointHistory=(g.checkpointScans||[]).map(c=>`<div class='sub'>✓ ${safe(c.name)} · ${safe(c.scannedAt||'')}</div>`).join('');
     $('scanResult').innerHTML=`${message?showNotice(message,'good'):''}<div class="guest-result"><div class="row"><strong>${safe(g.name)}</strong><span class="pill ${g.status==='approved'?'good':'warn'}">${safe(g.status)}</span></div><p class="muted">${safe(g.residence)}${g.roomNumber?' · Room '+safe(g.roomNumber):''} · ${safe(g.food)}</p><div class="wrap"><span class="pill ${g.entryUsed?'good':'warn'}">Entry: ${g.entryUsed?'Recorded':'Pending'}</span><span class="pill ${!foodCollectionIsEnabled()?'':(g.foodUsed?'good':'warn')}">Food: ${foodCollectionIsEnabled()?(g.foodUsed?'Collected':'Pending'):'Not applicable'}</span><span class="pill">Proof: ${safe(g.proofStatus||'Not collected')}</span><span class="pill">Exit: ${g.exitRecorded?'Recorded':'Pending'}</span></div>${g.storageLabel?`<p><strong>Storage:</strong> ${safe(g.storageLabel)}</p>`:''}${checkpointHistory?`<div class='section'><strong>Additional checkpoint history</strong>${checkpointHistory}</div>`:''}${customCheckpointHtml}${guestAdminEditor(g)}${!activePass?'<div class="notice error">This pass is not active. Event-day actions are disabled.</div>':g.exitRecorded?'<div class="notice good">Exit has already been recorded. No further event-day actions are available.</div>':g.entryUsed&&!proofResolved?'<div class="notice">Next step: store the guest’s proof or confirm that no proof was provided. Continue with the proof workflow before exit.</div>':''}<p class="muted">Pass code: ${safe(g.passCode)}</p><div class="actions">${actions.map(([a,l,cl])=>`<button class="btn ${cl}" data-scan-action="${a}">${l}</button>`).join('')||'<span class="pill good">No further actions available</span>'}</div></div>`;
     document.querySelectorAll('[data-scan-action]').forEach(b=>b.addEventListener('click',()=>recordAction(b.dataset.scanAction,b)));
@@ -2042,11 +2088,77 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     await load();
   }
   async function renderStaff(host) {
-    host.innerHTML=`<div class="section-title"><h2>Volunteer access</h2><button class="btn small" id="refreshStaff">Refresh</button></div><section class="card"><form id="addVolunteer"><div class="field"><label>Telegram user ID</label><input id="volunteerId" inputmode="numeric" placeholder="123456789" required></div><button class="btn primary" type="submit">Add volunteer</button></form><p class="footnote">Volunteer accounts are shared across EventHub. Their event data and QR scans remain separate for each selected event.</p></section><div id="volunteerList" class="list section"></div>`;
-    const load=async()=>{try{const r=await adminCall('volunteers');$('volunteerList').innerHTML=(r.volunteers||[]).map(v=>`<div class="list-item row"><div><strong>${v.telegram_id}</strong><div class="sub">Added ${safe(v.added_at||'')}</div></div><button class="btn danger small" data-remove-vol="${v.telegram_id}">Remove</button></div>`).join('')||'<div class="empty">No volunteers assigned.</div>';document.querySelectorAll('[data-remove-vol]').forEach(b=>b.addEventListener('click',async()=>{if(!confirm('Remove volunteer scanner access?'))return;try{const r=await adminCall('remove_volunteer',{telegram_id:Number(b.dataset.removeVol)});toast(r.message);load();}catch(e){toast(e.message,true);}}));}catch(e){$('volunteerList').innerHTML=showNotice(e.message,'error');}};
-    $('refreshStaff').addEventListener('click',load);$('addVolunteer').addEventListener('submit',async e=>{e.preventDefault();try{const r=await adminCall('add_volunteer',{telegram_id:Number($('volunteerId').value)});toast(r.message);$('volunteerId').value='';load();}catch(err){toast(err.message,true);}});await load();
+    const readOnly=state.event?.status==='archived';
+    const roles=[['scanner','Full scanner · all event-day actions'],['event_lead','Event lead · full workflow + event totals'],['entry','Entry desk · entry only'],['proof','ID proof + exit desk'],['food','Food desk · meal collection only'],['checkpoint','Additional checkpoint scans only']];
+    const roleLabels={scanner:'Full scanner',event_lead:'Event lead',entry:'Entry desk',food:'Food desk',proof:'ID proof + exit',checkpoint:'Checkpoint desk'};
+    host.innerHTML='<div class="section-title"><div><div class="eyebrow">People & permissions</div><h2>Event volunteer team</h2></div><button class="btn small" id="refreshStaff">↻ Refresh</button></div>'+
+      (readOnly?showNotice('This event is archived. Team assignments are read-only.','error'):'<p class="muted">Assign volunteers to this event only. Their access is restricted to the selected event and the role chosen below.</p>')+
+      '<section class="card staff-assignment-card"><div class="section-title"><h3>＋ Assign a volunteer</h3><span class="pill good">Event-scoped</span></div>'+
+      '<form id="assignEventVolunteer" class="staff-assignment-form"><div class="field"><label for="eventVolunteerId">Telegram user ID</label><input id="eventVolunteerId" inputmode="numeric" pattern="[0-9]+" placeholder="123456789" required '+(readOnly?'disabled':'')+'></div>'+
+      '<div class="field"><label for="eventVolunteerRole">Volunteer role</label><select id="eventVolunteerRole" '+(readOnly?'disabled':'')+'>'+
+      roles.filter(([value])=>value!=='food'||foodCollectionIsEnabled()).map(([value,label])=>'<option value="'+value+'">'+label+'</option>').join('')+
+      '</select></div><button class="btn primary" type="submit" '+(readOnly?'disabled':'')+'>Assign to this event</button></form>'+
+      '<p class="footnote">The volunteer must have opened the EventHub Telegram bot at least once so their Telegram user ID is available. Reassigning the same ID updates its role.</p></section>'+
+      '<section class="section"><div class="section-title"><h3>Assigned to this event</h3><span class="muted" id="eventTeamCount">Loading…</span></div><div id="eventVolunteerList" class="staff-list"><div class="empty">Loading event team…</div></div></section>'+
+      '<details class="settings-accordion staff-global-access"><summary>Core / global volunteers (all events)</summary><div class="settings-content">'+
+      '<p class="muted">These are legacy core accounts with scanner access across every active EventHub event. Keep this list limited to trusted permanent organisers.</p>'+
+      '<form id="addGlobalVolunteer" class="staff-assignment-form"><div class="field"><label for="globalVolunteerId">Telegram user ID</label><input id="globalVolunteerId" inputmode="numeric" pattern="[0-9]+" placeholder="123456789" required '+(readOnly?'disabled':'')+'></div>'+
+      '<button class="btn" type="submit" '+(readOnly?'disabled':'')+'>Add core volunteer</button></form>'+
+      '<div id="globalVolunteerList" class="staff-list"><div class="empty">Loading core volunteers…</div></div></div></details>';
+    const load=async()=>{
+      try{
+        const r=await adminCall('event_volunteers');
+        const assignments=r.assignments||[],globalRows=r.global_volunteers||[];
+        $('eventTeamCount').textContent=assignments.length+' assigned';
+        $('eventVolunteerList').innerHTML=assignments.map(v=>{
+          return '<article class="staff-row"><div class="staff-row-main"><strong>Telegram ID '+Number(v.telegram_id)+'</strong><span class="staff-role-label">'+safe(roleLabels[v.role]||v.role)+'</span><small>Assigned '+safe(v.assigned_at||'')+'</small>'+
+            (Number(v.also_global)?'<small class="staff-global-note">Also has core/global access across events.</small>':'')+
+            '</div><button class="btn danger small" type="button" data-remove-event-vol="'+Number(v.telegram_id)+'" '+(readOnly?'disabled':'')+'>Remove from event</button></article>';
+        }).join('')||'<div class="empty">No event-scoped volunteers have been assigned yet.</div>';
+        $('globalVolunteerList').innerHTML=globalRows.map(v=>'<article class="staff-row"><div class="staff-row-main"><strong>Telegram ID '+Number(v.telegram_id)+'</strong><span class="staff-role-label">Core access · all events</span><small>Added '+safe(v.added_at||'')+'</small></div><button class="btn danger small" type="button" data-remove-global-vol="'+Number(v.telegram_id)+'" '+(readOnly?'disabled':'')+'>Remove core access</button></article>').join('')||'<div class="empty">No core/global volunteers.</div>';
+        document.querySelectorAll('[data-remove-event-vol]').forEach(b=>b.addEventListener('click',async()=>{
+          if(!confirm('Remove this volunteer from the selected event only? Any separate core/global access remains unchanged.'))return;
+          b.disabled=true;
+          try{const result=await adminCall('remove_event_volunteer',{telegram_id:Number(b.dataset.removeEventVol)});toast(result.message||'Event assignment removed');await load();}
+          catch(err){toast(err.message,true);b.disabled=false;}
+        }));
+        document.querySelectorAll('[data-remove-global-vol]').forEach(b=>b.addEventListener('click',async()=>{
+          if(!confirm('Remove this core volunteer’s access to every event? Event-specific assignments, if any, remain separate.'))return;
+          b.disabled=true;
+          try{const result=await adminCall('remove_volunteer',{telegram_id:Number(b.dataset.removeGlobalVol)});toast(result.message||'Core access removed');await load();}
+          catch(err){toast(err.message,true);b.disabled=false;}
+        }));
+      }catch(err){
+        $('eventVolunteerList').innerHTML=showNotice('Could not load volunteer assignments: '+err.message,'error');
+        $('globalVolunteerList').innerHTML='';
+      }
+    };
+    $('refreshStaff').addEventListener('click',load);
+    $('assignEventVolunteer').addEventListener('submit',async e=>{
+      e.preventDefault();
+      const telegramId=Number($('eventVolunteerId').value);
+      if(!Number.isSafeInteger(telegramId)||telegramId<=0){toast('Enter a valid numeric Telegram user ID.',true);return;}
+      const submit=e.submitter||e.target.querySelector('button[type="submit"]');submit.disabled=true;
+      try{
+        const result=await adminCall('assign_event_volunteer',{telegram_id:telegramId,role:$('eventVolunteerRole').value});
+        toast(result.message||'Volunteer assigned');$('eventVolunteerId').value='';await load();
+      }catch(err){toast(err.message,true);}
+      finally{submit.disabled=readOnly;}
+    });
+    $('addGlobalVolunteer').addEventListener('submit',async e=>{
+      e.preventDefault();
+      const telegramId=Number($('globalVolunteerId').value);
+      if(!Number.isSafeInteger(telegramId)||telegramId<=0){toast('Enter a valid numeric Telegram user ID.',true);return;}
+      const submit=e.submitter||e.target.querySelector('button[type="submit"]');submit.disabled=true;
+      try{
+        const result=await adminCall('add_volunteer',{telegram_id:telegramId});
+        toast(result.message||'Core volunteer added');$('globalVolunteerId').value='';await load();
+      }catch(err){toast(err.message,true);}
+      finally{submit.disabled=readOnly;}
+    });
+    await load();
   }
-  async function refresh() { try{await stopScanner();await loadRole();if(state.eventId)await loadEvent();else renderEventList();toast('Updated');}catch(e){toast(e.message,true);} }
+    async function refresh() { try{await stopScanner();await loadRole();if(state.eventId)await loadEvent();else renderEventList();toast('Updated');}catch(e){toast(e.message,true);} }
   $('refreshBtn').addEventListener('click',refresh);$('backBtn').addEventListener('click',()=>scannerView?closeScannerStandalone():clearEvent());
   window.addEventListener('pagehide',()=>{if(state.scanner||state.scannerStarting)stopScanner();});
   // Release the camera whenever a mobile WebView/browser is backgrounded or the screen is locked.
