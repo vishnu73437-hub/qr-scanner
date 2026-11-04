@@ -435,7 +435,30 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
 @media(max-width:720px){.pass-editor-grid{grid-template-columns:1fr}.pass-editor-canvas{width:min(100%,360px)}.pass-editor-controls{width:100%}}
 @media(max-width:420px){.pass-editor-fields{grid-template-columns:repeat(2,minmax(0,1fr))}.pass-visual-editor{padding:12px}}
 
-  </style>
+  
+/* Individually editable, event-scoped interface components */
+#interfaceEditorLauncher{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:8500;border:1px solid color-mix(in srgb,var(--gold) 55%,var(--line));border-radius:999px;padding:12px 16px;background:linear-gradient(135deg,var(--panel),var(--panel2));color:var(--text);font-weight:850;box-shadow:0 12px 34px #0008;display:none}
+#interfaceEditorLauncher.visible{display:block}
+#interfaceEditorPanel{position:fixed;z-index:8501;right:12px;bottom:calc(76px + env(safe-area-inset-bottom));width:min(440px,calc(100vw - 24px));max-height:min(78dvh,760px);overflow:auto;padding:16px;border:1px solid color-mix(in srgb,var(--gold) 45%,var(--line));border-radius:22px;background:var(--panel);color:var(--text);box-shadow:0 22px 70px #000b;display:none;overscroll-behavior:contain}
+#interfaceEditorPanel.open{display:block}
+#interfaceEditorPanel .ui-editor-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+#interfaceEditorPanel .ui-editor-heading h2{font-size:18px;margin:0}
+#interfaceEditorPanel .ui-editor-help{font-size:12px;color:var(--muted);margin:7px 0 12px}
+#interfaceEditorPanel .ui-editor-field{display:flex;flex-direction:column;gap:5px;margin:10px 0}
+#interfaceEditorPanel .ui-editor-field label{font-size:12px;font-weight:800;color:var(--muted)}
+#interfaceEditorPanel input:not([type=checkbox]):not([type=color]),#interfaceEditorPanel textarea,#interfaceEditorPanel select{width:100%;min-height:40px;padding:9px 11px;border:1px solid var(--line);border-radius:11px;background:var(--bg);color:var(--text);font:inherit}
+#interfaceEditorPanel textarea{min-height:74px;resize:vertical}
+#interfaceEditorPanel input[type=color]{width:100%;height:40px;padding:3px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+#interfaceEditorPanel .ui-editor-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+#interfaceEditorPanel .ui-editor-check{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;margin:9px 0}
+#interfaceEditorPanel .ui-editor-check input{width:18px;height:18px;accent-color:var(--accent)}
+#interfaceEditorPanel .ui-editor-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+#interfaceEditorPanel .ui-editor-actions .btn{width:100%;font-size:12px;padding:9px 8px}
+#interfaceEditorPanel .ui-editor-scope{display:inline-flex;border:1px solid var(--line);border-radius:20px;padding:4px 9px;color:var(--gold);font-size:10px;font-weight:900;letter-spacing:.8px;text-transform:uppercase}
+[data-interface-key]{scroll-margin-top:90px}
+@media(max-width:480px){#interfaceEditorLauncher{right:10px;bottom:calc(10px + env(safe-area-inset-bottom));padding:11px 13px;font-size:12px}#interfaceEditorPanel{right:8px;bottom:calc(66px + env(safe-area-inset-bottom));width:calc(100vw - 16px);max-height:76dvh;padding:13px}}
+
+</style>
 <style id="admin-easy-settings-v1">
 .admin-easy-toolbar{position:sticky;top:0;z-index:40;display:grid;gap:10px;padding:12px;margin:0 0 14px;background:var(--card, #102d35);border:1px solid var(--line,rgba(255,255,255,.18));border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,.22)}
 .admin-easy-toolbar .toolbar-title{font-weight:800;font-size:16px;display:flex;align-items:center;gap:8px}
@@ -638,6 +661,235 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     const title=document.getElementById('brandTitle'), subtitle=document.getElementById('brandSubtitle'), mark=document.getElementById('brandMark');
     if(title)title.textContent=t.app_title||'KSMU HOSTEL 5 EVENTS';if(subtitle)subtitle.textContent=t.app_subtitle||'EVENT MANAGEMENT';
     if(mark){const logo=t.brand_logo_image||t.brand_logo_url;if(logo)mark.innerHTML='<img src="'+safe(logo)+'" alt="" loading="lazy">';else mark.textContent=isHalloween?'🎃':(isDiwali?'🪔':'✦');}
+  }
+
+
+  // Screen/component editor. Each component is keyed within a role + screen and
+  // stored in the selected event's theme_json; it never changes role permissions.
+  let interfaceEditorDraft=null, interfaceEditorScope='', interfaceEditorItems=[];
+  let interfaceEditorObserver=null, interfaceEditorOpen=false, interfaceEditorScheduled=false;
+  function currentInterfaceScope(){
+    if(scannerView||state.page==='scanner')return 'scanner';
+    if(state.role==='admin'&&state.page==='registration')return 'guest-register';
+    if(state.role==='admin'&&state.page==='pass')return 'guest-pass';
+    const role=state.role==='admin'?'admin':(state.role==='volunteer'?'volunteer':'guest');
+    const page=String(state.page||'home').toLowerCase().replace(/[^a-z0-9_-]/g,'-').slice(0,30)||'home';
+    return role+'-'+page;
+  }
+  function interfaceEditorRoot(){return main;}
+  function interfaceNodes(root){
+    const selector='h1,h2,h3,h4,p,button,a,label,summary,.eyebrow,.footnote,.notice,.status,.tab,.card,.hero,.eventday-primary,.meta,.stat,input[placeholder],textarea[placeholder],select';
+    return [...root.querySelectorAll(selector)].filter(el=>!el.closest('#interfaceEditorPanel')&&!el.closest('#interfaceEditorLauncher')&&!el.closest('#toast'));
+  }
+  function interfaceNodeKey(el,root){
+    if(el.id)return 'id_'+el.id.toLowerCase().replace(/[^a-z0-9_-]/g,'_').slice(0,120);
+    const parts=[];let node=el;
+    while(node&&node!==root&&parts.length<6){
+      const tag=node.tagName.toLowerCase();
+      const parent=node.parentElement;
+      if(!parent)break;
+      const siblings=[...parent.children].filter(item=>item.tagName===node.tagName);
+      parts.unshift(tag+'_'+(siblings.indexOf(node)+1));
+      if(parent.id){parts.unshift('id_'+parent.id.toLowerCase().replace(/[^a-z0-9_-]/g,'_').slice(0,70));break;}
+      node=parent;
+    }
+    return (parts.join('__')||el.tagName.toLowerCase()+'_1').slice(0,180);
+  }
+  function interfaceDirectText(el){
+    return [...el.childNodes].filter(n=>n.nodeType===Node.TEXT_NODE).map(n=>n.nodeValue||'').join('').trim();
+  }
+  function interfaceSetDirectText(el,value){
+    const nodes=[...el.childNodes].filter(n=>n.nodeType===Node.TEXT_NODE);
+    if(nodes.length){nodes[0].nodeValue=String(value);nodes.slice(1).forEach(n=>n.nodeValue='');}
+    else if(!el.children.length)el.textContent=String(value);
+    else el.insertBefore(document.createTextNode(String(value)),el.firstChild);
+  }
+  function interfaceClone(value){try{return JSON.parse(JSON.stringify(value||{}));}catch(_){return {};}}
+  function interfaceSavedComponents(){
+    return parseJSON(state.event?.theme_json,{}).interface_components||{};
+  }
+  function interfaceApplyOverrides(){
+    if(!state.event)return;
+    const root=interfaceEditorRoot(),scope=currentInterfaceScope(),saved=interfaceSavedComponents()[scope]||{};
+    const nodes=interfaceNodes(root);
+    nodes.forEach(el=>{
+      const key=el.dataset.interfaceKey||interfaceNodeKey(el,root);
+      el.dataset.interfaceKey=key;
+      if(!Object.prototype.hasOwnProperty.call(el.dataset,'interfaceOriginalText'))el.dataset.interfaceOriginalText=interfaceDirectText(el);
+      if(!Object.prototype.hasOwnProperty.call(el.dataset,'interfaceOriginalDisplay'))el.dataset.interfaceOriginalDisplay=el.style.display||'';
+      if(!Object.prototype.hasOwnProperty.call(el.dataset,'interfaceOriginalPlaceholder'))el.dataset.interfaceOriginalPlaceholder=el.getAttribute('placeholder')||'';
+      const originalStyle={backgroundColor:el.dataset.interfaceOriginalBg||'',color:el.dataset.interfaceOriginalColor||'',borderRadius:el.dataset.interfaceOriginalRadius||'',padding:el.dataset.interfaceOriginalPadding||'',fontSize:el.dataset.interfaceOriginalFontSize||'',textAlign:el.dataset.interfaceOriginalAlign||''};
+      if(!Object.prototype.hasOwnProperty.call(el.dataset,'interfaceOriginalBg'))el.dataset.interfaceOriginalBg=el.style.backgroundColor||'';
+      if(!Object.prototype.hasOwnProperty.call(el.dataset,'interfaceOriginalColor'))el.dataset.interfaceOriginalColor=el.style.color||'';
+      if(!Object.prototype.hasOwnProperty.call(el.dataset,'interfaceOriginalRadius'))el.dataset.interfaceOriginalRadius=el.style.borderRadius||'';
+      if(!Object.prototype.hasOwnProperty.call(el.dataset,'interfaceOriginalPadding'))el.dataset.interfaceOriginalPadding=el.style.padding||'';
+      if(!Object.prototype.hasOwnProperty.call(el.dataset,'interfaceOriginalFontSize'))el.dataset.interfaceOriginalFontSize=el.style.fontSize||'';
+      if(!Object.prototype.hasOwnProperty.call(el.dataset,'interfaceOriginalAlign'))el.dataset.interfaceOriginalAlign=el.style.textAlign||'';
+      const item=saved[key]||{};
+      interfaceSetDirectText(el,Object.prototype.hasOwnProperty.call(item,'text')?item.text:el.dataset.interfaceOriginalText);
+      if(el.matches('input,textarea,select')||el.hasAttribute('placeholder'))el.setAttribute('placeholder',Object.prototype.hasOwnProperty.call(item,'placeholder')?item.placeholder:el.dataset.interfaceOriginalPlaceholder);
+      el.style.display=item.hidden===true?'none':el.dataset.interfaceOriginalDisplay;
+      el.style.backgroundColor=item.bg||originalStyle.backgroundColor;
+      el.style.color=item.color||originalStyle.color;
+      el.style.borderRadius=Number.isFinite(Number(item.radius))&&item.radius!==''?Number(item.radius)+'px':originalStyle.borderRadius;
+      el.style.padding=Number.isFinite(Number(item.padding))&&item.padding!==''?Number(item.padding)+'px':originalStyle.padding;
+      el.style.fontSize=Number.isFinite(Number(item.font_size))&&item.font_size!==''?Number(item.font_size)+'px':originalStyle.fontSize;
+      el.style.textAlign=item.align||originalStyle.textAlign;
+    });
+  }
+  function interfaceDescribeElement(el,key){
+    const label=interfaceDirectText(el)||el.getAttribute('aria-label')||el.getAttribute('placeholder')||el.id||el.className?.toString().split(/\s+/).filter(Boolean).slice(0,2).join('.')||key;
+    return el.tagName.toLowerCase()+' · '+String(label).replace(/\s+/g,' ').slice(0,58);
+  }
+  function interfaceRefreshInventory(){
+    if(!state.event)return;
+    const root=interfaceEditorRoot(),scope=currentInterfaceScope();
+    interfaceEditorItems=interfaceNodes(root).map(el=>{
+      const key=el.dataset.interfaceKey||interfaceNodeKey(el,root);el.dataset.interfaceKey=key;
+      return {el,key,label:interfaceDescribeElement(el,key),originalText:el.dataset.interfaceOriginalText??interfaceDirectText(el),placeholder:el.getAttribute('placeholder')||''};
+    });
+    const selector=$('interfaceEditorComponent');
+    if(selector){
+      const previous=selector.value;
+      selector.innerHTML=interfaceEditorItems.map((item,index)=>'<option value="'+safe(item.key)+'">'+safe((index+1)+'. '+item.label)+'</option>').join('');
+      if(interfaceEditorItems.some(item=>item.key===previous))selector.value=previous;
+      else if(interfaceEditorItems.length)selector.selectedIndex=0;
+      interfaceEditorScope=scope;
+      interfaceEditorPopulate();
+    }
+  }
+  function interfaceEditorSelected(){
+    const key=$('interfaceEditorComponent')?.value;
+    return interfaceEditorItems.find(item=>item.key===key)||null;
+  }
+  function interfaceEditorPopulate(){
+    const item=interfaceEditorSelected();if(!item)return;
+    const saved=interfaceEditorDraft?.[interfaceEditorScope]?.[item.key]||{};
+    $('interfaceEditorText').value=Object.prototype.hasOwnProperty.call(saved,'text')?saved.text:item.originalText;
+    $('interfaceEditorPlaceholder').value=Object.prototype.hasOwnProperty.call(saved,'placeholder')?saved.placeholder:item.placeholder;
+    $('interfaceEditorVisible').checked=saved.hidden!==true;
+    $('interfaceEditorBgEnabled').checked=!!saved.bg;$('interfaceEditorBg').value=saved.bg||'#211c2d';
+    $('interfaceEditorColorEnabled').checked=!!saved.color;$('interfaceEditorColor').value=saved.color||'#f8f5fb';
+    $('interfaceEditorRadius').value=Object.prototype.hasOwnProperty.call(saved,'radius')?saved.radius:'';
+    $('interfaceEditorPadding').value=Object.prototype.hasOwnProperty.call(saved,'padding')?saved.padding:'';
+    $('interfaceEditorFontSize').value=Object.prototype.hasOwnProperty.call(saved,'font_size')?saved.font_size:'';
+    $('interfaceEditorAlign').value=saved.align||'';
+  }
+  function interfaceEditorReadDraft(){
+    const item=interfaceEditorSelected();if(!item)return;
+    if(!interfaceEditorDraft)interfaceEditorDraft=interfaceClone(interfaceSavedComponents());
+    if(!interfaceEditorDraft[interfaceEditorScope])interfaceEditorDraft[interfaceEditorScope]={};
+    const record={...(interfaceEditorDraft[interfaceEditorScope][item.key]||{})};
+    const text=$('interfaceEditorText').value;
+    if(text!==item.originalText)record.text=text;else delete record.text;
+    const placeholder=$('interfaceEditorPlaceholder').value;
+    if(placeholder!==item.placeholder)record.placeholder=placeholder;else delete record.placeholder;
+    if($('interfaceEditorVisible').checked)delete record.hidden;else record.hidden=true;
+    if($('interfaceEditorBgEnabled').checked)record.bg=$('interfaceEditorBg').value;else delete record.bg;
+    if($('interfaceEditorColorEnabled').checked)record.color=$('interfaceEditorColor').value;else delete record.color;
+    for(const [input,key,max] of [['interfaceEditorRadius','radius',48],['interfaceEditorPadding','padding',60],['interfaceEditorFontSize','font_size',48]]){
+      const raw=$(input).value;
+      if(raw==='')delete record[key];
+      else record[key]=Math.max(0,Math.min(max,Math.round(Number(raw)||0)));
+    }
+    const align=$('interfaceEditorAlign').value;if(align)record.align=align;else delete record.align;
+    if(Object.keys(record).length)interfaceEditorDraft[interfaceEditorScope][item.key]=record;
+    else delete interfaceEditorDraft[interfaceEditorScope][item.key];
+    if(!Object.keys(interfaceEditorDraft[interfaceEditorScope]).length)delete interfaceEditorDraft[interfaceEditorScope];
+    const theme=parseJSON(state.event?.theme_json,{});
+    theme.interface_components=interfaceEditorDraft;
+    // Preview from the unsaved draft without changing the stored event record.
+    const originalTheme=state.event.theme_json;
+    state.event.theme_json=JSON.stringify(theme);
+    interfaceApplyOverrides();
+    state.event.theme_json=originalTheme;
+  }
+  function ensureInterfaceEditor(){
+    let launcher=$('interfaceEditorLauncher'),panel=$('interfaceEditorPanel');
+    if(!launcher){
+      launcher=document.createElement('button');launcher.id='interfaceEditorLauncher';launcher.className='btn';launcher.type='button';
+      launcher.addEventListener('click',()=>openInterfaceEditor());
+      document.body.appendChild(launcher);
+    }
+    if(!panel){
+      panel=document.createElement('aside');panel.id='interfaceEditorPanel';panel.setAttribute('aria-label','Individual screen and component editor');
+      panel.innerHTML='<div class="ui-editor-heading"><div><span class="ui-editor-scope" id="interfaceEditorScope"></span><h2>Customize this screen</h2></div><button class="btn small" id="closeInterfaceEditor" type="button">✕</button></div>'+
+        '<p class="ui-editor-help">Select any visible component to change its wording, visibility, colours, size, spacing and alignment. These settings apply only to this event and this screen. They never change account permissions or scan rules.</p>'+
+        '<div class="ui-editor-field"><label for="interfaceEditorComponent">Individual component</label><select id="interfaceEditorComponent"></select></div>'+
+        '<div class="ui-editor-field"><label for="interfaceEditorText">Display text (leave unchanged to keep the default)</label><textarea id="interfaceEditorText" maxlength="300"></textarea></div>'+
+        '<div class="ui-editor-field"><label for="interfaceEditorPlaceholder">Input placeholder</label><input id="interfaceEditorPlaceholder" maxlength="140"></div>'+
+        '<label class="ui-editor-check"><input id="interfaceEditorVisible" type="checkbox" checked> Show this component</label>'+
+        '<div class="ui-editor-grid"><div class="ui-editor-field"><label class="ui-editor-check"><input id="interfaceEditorBgEnabled" type="checkbox"> Custom background</label><input id="interfaceEditorBg" type="color" value="#211c2d"></div><div class="ui-editor-field"><label class="ui-editor-check"><input id="interfaceEditorColorEnabled" type="checkbox"> Custom text colour</label><input id="interfaceEditorColor" type="color" value="#f8f5fb"></div></div>'+
+        '<div class="ui-editor-grid"><div class="ui-editor-field"><label for="interfaceEditorRadius">Corner radius (0–48 px)</label><input id="interfaceEditorRadius" type="number" min="0" max="48" placeholder="Default"></div><div class="ui-editor-field"><label for="interfaceEditorPadding">Inner spacing (0–60 px)</label><input id="interfaceEditorPadding" type="number" min="0" max="60" placeholder="Default"></div></div>'+
+        '<div class="ui-editor-grid"><div class="ui-editor-field"><label for="interfaceEditorFontSize">Font size (10–48 px)</label><input id="interfaceEditorFontSize" type="number" min="10" max="48" placeholder="Default"></div><div class="ui-editor-field"><label for="interfaceEditorAlign">Text alignment</label><select id="interfaceEditorAlign"><option value="">Default</option><option value="left">Left</option><option value="center">Centre</option><option value="right">Right</option></select></div></div>'+
+        '<div class="ui-editor-actions"><button class="btn" id="resetInterfaceComponent" type="button">Reset component</button><button class="btn" id="resetInterfaceScreen" type="button">Reset this screen</button><button class="btn primary" id="saveInterfaceComponents" type="button">Save this screen</button><button class="btn" id="closeInterfaceEditor2" type="button">Close</button></div><div id="interfaceEditorMessage" aria-live="polite"></div>';
+      document.body.appendChild(panel);
+      $('closeInterfaceEditor').addEventListener('click',closeInterfaceEditor);$('closeInterfaceEditor2').addEventListener('click',closeInterfaceEditor);
+      $('interfaceEditorComponent').addEventListener('change',interfaceEditorPopulate);
+      ['interfaceEditorText','interfaceEditorPlaceholder','interfaceEditorVisible','interfaceEditorBgEnabled','interfaceEditorBg','interfaceEditorColorEnabled','interfaceEditorColor','interfaceEditorRadius','interfaceEditorPadding','interfaceEditorFontSize','interfaceEditorAlign'].forEach(id=>{
+        $(id).addEventListener('input',interfaceEditorReadDraft);$(id).addEventListener('change',interfaceEditorReadDraft);
+      });
+      $('resetInterfaceComponent').addEventListener('click',()=>{
+        const item=interfaceEditorSelected();if(!item)return;
+        if(interfaceEditorDraft?.[interfaceEditorScope])delete interfaceEditorDraft[interfaceEditorScope][item.key];
+        interfaceEditorPopulate();interfaceEditorReadDraft();toast('Component restored to its default appearance');
+      });
+      $('resetInterfaceScreen').addEventListener('click',()=>{
+        if(!confirm('Remove all custom changes from this screen? Other screens will stay unchanged.'))return;
+        if(interfaceEditorDraft)delete interfaceEditorDraft[interfaceEditorScope];
+        interfaceApplyOverrides();interfaceRefreshInventory();toast('Screen reset in the editor. Save to publish the reset.');
+      });
+      $('saveInterfaceComponents').addEventListener('click',saveInterfaceComponents);
+    }
+    const active=state.role==='admin'&&!!state.event;
+    launcher.classList.toggle('visible',active);
+    launcher.textContent='✎ Customize screen';
+    if(!active)closeInterfaceEditor();
+  }
+  function openInterfaceEditor(){
+    if(state.role!=='admin'||!state.event)return;
+    ensureInterfaceEditor();interfaceEditorDraft=interfaceClone(interfaceSavedComponents());
+    interfaceEditorScope=currentInterfaceScope();
+    $('interfaceEditorScope').textContent=interfaceEditorScope.replace(/-/g,' ');
+    $('interfaceEditorPanel').classList.add('open');interfaceEditorOpen=true;
+    interfaceRefreshInventory();
+  }
+  function closeInterfaceEditor(){
+    const panel=$('interfaceEditorPanel');if(panel)panel.classList.remove('open');
+    interfaceEditorOpen=false;
+  }
+  async function saveInterfaceComponents(){
+    const button=$('saveInterfaceComponents');if(!button||button.disabled)return;
+    button.disabled=true;button.textContent='Saving…';
+    try{
+      const nextTheme=parseJSON(state.event?.theme_json,{});
+      nextTheme.interface_components=interfaceEditorDraft||interfaceClone(interfaceSavedComponents());
+      const result=await adminCall('update_event',{
+        name:state.event.name,description:state.event.description||'',
+        event_date:state.event.event_date||'',event_time:state.event.event_time||'',
+        venue:state.event.venue||'',theme:nextTheme
+      });
+      state.event.theme_json=JSON.stringify(nextTheme);
+      eventTheme(state.event);interfaceApplyOverrides();
+      const warning=result.mirror_synced===false||result.audit_recorded===false;
+      $('interfaceEditorMessage').innerHTML=showNotice(result.message||'Screen customizations saved for this event.',warning?'error':'good');
+      toast(warning?'Customizations saved with a backend warning.':'Screen customizations saved.');
+      if(warning)toast('Check the save warning before publishing more changes.',true);
+    }catch(err){$('interfaceEditorMessage').innerHTML=showNotice(err.message||'Could not save screen customizations.','error');}
+    finally{button.disabled=false;button.textContent='Save this screen';}
+  }
+  function scheduleInterfaceRefresh(){
+    if(interfaceEditorScheduled)return;
+    interfaceEditorScheduled=true;
+    Promise.resolve().then(()=>{
+      interfaceEditorScheduled=false;
+      if(!state.event)return;
+      const scope=currentInterfaceScope();
+      if(interfaceEditorOpen&&scope!==interfaceEditorScope)closeInterfaceEditor();
+      interfaceApplyOverrides();
+      ensureInterfaceEditor();
+      if(interfaceEditorOpen)interfaceRefreshInventory();
+    });
   }
 
   let deepotsavFxFrame=0,deepotsavFxResize=null,deepotsavFxVisibility=null;
@@ -1932,6 +2184,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
             <div class="field"><label><input id="editUiMotion" type="checkbox" style="width:auto;min-height:0" ${theme.interface_motion_enabled!==false?'checked':''}> Enable motion effects</label></div>
             <div class="field"><label><input id="editUiFireworks" type="checkbox" style="width:auto;min-height:0" ${(typeof theme.interface_fireworks==='boolean'?theme.interface_fireworks:isDiwali)?'checked':''}> Enable event fireworks</label></div>
           </div>
+          <section class="section card" id="individualInterfaceEditorInfo"><div class="section-title"><h3>🧩 Individual screen & component editor</h3><span class="status active">Per-event</span></div><p class="muted">Open any event page as an admin and use the floating “Customize screen” control. Edit each heading, description, button, input, card or status individually. Changes are stored separately for each screen.</p><p class="footnote">The editor changes presentation only. Access rules, QR verification, scan order, database records and required workflow steps remain controlled by EventHub.</p></section>
           <div class="notice" id="interfacePreview" aria-live="polite"><strong>Live interface preview</strong><div style="margin:12px auto 0;max-width:360px;padding:18px;border-radius:var(--ui-dialog-radius,28px);background:var(--ui-dialog-bg,#1C1E2D);color:var(--ui-dialog-text,#F8F7FC);border:1px solid var(--ui-dialog-border,#E5B85C);text-align:center"><span style="display:inline-grid;place-items:center;width:42px;height:42px;border-radius:14px;background:color-mix(in srgb,var(--ui-dialog-accent,#E5B85C) 18%,transparent);color:var(--ui-dialog-accent,#E5B85C);font-size:22px">✓</span><h3 style="margin:10px 0 6px">SAVED & VERIFIED</h3><p style="color:var(--ui-dialog-muted,#C5C7D4);font-size:13px;margin:0 0 12px">This is how scanner alerts will look.</p><span style="display:inline-block;padding:10px 18px;border-radius:var(--ui-button-radius,16px);background:var(--accent);color:#fff;font-weight:800">NEXT GUEST</span></div></div>
           <div class="divider"></div><h3>QR pass design</h3>
           <div class="inline-fields"><div class="field"><label>Pass background</label><input id="editPassBackground" type="color" value="${safe(theme.pass_background||theme.background||(isDiwali?'#190d2b':'#170F24'))}"></div><div class="field"><label>Pass accent</label><input id="editPassAccent" type="color" value="${safe(theme.pass_accent||theme.accent||(isDiwali?'#d9b15f':'#ff7518'))}"></div><div class="field"><label>Pass highlight</label><input id="editPassGold" type="color" value="${safe(theme.pass_gold||theme.gold||(isDiwali?'#d9b15f':'#ffd166'))}"></div></div>
@@ -2222,6 +2475,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
       interface_density:$('editUiDensity').value,interface_header_style:$('editUiHeaderStyle').value,
       interface_dialog_animation:$('editUiDialogAnimation').value,interface_motion_enabled:$('editUiMotion').checked,
       interface_fireworks:$('editUiFireworks').checked,
+      interface_components:theme.interface_components||{},
       pass_background:$('editPassBackground').value,pass_accent:$('editPassAccent').value,pass_gold:$('editPassGold').value,
       app_title:$('editAppTitle').value,app_subtitle:$('editAppSubtitle').value,brand_logo_url:$('editBrandLogo').value,
       brand_logo_image:$('editBrandLogoImage').value,hero_banner_url:$('editHeroBanner').value,hero_banner_image:$('editHeroBannerImage').value,hero_badge:$('editHeroBadge').value,
@@ -2685,6 +2939,11 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     await stopScanner();scannerView=false;document.body.classList.remove('scanner-mode');$('refreshBtn').classList.remove('hidden');$('backBtn').textContent='← All events'; state.eventId=Number.isSafeInteger(nextId)&&nextId>0?nextId:0; state.event=null; state.guest=null; state.pass=null;
     try { await loadRole(); if(state.eventId){const permitted=(state.role==='admin'?state.workspaces:state.activeEvents).some(e=>Number(e.id)===state.eventId); if(permitted){await loadEvent();if(wantsScanner)await openScannerStandalone(false);else{scannerView=false;document.body.classList.remove('scanner-mode');$('refreshBtn').classList.remove('hidden');eventTheme(state.event);}} else {scannerView=false;document.body.classList.remove('scanner-mode');state.eventId=0;eventTheme(null);renderEventList();}} else {scannerView=false;document.body.classList.remove('scanner-mode');eventTheme(null);renderEventList();} } catch(err){main.innerHTML=showNotice(err.message,'error');}
   });
+  if(typeof MutationObserver!=='undefined'){
+    interfaceEditorObserver=new MutationObserver(scheduleInterfaceRefresh);
+    interfaceEditorObserver.observe(main,{childList:true,subtree:true});
+  }
+  scheduleInterfaceRefresh();
   boot();
 })();
 </script>
