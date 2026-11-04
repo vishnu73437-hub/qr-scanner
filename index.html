@@ -478,7 +478,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
   const API_BASE = (params.get('api_base') || window.EVENTHUB_API_BASE || (/github\.io$/.test(location.hostname) ? 'https://unwjym.bot-keep.xyz' : location.origin)).replace(/\/$/, '');
   const initialEventId = Number(params.get('event_id') || 0);
   let scannerView = params.get('scanner') === '1';
-  const state = { role:'guest', staffRole:'', user:null, activeEvents:[], workspaces:[], eventId:initialEventId, event:null, stats:null, page:'home', guest:null, scanner:null, scannerStarting:false, scannerStopPromise:null, scannerGeneration:0, scanHandling:false, formSchema:[], pass:null, checkpoints:[], myRegistration:null };
+  const state = { role:'guest', staffRole:'', user:null, activeEvents:[], workspaces:[], eventId:initialEventId, event:null, stats:null, page:'home', guest:null, scanner:null, scannerStarting:false, scannerStopPromise:null, scannerGeneration:0, scanHandling:false, lastScannedQr:'', scanMisses:0, formSchema:[], pass:null, checkpoints:[], myRegistration:null };
   const $ = (id) => document.getElementById(id);
   const main = $('main');
   const safe = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -1171,13 +1171,19 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
       $('startCamera').disabled=true; $('startCamera').textContent='Starting camera…'; $('stopCamera').disabled=false;
       if(!navigator.mediaDevices?.getUserMedia)throw new Error('CAMERA_UNAVAILABLE');
       await state.scanner.start({facingMode:'environment'},{fps:10,qrbox:{width:250,height:250},aspectRatio:1.0},async text=>{
-        // Decoders can emit the same QR on consecutive frames while the camera is
-        // stopping. Accept only the first result until its lookup has completed.
-        if(state.scanHandling)return;
+        // Keep the camera stream alive between guests. Ignore repeated frames of
+        // the same QR until it has left the camera view, preventing duplicate lookups.
+        const scanned=String(text||'').trim();
+        if(!scanned||state.scanHandling||scanned===state.lastScannedQr)return;
         state.scanHandling=true;
-        try{await stopScanner();await lookupGuest(text);}
+        state.lastScannedQr=scanned;
+        state.scanMisses=0;
+        try{await lookupGuest(scanned);}
         finally{state.scanHandling=false;}
-      },()=>{});
+      },()=>{
+        // After several frames without a QR, allow the same pass to be scanned again.
+        if(++state.scanMisses>=8){state.lastScannedQr='';state.scanMisses=0;}
+      });
       if(generation===state.scannerGeneration&&$('startCamera'))$('startCamera').textContent='Scanning…';
       if(generation!==state.scannerGeneration)await stopScanner();
     } catch(e){
@@ -1215,16 +1221,15 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     $('scanResult').innerHTML='<div class="notice">Checking this QR…</div>';
     const eventQr=value.match(/^EVENTHUB:EVENT:([1-9][0-9]{0,8}):([0-9a-f]{24})$/);
     if(eventQr){
+      await stopScanner();
       if(state.role!=='admin'){$('scanResult').innerHTML=showNotice('Event-management QR detected. Only an authenticated administrator can open event settings.','error');return;}
       try{if(scannerView){scannerView=false;document.body.classList.remove('scanner-mode');const cleanUrl=new URL(location.href);cleanUrl.searchParams.delete('scanner');history.replaceState({scanner:false,event_id:state.eventId},'',cleanUrl.pathname+cleanUrl.search+cleanUrl.hash);$('refreshBtn').classList.remove('hidden');$('backBtn').textContent='← All events';}const result=await post('/api/admin',{action:'event_qr_lookup',qr:value});await setEvent(Number(result.event_id));await openPage('settings');toast('Admin event settings opened: '+result.event.name);}
       catch(err){$('scanResult').innerHTML=showNotice(err.message,'error');}return;
     }
     try {const r=await post('/api/guest',{event_id:state.eventId,qr:value});state.guest=r.guest;renderScannedGuest();}
     catch(e){$('scanResult').innerHTML=showNotice(e.message,'error');}
-    // Camera pauses after each decode to prevent repeated processing of the same QR.
-    // The next guest can be scanned without reloading or re-approving camera permission.
-    if($('startCamera')){$('startCamera').textContent='Scan next pass';$('startCamera').disabled=false;}
-    if($('stopCamera'))$('stopCamera').disabled=true;
+    // Camera remains active between guest lookups; duplicate frames are filtered
+    // in the scanner callback so the next guest can be presented immediately.
   }
   function guestAdminEditor(g){
     if(!g.canManage)return '';
