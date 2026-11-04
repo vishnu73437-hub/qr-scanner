@@ -20,6 +20,14 @@ A professional, clean, responsive event operations dashboard. Keep event brandin
 7. Any schema change must be additive, versioned, backed up, tested against a copy and have a rollback path.
 8. Never include tokens, secrets, guest PII, database files or production logs in Git.
 
+## Implementation status — 4 November 2026
+
+- **Staging frontend:** admin-only dashboard visual refresh completed; read-only Botkeep API / primary registry health indicator added; `index.html` and `eventhub-preview.html` are synchronized.
+- **Frontend static checks:** inline application script parses successfully; 216 literal element lookups were matched to existing static HTML IDs; no missing literal IDs were found.
+- **Backend candidate:** `EventHub_Canva_Backend_Upgrade_20261104.zip` includes the pass-layout renderer and bounded SQLite lock-handling changes. Its standard `python -m unittest discover -s tests -v` suite passes four test groups, including seven isolated regression assertions.
+- **Not yet verified:** no live Botkeep install/restart, production DB backup verification, Telegram polling test, Google Sheets live test, or real Android / iPhone / tablet / desktop browser acceptance test has been performed in this work session.
+- **Production protection:** GitHub `main` and the live Botkeep process have not been changed. Do not treat the staging branch or backend ZIP as deployed.
+
 ## Rollout strategy
 
 ### Stage 0 — Baseline and protection
@@ -36,7 +44,7 @@ A professional, clean, responsive event operations dashboard. Keep event brandin
 - Keep guest and volunteer views outside admin-only styling.
 - Do not alter registration, QR validation, entry, food or checkpoint behavior.
 
-**Current staging work:** admin-only visual polish has been added to the staging copy of `eventhub-preview.html`. The root `index.html` must remain byte-for-byte synchronized with it. This is not deployed to GitHub Pages production.
+**Current staging work:** admin-only visual polish and a read-only Botkeep service-health card have been added to `eventhub-preview.html`. The health card checks `GET /health`, reports API / primary registry state and response time, and has a manual retry; it does not access guest data or mutate records. The root `index.html` is byte-for-byte synchronized with it. Inline application JavaScript syntax and static ID references have been checked. This is not deployed to GitHub Pages production.
 
 ### Stage 2 — Event command centre
 - Display event-scoped approved, checked-in, food-served and volunteer totals.
