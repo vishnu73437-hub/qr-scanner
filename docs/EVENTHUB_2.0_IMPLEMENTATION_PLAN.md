@@ -122,3 +122,35 @@ A professional, clean, responsive event operations dashboard. Keep event brandin
 - [ ] Verify production source/database backup and Botkeep configuration.
 - [ ] Backend deployment and live smoke tests — pending.
 - [ ] Production promotion — pending explicit review.
+
+## Device-friendly requirement — applies to every phase
+
+The interface must work comfortably on:
+- Android phones (including smaller screens and Telegram's in-app browser).
+- iPhone / iOS Safari and Telegram's in-app browser.
+- iPad and Android tablets, in portrait and landscape.
+- Windows, macOS and Linux desktop browsers.
+
+### Responsive behavior and accessibility
+- Mobile-first layout with no page-level horizontal scrolling at 320 CSS pixels and above.
+- Use fluid widths and responsive grids; collapse multi-column dashboards and forms into one column on phones.
+- Convert wide data tables into readable stacked cards or provide a clearly labelled, contained horizontal scroll region.
+- Keep primary actions visible and easy to reach; use touch targets of at least 44 × 44 CSS pixels where practical.
+- Inputs must remain usable when the mobile keyboard opens; labels must not rely on placeholders alone.
+- Keep scanner controls large, avoid tiny icons, and handle camera permission denial, orientation changes, screen sleep and returning from another app.
+- Respect safe-area insets, browser zoom, text scaling and reduced-motion preferences.
+- Maintain readable contrast, visible keyboard focus, accessible labels and status messages that do not rely on colour alone.
+- Avoid hover-only interactions; every action must work by touch, mouse and keyboard.
+- Keep images compressed and correctly sized; lazy-load non-critical images and avoid unnecessary animation or heavy libraries.
+- Preserve loading, empty, offline, timeout and retry states so a slow mobile connection does not appear frozen.
+- Never put secrets, QR tokens or sensitive guest details into client logs or analytics.
+
+### Device acceptance checklist
+- [ ] Android phone, narrow viewport: event selection, registration, My Pass, admin pages and scanner fit without clipped controls.
+- [ ] iPhone: same flows work in Safari and Telegram's in-app browser.
+- [ ] Tablet portrait and landscape: dashboard adapts without awkward empty columns.
+- [ ] Desktop: navigation and data views remain efficient with keyboard and mouse.
+- [ ] 320 px viewport: no unintended page-level horizontal overflow.
+- [ ] Touch targets, text scaling, browser zoom and mobile keyboard are usable.
+- [ ] Camera scanner survives permission denial, rotate, background/foreground and retry.
+- [ ] Slow network and API timeout show a clear status and safe retry behavior.
