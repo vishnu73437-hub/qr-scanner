@@ -474,7 +474,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
   const API_BASE = (params.get('api_base') || window.EVENTHUB_API_BASE || (/github\.io$/.test(location.hostname) ? 'https://unwjym.bot-keep.xyz' : location.origin)).replace(/\/$/, '');
   const initialEventId = Number(params.get('event_id') || 0);
   let scannerView = params.get('scanner') === '1';
-  const state = { role:'guest', user:null, activeEvents:[], workspaces:[], eventId:initialEventId, event:null, stats:null, page:'home', guest:null, scanner:null, scannerStarting:false, scannerStopPromise:null, scannerGeneration:0, scanHandling:false, formSchema:[], pass:null, checkpoints:[], myRegistration:null };
+  const state = { role:'guest', user:null, activeEvents:[], workspaces:[], eventId:initialEventId, event:null, stats:null, page:'home', guest:null, scanner:null, scannerStarting:false, scannerStopPromise:null, scannerGeneration:0, scanHandling:false, lastScannedQr:'', scanMisses:0, formSchema:[], pass:null, checkpoints:[], myRegistration:null };
   const $ = (id) => document.getElementById(id);
   const main = $('main');
   const safe = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -1135,21 +1135,28 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
       if(generation!==state.scannerGeneration||!$('reader'))return;
       if(!window.Html5Qrcode)throw new Error('QR_LIBRARY_UNAVAILABLE');
       if(!state.scanner) state.scanner=new Html5Qrcode('reader');
-      $('startCamera').disabled=true; $('stopCamera').disabled=false;
+      $('startCamera').disabled=true; $('startCamera').textContent='Starting camera…'; $('stopCamera').disabled=false;
       if(!navigator.mediaDevices?.getUserMedia)throw new Error('CAMERA_UNAVAILABLE');
       await state.scanner.start({facingMode:'environment'},{fps:10,qrbox:{width:250,height:250},aspectRatio:1.0},async text=>{
-        // Decoders can emit the same QR on consecutive frames while the camera is
-        // stopping. Accept only the first result until its lookup has completed.
-        if(state.scanHandling)return;
+        // Keep the camera stream alive between guests. Ignore repeated frames of
+        // the same QR until it has left the camera view, preventing duplicate lookups.
+        const scanned=String(text||'').trim();
+        if(!scanned||state.scanHandling||scanned===state.lastScannedQr)return;
         state.scanHandling=true;
-        try{await stopScanner();await lookupGuest(text);}
+        state.lastScannedQr=scanned;
+        state.scanMisses=0;
+        try{await lookupGuest(scanned);}
         finally{state.scanHandling=false;}
-      },()=>{});
+      },()=>{
+        // After several frames without a QR, allow the same pass to be scanned again.
+        if(++state.scanMisses>=8){state.lastScannedQr='';state.scanMisses=0;}
+      });
+      if(generation===state.scannerGeneration&&$('startCamera'))$('startCamera').textContent='Scanning…';
       if(generation!==state.scannerGeneration)await stopScanner();
     } catch(e){
       const failedScanner=state.scanner;state.scanner=null;
       try{if(failedScanner)await failedScanner.clear();}catch(_){}
-      if($('startCamera'))$('startCamera').disabled=false;
+      if($('startCamera')){$('startCamera').disabled=false;$('startCamera').textContent=state.guest?'Scan next pass':'Start QR scanner';}
       if($('stopCamera'))$('stopCamera').disabled=true;
       if(generation===state.scannerGeneration){
         const msg=e?.message==='QR_LIBRARY_UNAVAILABLE'?'QR scanner library could not be downloaded. Check your connection or use manual pass-code verification.':e?.name==='NotAllowedError'?'Camera permission was denied. Allow camera access for Telegram or your browser, then tap Start again.':e?.name==='NotFoundError'?'No camera was found on this device. Please use a device with a working camera.':e?.message==='CAMERA_UNAVAILABLE'?'This browser does not support camera access. Open the Mini App in updated Telegram or Chrome.':'Camera could not start. Check permissions and make sure another app is not using the camera.';
@@ -1173,7 +1180,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
         try{await stopping;}finally{if(state.scannerStopPromise===stopping)state.scannerStopPromise=null;}
       }
     }
-    if($('startCamera'))$('startCamera').disabled=false;
+    if($('startCamera')){$('startCamera').disabled=false;$('startCamera').textContent=state.guest?'Scan next pass':'Start QR scanner';}
     if($('stopCamera'))$('stopCamera').disabled=true;
   }
   async function lookupGuest(qr) {
@@ -1181,6 +1188,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     $('scanResult').innerHTML='<div class="notice">Checking this QR…</div>';
     const eventQr=value.match(/^EVENTHUB:EVENT:([1-9][0-9]{0,8}):([0-9a-f]{24})$/);
     if(eventQr){
+      await stopScanner();
       if(state.role!=='admin'){$('scanResult').innerHTML=showNotice('Event-management QR detected. Only an authenticated administrator can open event settings.','error');return;}
       try{if(scannerView){scannerView=false;document.body.classList.remove('scanner-mode');const cleanUrl=new URL(location.href);cleanUrl.searchParams.delete('scanner');history.replaceState({scanner:false,event_id:state.eventId},'',cleanUrl.pathname+cleanUrl.search+cleanUrl.hash);$('refreshBtn').classList.remove('hidden');$('backBtn').textContent='← All events';}const result=await post('/api/admin',{action:'event_qr_lookup',qr:value});await setEvent(Number(result.event_id));await openPage('settings');toast('Admin event settings opened: '+result.event.name);}
       catch(err){$('scanResult').innerHTML=showNotice(err.message,'error');}return;
