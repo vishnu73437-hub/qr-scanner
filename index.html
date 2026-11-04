@@ -31,6 +31,35 @@
 .scanner-mode .scanner-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .scanner-mode .scanner-actions .btn{min-height:52px;font-size:15px}
 .scanner-hint{padding:12px;border-radius:14px;border:1px solid color-mix(in srgb,var(--gold) 40%,var(--line));background:color-mix(in srgb,var(--accent) 10%,var(--panel));font-size:13px;color:var(--text)}
+.scan-feedback-backdrop{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;padding:18px;background:#080610d9;backdrop-filter:blur(8px)}
+.scan-feedback-card{width:min(100%,460px);border:2px solid var(--line);border-radius:24px;padding:24px;background:var(--panel);box-shadow:0 24px 80px #000b;text-align:center;max-height:88dvh;overflow:auto}
+.scan-feedback-card.danger{border-color:var(--danger)}.scan-feedback-card.success{border-color:var(--ok)}.scan-feedback-card.warning{border-color:var(--gold)}
+.scan-feedback-icon{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;margin:0 auto 12px;font-size:34px;font-weight:900;background:#ffffff12}
+.scan-feedback-card h2{font-size:clamp(24px,5vw,34px);line-height:1.05;margin:8px 0 12px}.scan-feedback-card p{color:var(--muted);margin:6px 0 18px;overflow-wrap:anywhere}
+.scan-feedback-card .btn{width:100%;min-height:58px;font-size:17px;font-weight:900;margin-top:8px}
+.scan-feedback-card.danger .scan-feedback-icon{background:#ff626d22;color:var(--danger)}.scan-feedback-card.success .scan-feedback-icon{background:#47cf9122;color:var(--ok)}
+.scanner-mode .scanner-screen{gap:8px}.scanner-mode .scanner-screen .card{padding:12px}
+.scanner-mode .scanner-screen .scanner-box{min-height:clamp(130px,27vh,230px);padding:6px}
+.scanner-mode .scanner-screen .scanner-box #reader{max-width:520px}
+.scanner-mode .scanner-screen .scanner-box #reader video{max-height:28vh}
+.scanner-mode .scanner-screen .scanner-hint{font-size:12px;padding:9px}
+.scanner-mode .scanner-screen .manual-pass-entry{margin:0}
+.scanner-mode .scanner-screen .manual-pass-entry>summary,.scanner-mode .scanner-screen .scanner-help>summary{cursor:pointer;font-weight:800;color:var(--gold);padding:8px 2px}
+.scanner-mode.scanner-has-guest .scanner-screen .scanner-box{display:none}
+.scanner-mode.scanner-has-guest .scanner-screen .scanner-actions{display:none}
+.scanner-mode .guest-result{margin-top:0;padding:14px}
+.scanner-mode .guest-result .actions{position:sticky;bottom:calc(env(safe-area-inset-bottom) + 4px);z-index:25;display:grid;grid-template-columns:1fr;gap:8px;padding:10px 0 4px;background:linear-gradient(180deg,transparent,var(--panel) 18%)}
+.scanner-mode .guest-result .actions .btn{min-height:60px;font-size:17px;font-weight:900}
+.scanner-mode .guest-result .wrap{gap:5px}
+.scanner-mode .guest-result .section{margin:8px 0}
+.scanner-mode .scan-guest-heading{align-items:flex-start}
+.scanner-mode .scan-guest-heading strong{font-size:clamp(20px,5vw,26px);line-height:1.1;overflow-wrap:anywhere}
+.scan-status-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin:10px 0}
+.scan-status-item{padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:#ffffff08;font-size:12px}
+.scan-status-item strong{display:block;font-size:13px}
+.scan-next-guest{min-height:58px!important;width:100%;font-size:17px!important;font-weight:900}
+@media(max-width:420px){.scan-feedback-card{padding:18px}.scanner-mode .guest-result{padding:11px}.scanner-mode .scanner-screen .section-title h2{font-size:18px}}
+
 @media(max-width:720px){.admin-launchpad{grid-template-columns:1fr}.eventday-actions{grid-template-columns:1fr}.workflow-steps{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .scanner-box{background:#100d1b;border:1px dashed #ffffff3b;border-radius:18px;padding:12px;min-height:220px}.scanner-box #reader{width:100%;max-width:560px;margin:auto}.guest-result{border:1px solid color-mix(in srgb,var(--accent) 42%,var(--line));background:linear-gradient(180deg,var(--panel),#171321);border-radius:18px;padding:16px;margin-top:14px}.pill{display:inline-block;border-radius:24px;padding:4px 8px;background:#ffffff12;color:var(--muted);font-size:11px;font-weight:800;margin:2px}.pill.good{background:#47cf9122;color:#7ce4b3}.pill.warn{background:#ffd16622;color:#ffd166}.table-wrap{overflow-x:auto}table{border-collapse:collapse;width:100%;min-width:540px;font-size:13px}td,th{text-align:left;padding:10px;border-bottom:1px solid var(--line);vertical-align:top}th{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px}.pass-image{width:min(100%,360px);display:block;border-radius:16px;border:1px solid var(--line);margin:12px auto;box-shadow:var(--shadow)}.empty{padding:24px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:18px}.toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#f8f5fb;color:#171321;border-radius:12px;padding:11px 16px;z-index:50;max-width:min(90vw,480px);box-shadow:var(--shadow);font-weight:750}.loading{opacity:.65;pointer-events:none}.schema-field{border:1px solid var(--line);padding:12px;border-radius:14px;margin:8px 0;background:#171321}.settings-accordion{margin:12px 0;border:1px solid var(--line);border-radius:16px;background:var(--panel);overflow:hidden}.settings-accordion>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 16px;font-weight:800}.settings-accordion>summary::-webkit-details-marker{display:none}.settings-accordion>summary:after{content:'＋';color:var(--gold);font-size:18px}.settings-accordion[open]>summary:after{content:'−'}.settings-accordion>.settings-content{padding:0 14px 14px}.settings-accordion .card{box-shadow:none}.settings-quick-save{position:sticky;bottom:8px;z-index:5;display:flex;justify-content:flex-end;padding:8px;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-radius:14px}.schema-field .inline-fields{align-items:end}.footnote{font-size:12px;color:var(--muted);margin-top:12px}.divider{height:1px;background:var(--line);margin:15px 0}
     .brand-mark img{width:100%;height:100%;object-fit:contain;border-radius:12px}.hero-banner{margin:0 0 14px;border-radius:20px;overflow:hidden;border:1px solid var(--line);box-shadow:var(--shadow)}.hero-banner img{display:block;width:100%;max-height:260px;object-fit:cover}.guest-edit{margin-top:10px;padding:10px;border:1px solid var(--line);border-radius:12px}.guest-edit summary{cursor:pointer;font-weight:750;color:var(--gold)}.sponsor-card{margin:14px 0 4px;padding:12px 16px;background:#fff;border:1px solid #d9b15f;border-radius:18px;display:flex;align-items:center;justify-content:center;gap:12px;box-shadow:0 10px 26px #0003;min-height:88px}.sponsor-card img{display:block;width:min(100%,360px);max-height:105px;object-fit:contain}.sponsor-label{font-size:10px;font-weight:900;letter-spacing:1.5px;color:#315078;white-space:nowrap}.theme-deepotsav body{background:radial-gradient(circle at 12% 12%,#d9b15f26 0 2px,transparent 3px),radial-gradient(circle at 88% 20%,#d9b15f22 0 3px,transparent 4px),radial-gradient(ellipse at 50% 0%,#6d328b55,transparent 58%),linear-gradient(145deg,#190d2b,#32104d 52%,#160b25)}body.theme-deepotsav{background:radial-gradient(ellipse at 50% 0%,color-mix(in srgb,var(--accent) 24%,transparent),transparent 58%),var(--bg)}body.theme-deepotsav .hero{background:linear-gradient(125deg,color-mix(in srgb,var(--accent) 24%,var(--panel)),var(--panel) 58%,color-mix(in srgb,var(--gold) 12%,var(--panel)));border-color:var(--gold)}body.theme-deepotsav .brand-mark{background:linear-gradient(135deg,var(--gold),#fff0b2)}
@@ -474,7 +503,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
   const API_BASE = (params.get('api_base') || window.EVENTHUB_API_BASE || (/github\.io$/.test(location.hostname) ? 'https://unwjym.bot-keep.xyz' : location.origin)).replace(/\/$/, '');
   const initialEventId = Number(params.get('event_id') || 0);
   let scannerView = params.get('scanner') === '1';
-  const state = { role:'guest', user:null, activeEvents:[], workspaces:[], eventId:initialEventId, event:null, stats:null, page:'home', guest:null, scanner:null, scannerStarting:false, scannerStopPromise:null, scannerGeneration:0, scanHandling:false, lastScannedQr:'', scanMisses:0, formSchema:[], pass:null, checkpoints:[], myRegistration:null };
+  const state = { role:'guest', staffRole:'', user:null, activeEvents:[], workspaces:[], eventId:initialEventId, event:null, stats:null, page:'home', guest:null, scanner:null, scannerStarting:false, scannerStopPromise:null, scannerGeneration:0, scanHandling:false, scanSource:'', scanCurrentQr:'', scanPendingAction:null, scanActionBusy:false, scanResumeTimer:null, scannerPaused:false, lastScannedQr:'', scanMisses:0, formSchema:[], pass:null, checkpoints:[], myRegistration:null };
   const $ = (id) => document.getElementById(id);
   const main = $('main');
   const safe = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -691,7 +720,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     const elapsed=Date.now()-startedAt;
     if(elapsed>1500) console.warn('[EventHub slow API]',path,'action='+actionName,elapsed+'ms','HTTP',res.status);
     if(!data || typeof data!=='object') throw new Error(`EventHub API ${path} returned an unexpected response.`);
-    if(!res.ok || data.ok===false) throw new Error(data.error || `Request failed (${res.status}).`);
+    if(!res.ok || data.ok===false) { const error=new Error(data.error || `Request failed (${res.status}).`); error.status=res.status; error.apiPath=path; error.apiAction=actionName; throw error; }
     return data;
   }
   // Keep recently fetched, read-only admin data in memory while navigating the
@@ -700,7 +729,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
   const adminReadActions = new Set([
     'stats','guest_search','pending_registrations','storage_config',
     'proof_storage_report','announcement_history','sheets_queue_status',
-    'volunteers','admins','checkpoints'
+    'volunteers','admins','checkpoints','event_volunteers','event_volunteer_candidates','checkpoint_team'
   ]);
   const ADMIN_READ_CACHE_MS = 8000;
   const adminCall = async (action, extra={}) => {
@@ -741,7 +770,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
   }
   async function loadRole() {
     const data=await post('/api/role', state.eventId?{event_id:state.eventId}:{});
-    state.role=data.role||'guest'; state.user=data.user||null; state.activeEvents=data.events||[]; state.workspaces=data.workspaces||[];
+    state.role=data.role||'guest'; state.staffRole=data.staff_role||''; state.user=data.user||null; state.activeEvents=data.events||[]; state.workspaces=data.workspaces||[];
     return data;
   }
   async function loadEvent() {
@@ -774,6 +803,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
         if(roleResult.status!=='fulfilled') throw roleResult.reason;
         const roleData=roleResult.value;
         state.role=roleData.role||'guest';
+        state.staffRole=roleData.staff_role||'';
         state.user=roleData.user||null;
         state.activeEvents=roleData.events||[];
         state.workspaces=roleData.workspaces||[];
@@ -1112,14 +1142,35 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     if(state.role!=='admin'&&state.role!=='volunteer'){host.innerHTML=showNotice('Scanner access is restricted to event volunteers and admins.','error');return;}
     if(state.event?.status!=='active'){await stopScanner();host.innerHTML=showNotice('This event is not active. Its records are available for review, but QR scanning and event-day actions are disabled.','error');return;}
     await stopScanner();
-    host.innerHTML=standalone?`<section class="scanner-screen"><section class="card"><div class="section-title"><h2>📷 Event QR Scanner</h2><span class="status active">${safe(state.event.name)}</span></div><p class="muted">The camera starts when you tap Start. Each QR scan pauses detection while that guest is processed, then scanning resumes automatically. EventHub stops the camera when you leave this screen or switch the app to the background.</p><div class="scanner-hint">Camera permission is normally requested only the first time. During guest processing, QR detection pauses to prevent accidental extra scans; it resumes automatically when processing finishes. You can revoke access in your device/app settings.</div><div class="manual-pass-entry"><div class="field"><label for="manualPassCode">Or enter pass code manually</label><input id="manualPassCode" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="120" placeholder="Enter guest pass code"></div><button class="btn primary" type="button" id="verifyManualPass">Verify pass code</button><p class="footnote">Use this if the guest cannot display their QR code or the camera is unavailable.</p></div><div class="scanner-box"><div id="reader"><div class="empty">Camera preview appears here after access is granted.</div></div></div><div class="scanner-actions"><button class="btn primary" id="startCamera">Start QR scanner</button><button class="btn" id="stopCamera" disabled>Stop camera</button></div><div id="scanResult"></div></section><div class="actions"><button class="btn ghost" id="scannerBack">← Back to event workspace</button></div></section>`:`<section class="section card"><div class="section-title"><h2>📷 QR Scanner</h2><span class="status active">${safe(state.event.name)}</span></div><p class="muted">Open the dedicated scanner screen before scanning passes.</p><div class="actions"><button class="btn primary" id="openDedicatedScanner">Open full-screen QR Scanner →</button></div></section>`;
-    $('verifyManualPass')?.addEventListener('click',async()=>{const input=$('manualPassCode'),button=$('verifyManualPass'),code=String(input?.value||'').trim();if(!code){toast('Enter a pass code first.',true);input?.focus();return;}await stopScanner();button.disabled=true;button.textContent='Verifying…';try{await lookupGuest(code);}finally{button.disabled=false;button.textContent='Verify pass code';}});
+    const roleLabels={admin:'Administrator',global:'Core volunteer',scanner:'Full scanner',event_lead:'Event lead',entry:'Entry desk',food:'Food desk',proof:'Proof & exit desk',checkpoint:'Assigned checkpoint desk'};
+    const roleLabel=state.role==='admin'?'Administrator':(roleLabels[state.staffRole||'global']||'Event volunteer');
+    host.innerHTML=standalone?'<section class="scanner-screen"><section class="card scanner-console">'+
+      '<div class="section-title"><div><div class="eyebrow">'+safe(roleLabel)+'</div><h2>📷 Event QR Scanner</h2></div><span class="status active">'+safe(state.event.name)+'</span></div>'+
+      '<p class="muted">One guest at a time. EventHub locks scanning until the required action is confirmed as saved.</p>'+
+      '<div class="scanner-box"><div id="reader"><div class="empty">Camera preview appears here after you start the scanner.</div></div></div>'+
+      '<div class="scanner-actions"><button class="btn primary" id="startCamera">Start QR scanner</button><button class="btn" id="stopCamera" disabled>Stop camera</button></div>'+
+      '<details class="manual-pass-entry"><summary>⌨️ Manual pass-code fallback</summary><div class="field"><label for="manualPassCode">Guest pass code</label><input id="manualPassCode" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="120" placeholder="Enter guest pass code"></div><button class="btn primary" type="button" id="verifyManualPass">Verify pass code</button></details>'+
+      '<details class="scanner-help"><summary>Camera help and troubleshooting</summary><div class="scanner-hint">Camera permission is requested when you tap Start. If permission is denied, allow camera access for Telegram or your browser and retry. EventHub releases the camera when it moves to the background; tap Start when you return.</div></details>'+
+      '<div id="scanResult" aria-live="polite"></div>'+
+    '</section><div class="actions"><button class="btn ghost" id="scannerBack">← Back to event workspace</button></div></section>':'<section class="section card"><div class="section-title"><h2>📷 QR Scanner</h2><span class="status active">'+safe(state.event.name)+'</span></div><p class="muted">Open the dedicated full-screen scanner before scanning passes.</p><div class="actions"><button class="btn primary" id="openDedicatedScanner">Open full-screen QR Scanner →</button></div></section>';
+    $('verifyManualPass')?.addEventListener('click',async()=>{
+      const input=$('manualPassCode'),button=$('verifyManualPass'),code=String(input?.value||'').trim();
+      if(!code){toast('Enter a pass code first.',true);input?.focus();return;}
+      if(!beginGuestScanLock(code,'manual'))return;
+      button.disabled=true;button.textContent='Checking…';
+      try{await lookupGuest(code);}
+      finally{if(button.isConnected){button.disabled=false;button.textContent='Verify pass code';}}
+    });
     $('manualPassCode')?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('verifyManualPass')?.click();}});
     $('startCamera')?.addEventListener('click',startScanner);$('stopCamera')?.addEventListener('click',stopScanner);
     $('openDedicatedScanner')?.addEventListener('click',()=>openScannerStandalone());$('scannerBack')?.addEventListener('click',()=>closeScannerStandalone());
     state.checkpoints=[];
-    try{const cp=await post('/api/checkpoints',{event_id:state.eventId});state.checkpoints=cp.checkpoints||[];}catch(err){toast('Additional checkpoints could not be loaded: '+err.message,true);}
-    // Camera access is intentionally user-initiated via the Start button.
+    try{const cp=await post('/api/checkpoints',{event_id:state.eventId});state.checkpoints=Array.isArray(cp.checkpoints)?cp.checkpoints:[];}
+    catch(err){toast('Assigned checkpoints could not be loaded: '+err.message,true);}
+    if(state.scanHandling&&state.scanCurrentQr){
+      document.body.classList.add('scanner-has-guest');
+      if(state.scanPendingAction)showScanFeedback('danger','ACTION NOT YET CONFIRMED','A previous guest action still needs verification. Retry the save before scanning another guest.','RETRY / CHECK STATUS',retryPendingScanAction);
+    }
   }
   async function startScanner() {
     if(state.scannerStarting||state.scanHandling)return;
@@ -1130,50 +1181,30 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
       if(generation!==state.scannerGeneration||!$('reader'))return;
       if(state.scanner?.isScanning)return;
       await loadQrLibrary();
-      // The user may have left the scanner while the CDN library was loading.
-      // Do not request camera permission or start a hidden camera after navigation.
       if(generation!==state.scannerGeneration||!$('reader'))return;
       if(!window.Html5Qrcode)throw new Error('QR_LIBRARY_UNAVAILABLE');
-      if(!state.scanner) state.scanner=new Html5Qrcode('reader');
-      $('startCamera').disabled=true; $('startCamera').textContent='Starting camera…'; $('stopCamera').disabled=false;
+      if(!state.scanner)state.scanner=new Html5Qrcode('reader');
+      $('startCamera').disabled=true;$('startCamera').textContent='Starting camera…';$('stopCamera').disabled=false;
       if(!navigator.mediaDevices?.getUserMedia)throw new Error('CAMERA_UNAVAILABLE');
       await state.scanner.start({facingMode:'environment'},{fps:10,qrbox:{width:250,height:250},aspectRatio:1.0},async text=>{
-        // Keep the camera stream alive between guests. Ignore repeated frames of
-        // the same QR until it has left the camera view, preventing duplicate lookups.
         const scanned=String(text||'').trim();
         if(!scanned||state.scanHandling||scanned===state.lastScannedQr)return;
-        state.scanHandling=true;
-        state.lastScannedQr=scanned;
-        state.scanMisses=0;
-        const activeScanner=state.scanner;
-        // Freeze QR detection and the preview while this guest is being processed.
-        // Keep the camera session alive so permission is not requested again.
-        try{
-          if(activeScanner?.isScanning)activeScanner.pause(true);
-          if($('scanResult'))$('scanResult').innerHTML='<div class="notice">QR captured. Processing this guest — please wait…</div>';
-          await lookupGuest(scanned);
-        } finally {
-          // Resume only the same scanner session. Event-management QR lookup may
-          // intentionally stop it or navigate away, in which case it must stay stopped.
-          if(activeScanner&&state.scanner===activeScanner&&activeScanner.isScanning){
-            try{activeScanner.resume();}catch(resumeError){toast('Guest processed, but the scanner could not resume. Tap Start QR scanner to continue.',true);}
-          }
-          state.scanHandling=false;
-        }
+        state.lastScannedQr=scanned;state.scanMisses=0;
+        if(!beginGuestScanLock(scanned,'camera'))return;
+        await lookupGuest(scanned);
       },()=>{
-        // After several frames without a QR, allow the same pass to be scanned again.
         if(++state.scanMisses>=8){state.lastScannedQr='';state.scanMisses=0;}
       });
       if(generation===state.scannerGeneration&&$('startCamera'))$('startCamera').textContent='Scanning…';
       if(generation!==state.scannerGeneration)await stopScanner();
     } catch(e){
-      const failedScanner=state.scanner;state.scanner=null;
+      const failedScanner=state.scanner;state.scanner=null;state.scannerPaused=false;
       try{if(failedScanner)await failedScanner.clear();}catch(_){}
-      if($('startCamera')){$('startCamera').disabled=false;$('startCamera').textContent=state.guest?'Scan next pass':'Start QR scanner';}
+      if($('startCamera')){$('startCamera').disabled=false;$('startCamera').textContent='Start QR scanner';}
       if($('stopCamera'))$('stopCamera').disabled=true;
       if(generation===state.scannerGeneration){
         const msg=e?.message==='QR_LIBRARY_UNAVAILABLE'?'QR scanner library could not be downloaded. Check your connection or use manual pass-code verification.':e?.name==='NotAllowedError'?'Camera permission was denied. Allow camera access for Telegram or your browser, then tap Start again.':e?.name==='NotFoundError'?'No camera was found on this device. Please use a device with a working camera.':e?.message==='CAMERA_UNAVAILABLE'?'This browser does not support camera access. Open the Mini App in updated Telegram or Chrome.':'Camera could not start. Check permissions and make sure another app is not using the camera.';
-        toast(msg,true);
+        showScanFeedback('danger','CAMERA NOT READY',msg,'TRY AGAIN',()=>startScanner());
       }
     } finally {state.scannerStarting=false;}
   }
