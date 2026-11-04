@@ -606,17 +606,20 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
     const slowAction=path==='/api/admin' && ['announcement_send','announcement_unsend','sheets_sync','refresh_event_passes','update_event'].includes(actionName);
     const timeoutMs=slowAction?120000:30000, startedAt=Date.now();
     const timer=controller?setTimeout(()=>controller.abort(),timeoutMs):null;
-    let res;
+    let res, data;
     try {
       res=await fetch(API_BASE+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({initData,...payload}),signal:controller?.signal});
+      try { data=await res.json(); }
+      catch(_) { throw new Error('EventHub API '+path+(actionName?' (action: '+actionName+')':'')+' returned an unreadable response. Check the Botkeep service logs.'); }
     } catch(err) {
       const seconds=Math.round((Date.now()-startedAt)/1000);
-      if(err?.name==='AbortError') throw new Error(`EventHub API ${path}${actionName?' (action: '+actionName+')':''} did not respond within ${seconds}s. Check Botkeep logs for this exact action.`);
-      throw new Error(`Network connection to EventHub API ${path}${actionName?' (action: '+actionName+')':''} failed. Check internet access and Botkeep service availability.`);
+      if(err?.name==='AbortError') {
+        const uncertain=actionName==='update_event'?' The save may have completed on the server. Reopen Event Settings and verify the saved values before retrying.':'';
+        throw new Error('EventHub API '+path+(actionName?' (action: '+actionName+')':'')+' did not respond within '+seconds+'s. Check Botkeep logs for this exact action.'+uncertain);
+      }
+      if(err instanceof Error && err.message.startsWith('EventHub API ')) throw err;
+      throw new Error('Network connection to EventHub API '+path+(actionName?' (action: '+actionName+')':'')+' failed. Check internet access and Botkeep service availability.');
     } finally { if(timer) clearTimeout(timer); }
-    let data;
-    try { data=await res.json(); }
-    catch(_) { throw new Error(`EventHub API ${path}${actionName?' (action: '+actionName+')':''} returned an unreadable response. Check the Botkeep service logs.`); }
     const elapsed=Date.now()-startedAt;
     if(elapsed>1500) console.warn('[EventHub slow API]',path,'action='+actionName,elapsed+'ms','HTTP',res.status);
     if(!data || typeof data!=='object') throw new Error(`EventHub API ${path} returned an unexpected response.`);
@@ -1677,9 +1680,8 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
       renderPassEditor();
     }
 
-    function collectTheme(){return {
+    function collectTheme(){const collected={
       primary:$('editPrimary').value,accent:$('editAccent').value,background:$('editBackground').value,gold:$('editGold').value,
-      pass_layout:passEditor&&!passEditor.hidden?{version:1,elements:passLayout}:(theme.pass_layout||null),
       pass_background:$('editPassBackground').value,pass_accent:$('editPassAccent').value,pass_gold:$('editPassGold').value,
       app_title:$('editAppTitle').value,app_subtitle:$('editAppSubtitle').value,brand_logo_url:$('editBrandLogo').value,
       brand_logo_image:$('editBrandLogoImage').value,hero_banner_url:$('editHeroBanner').value,hero_banner_image:$('editHeroBannerImage').value,hero_badge:$('editHeroBadge').value,
@@ -1698,7 +1700,11 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
       pass_show_pass_code:$('editPassShowCode').checked,pass_show_date:$('editPassShowDate').checked,pass_show_time:$('editPassShowTime').checked,
       pass_show_venue:$('editPassShowVenue').checked,pass_show_instruction:$('editPassShowInstruction').checked,pass_show_privacy:$('editPassShowPrivacy').checked,
       pass_header_label:$('editPassHeaderLabel').value,pass_instruction:$('editPassInstruction').value,pass_privacy:$('editPassPrivacy').value
-    };}
+    };
+      // Do not send null when the visual editor is closed: omission preserves the previously saved layout.
+      if(passEditor&&!passEditor.hidden)collected.pass_layout={version:1,elements:passLayout};
+      return collected;
+    }
     $('refreshExistingPasses').addEventListener('click',async()=>{
       const button=$('refreshExistingPasses');
       if(!confirm('Send the newly saved QR pass design to every approved guest in this event? This sends a new pass image to each guest, but preserves their existing QR token and pass code.'))return;
@@ -1808,10 +1814,40 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
       try{const r=await adminCall('event_qr_generate');target.innerHTML='<div class="notice good">Signed admin QR ready for '+safe(r.event_name)+'. Keep it in a controlled admin location.</div><img alt="Signed admin event QR" style="display:block;width:min(100%,320px);height:auto;background:#fff;padding:12px;border-radius:14px;margin-top:12px" src="data:image/png;base64,'+r.image+'">';const a=$('downloadEventAdminQr');a.href='data:image/png;base64,'+r.image;a.hidden=false;}
       catch(err){target.innerHTML=showNotice(err.message,'error');}finally{b.disabled=false;}
     });
-    $('settingsForm').addEventListener('submit',async e=>{e.preventDefault();const btn=e.currentTarget.querySelector('button[type="submit"]');btn.disabled=true;theme=collectTheme();
-      try{const r=await adminCall('update_event',{name:$('editName').value,description:$('editDescription').value,event_date:$('editDate').value,event_time:$('editTime').value,venue:$('editVenue').value,theme});
-        await loadEvent();await renderAdminPage('settings');toast('Event, Mini App branding and QR pass design saved');
-      }catch(err){$('settingsMessage').innerHTML=showNotice(err.message,'error');}finally{btn.disabled=false;}
+    $('settingsForm').addEventListener('submit',async e=>{
+      e.preventDefault();
+      const form=e.currentTarget, btn=form.querySelector('button[type="submit"]');
+      if(form.dataset.saving==='1')return;
+      form.dataset.saving='1';
+      const original=btn?.textContent||'Save event, Mini App and pass design';
+      if(btn){btn.disabled=true;btn.textContent='Saving…';}
+      const message=$('settingsMessage');
+      if(message)message.innerHTML=showNotice('Saving event settings and pass layout…','good');
+      try{
+        const nextTheme=collectTheme();
+        const result=await adminCall('update_event',{
+          name:$('editName').value,description:$('editDescription').value,
+          event_date:$('editDate').value,event_time:$('editTime').value,
+          venue:$('editVenue').value,theme:nextTheme
+        });
+        theme={...theme,...nextTheme};
+        if(message)message.innerHTML=showNotice(result.message||'Event settings saved. Refreshing…','good');
+        try{
+          await loadEvent();
+          await renderAdminPage('settings');
+          toast('Event, Mini App branding and QR pass design saved');
+        }catch(refreshErr){
+          const liveMessage=$('settingsMessage');
+          const note='Your settings were saved successfully, but this screen could not refresh. Reopen Event Settings to verify the latest values. '+(refreshErr?.message||'');
+          if(liveMessage)liveMessage.innerHTML=showNotice(note,'good');else toast(note,true);
+        }
+      }catch(err){
+        const note=err?.message||'Event settings could not be saved.';
+        if($('settingsMessage'))$('settingsMessage').innerHTML=showNotice(note,'error');
+      }finally{
+        form.dataset.saving='0';
+        if(btn){btn.disabled=false;btn.textContent=original;}
+      }
     });
     if(host.dataset.schemaAddBound!=='1'){host.dataset.schemaAddBound='1';host.addEventListener('click',e=>{if(!e.target.closest('#addSchemaField'))return;try{const arr=readSchemaEditor();if(arr.length>=30)throw new Error('A registration form can have at most 30 fields.');let next=1;const used=new Set(arr.map(f=>f.key));while(used.has('custom_'+next))next++;arr.push({key:'custom_'+next,label:'New field',type:'text',required:false,options:[]});$('schemaBuilder').outerHTML=schemaEditor(arr);bindSchemaEditorButtons();}catch(err){toast(err.message,true);}});}
     bindSchemaEditorButtons();
@@ -1863,7 +1899,25 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
       finally{btn.disabled=false;}
     });
     loadTelegramBotSettings();
-    $('saveSchema').addEventListener('click',async()=>{try{const arr=readSchemaEditor();const r=await adminCall('update_event',{name:$('editName').value,description:$('editDescription').value,event_date:$('editDate').value,event_time:$('editTime').value,venue:$('editVenue').value,theme:collectTheme(),registration_schema:arr});$('schemaMessage').innerHTML=showNotice(r.message||'Registration form saved.','good');const d=await post('/api/event_details',{event_id:state.eventId});state.event=d.event;toast('Registration form saved');}catch(err){$('schemaMessage').innerHTML=showNotice(err.message,'error');}});
+    $('saveSchema').addEventListener('click',async()=>{
+      const button=$('saveSchema');
+      if(!button||button.disabled)return;
+      const original=button.textContent;button.disabled=true;button.textContent='Saving form…';
+      try{
+        const arr=readSchemaEditor(), nextTheme=collectTheme();
+        const result=await adminCall('update_event',{
+          name:$('editName').value,description:$('editDescription').value,
+          event_date:$('editDate').value,event_time:$('editTime').value,
+          venue:$('editVenue').value,theme:nextTheme,registration_schema:arr
+        });
+        theme={...theme,...nextTheme};
+        $('schemaMessage').innerHTML=showNotice(result.message||'Registration form saved.','good');
+        try{const d=await post('/api/event_details',{event_id:state.eventId});state.event=d.event;}
+        catch(refreshErr){$('schemaMessage').innerHTML=showNotice('Registration form saved, but the event details could not be refreshed. Reopen this section to verify. '+(refreshErr?.message||''),'good');}
+        toast('Registration form saved');
+      }catch(err){$('schemaMessage').innerHTML=showNotice(err?.message||'Registration form could not be saved.','error');}
+      finally{button.disabled=false;button.textContent=original;}
+    });
     $('activateEvent')?.addEventListener('click',async()=>{if(!confirm(`Activate ${ev.name}? It will become visible to guests and registration/scanning will open.`))return;const btn=$('activateEvent');btn.disabled=true;try{const r=await adminCall('activate_event');$('archiveMessage').innerHTML=showNotice(r.message||'Event activated.','good');await loadRole();await loadEvent();toast('Event activated');}catch(err){$('archiveMessage').innerHTML=showNotice(err.message,'error');btn.disabled=false;}});
     $('archiveEvent')?.addEventListener('click',async()=>{if(!confirm(`Archive ${ev.name}? New registrations and scans will stop.`))return;const btn=$('archiveEvent');btn.disabled=true;try{const r=await post('/api/admin',{action:'archive_event',event_id:state.eventId});$('archiveMessage').innerHTML=showNotice(r.message,'good');await loadRole();setTimeout(clearEvent,800);}catch(err){$('archiveMessage').innerHTML=showNotice(err.message,'error');btn.disabled=false;}});
     $('backToEvents').addEventListener('click',clearEvent);
