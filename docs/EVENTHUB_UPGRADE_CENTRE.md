@@ -22,3 +22,10 @@ GitHub Pages frontend changes do not automatically update the Botkeep backend. B
 - Frontend: previously published through GitHub Pages; recheck the Pages deployment status after any frontend commit.
 - Backend: upgrade package is not confirmed deployed to Botkeep.
 - Production data: preserve all current records and QR credentials.
+
+
+## Follow-up — 4 November 2026
+- GitHub frontend pages: `index.html` and `eventhub-preview.html` synchronized with the save-flow / Canva-layout preservation fixes.
+- Backend: a tested release candidate is prepared separately for Botkeep; it is **not** automatically deployed by GitHub Pages and is not confirmed live.
+- See [4 November upgrade and regression-test notes](./EVENTHUB_UPGRADE_20261104.md).
+- Preserve the production database and environment variables. Do not send updated passes until the live backend preview has been checked.
