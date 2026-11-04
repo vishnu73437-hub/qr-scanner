@@ -503,7 +503,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
   const API_BASE = (params.get('api_base') || window.EVENTHUB_API_BASE || (/github\.io$/.test(location.hostname) ? 'https://unwjym.bot-keep.xyz' : location.origin)).replace(/\/$/, '');
   const initialEventId = Number(params.get('event_id') || 0);
   let scannerView = params.get('scanner') === '1';
-  const state = { role:'guest', staffRole:'', user:null, activeEvents:[], workspaces:[], eventId:initialEventId, event:null, stats:null, page:'home', guest:null, scanner:null, scannerStarting:false, scannerStopPromise:null, scannerGeneration:0, scanHandling:false, scanSource:'', scanCurrentQr:'', scanPendingAction:null, scanActionBusy:false, scanLookupBusy:false, scanProofPending:false, scanResumeTimer:null, scannerPaused:false, lastScannedQr:'', scanMisses:0, formSchema:[], pass:null, checkpoints:[], myRegistration:null };
+  const state = { role:'guest', staffRole:'', user:null, activeEvents:[], workspaces:[], eventId:initialEventId, event:null, stats:null, page:'home', guest:null, scanner:null, scannerStarting:false, scannerStopPromise:null, scannerGeneration:0, scanHandling:false, scanSource:'', scanCurrentQr:'', scanPendingAction:null, scanActionBusy:false, scanLookupBusy:false, scanProofPending:false, scanResumeTimer:null, scannerPaused:false, lastScannedQr:'', scanMisses:0, checkpointAccessBlocked:false, formSchema:[], pass:null, checkpoints:[], myRegistration:null };
   const $ = (id) => document.getElementById(id);
   const main = $('main');
   const safe = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -1184,6 +1184,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
       '<div id="scanResult" aria-live="polite"></div>'+
     '</section><div class="actions"><button class="btn ghost" id="scannerBack">← Back to event workspace</button></div></section>':'<section class="section card"><div class="section-title"><h2>📷 QR Scanner</h2><span class="status active">'+safe(state.event.name)+'</span></div><p class="muted">Open the dedicated full-screen scanner before scanning passes.</p><div class="actions"><button class="btn primary" id="openDedicatedScanner">Open full-screen QR Scanner →</button></div></section>';
     $('verifyManualPass')?.addEventListener('click',async()=>{
+      if(state.checkpointAccessBlocked){showScanFeedback('danger','NO CHECKPOINT ASSIGNED','Ask an event admin to assign your name to an enabled checkpoint before scanning.','BACK TO WORKSPACE',()=>closeScannerStandalone());return;}
       const input=$('manualPassCode'),button=$('verifyManualPass'),code=String(input?.value||'').trim();
       if(!code){toast('Enter a pass code first.',true);input?.focus();return;}
       if(!beginGuestScanLock(code,'manual'))return;
@@ -1194,9 +1195,24 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     $('manualPassCode')?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('verifyManualPass')?.click();}});
     $('startCamera')?.addEventListener('click',startScanner);$('stopCamera')?.addEventListener('click',stopScanner);
     $('openDedicatedScanner')?.addEventListener('click',()=>openScannerStandalone());$('scannerBack')?.addEventListener('click',()=>closeScannerStandalone());
-    state.checkpoints=[];
-    try{const cp=await post('/api/checkpoints',{event_id:state.eventId});state.checkpoints=Array.isArray(cp.checkpoints)?cp.checkpoints:[];}
-    catch(err){toast('Assigned checkpoints could not be loaded: '+err.message,true);}
+    state.checkpoints=[];state.checkpointAccessBlocked=false;
+    try{
+      const cp=await post('/api/checkpoints',{event_id:state.eventId});
+      state.checkpoints=Array.isArray(cp.checkpoints)?cp.checkpoints:[];
+      if(state.staffRole==='checkpoint'&&!state.checkpoints.length){
+        state.checkpointAccessBlocked=true;
+        $('startCamera')?.setAttribute('disabled','disabled');$('verifyManualPass')?.setAttribute('disabled','disabled');
+        showScanFeedback('danger','NO CHECKPOINT ASSIGNED','Your account has no enabled checkpoint assigned for this event. Ask an admin to assign your name to an enabled station.','BACK TO WORKSPACE',()=>closeScannerStandalone());
+      }
+    }catch(err){
+      const detail=String(err?.message||'');
+      const assignmentMissing=state.staffRole==='checkpoint'&&/no (enabled )?checkpoint station is assigned|none of your assigned checkpoint stations/i.test(detail);
+      if(assignmentMissing){
+        state.checkpointAccessBlocked=true;
+        $('startCamera')?.setAttribute('disabled','disabled');$('verifyManualPass')?.setAttribute('disabled','disabled');
+        showScanFeedback('danger','NO CHECKPOINT ASSIGNED',detail,'BACK TO WORKSPACE',()=>closeScannerStandalone());
+      }else toast('Assigned checkpoints could not be loaded: '+detail,true);
+    }
     if(state.scanHandling&&state.scanCurrentQr){
       document.body.classList.add('scanner-has-guest');
       if(state.scanPendingAction)showScanFeedback('danger','ACTION NOT YET CONFIRMED','A previous guest action still needs verification. Retry the save before scanning another guest.','RETRY / CHECK STATUS',retryPendingScanAction);
@@ -1205,6 +1221,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     }
   }
   async function startScanner() {
+    if(state.checkpointAccessBlocked){showScanFeedback('danger','NO CHECKPOINT ASSIGNED','Ask an event admin to assign your name to an enabled checkpoint before scanning.','BACK TO WORKSPACE',()=>closeScannerStandalone());return;}
     if(state.scannerStarting||state.scanHandling)return;
     state.scannerStarting=true;
     const generation=++state.scannerGeneration;
