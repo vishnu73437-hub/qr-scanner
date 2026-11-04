@@ -521,6 +521,10 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     if(Object.prototype.hasOwnProperty.call(t,'food_collection_enabled')) return t.food_collection_enabled!==false;
     return ev?.food_collection_enabled!==false;
   }
+  function registrationIsOpen(ev=state.event) {
+    const t=parseJSON(ev?.theme_json,{});
+    return t.registration_open!==false && !['false','0','no','off','closed','paused'].includes(String(t.registration_open??'true').trim().toLowerCase());
+  }
   function foodCollectionEnabledInEditor() {
     const toggle=$('editFoodCollectionEnabled');
     return toggle ? !!toggle.checked : foodCollectionIsEnabled();
@@ -858,6 +862,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     if(status==='pending')return '<span class="status pending">Registration awaiting approval</span>';
     if(status==='revoked')return '<span class="status revoked">Pass revoked · Contact admin</span>';
     if(status==='check_failed'||status==='unknown')return '<span class="status pending">Checking registration unavailable · Refresh to retry</span>';
+    if(!registrationIsOpen())return '<span class="status revoked">Registration closed</span><button class="btn" data-page="pass">My QR pass</button>';
     return '<button class="btn primary" data-page="register">Register for this event</button><button class="btn" data-page="pass">My QR pass</button>';
   }
   function eventHero() {
@@ -908,6 +913,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
       else if(regStatus==='pending')guestCards='<article class="card"><h3>🕒 Registration received</h3><p>Your registration is awaiting admin approval. The Register option is hidden for this event.</p></article>';
       else if(regStatus==='revoked')guestCards='<article class="card"><h3>⚠️ Pass revoked</h3><p>Your previous pass for this event was revoked. Please contact an event admin. A duplicate registration is not available.</p></article>';
       else if(regStatus==='check_failed'||regStatus==='unknown')guestCards='<article class="card"><h3>Registration status unavailable</h3><p>EventHub could not verify your registration. Refresh the event before trying to register, so a duplicate registration is not submitted.</p></article>';
+      else if(!registrationIsOpen())guestCards='<article class="card"><h3>🔒 Registration closed</h3><p>Registration for this event is currently closed. Existing registrations and QR passes remain valid. Please contact the event organisers for assistance.</p></article><article class="card"><h3>🎫 My QR pass</h3><p>Open your pass here after approval.</p><div class="actions"><button class="btn" data-page="pass">Open my pass</button></div></article>';
       else guestCards='<article class="card"><h3>🎟 Registration</h3><p>'+(regStatus==='rejected'?'Your previous registration was rejected. You may submit a new registration.':"Complete this event's registration form. Your pass is sent after approval.")+'</p><div class="actions"><button class="btn primary" data-page="register">Register now</button></div></article><article class="card"><h3>🎫 My QR pass</h3><p>View your pass after your registration is approved.</p><div class="actions"><button class="btn" data-page="pass">Open my pass</button></div></article>';
       main.innerHTML=eventHero()+`<section class="section grid">${guestCards}</section><section id="workspaceContent"></section>`;
       bindNavigation();
@@ -998,6 +1004,10 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
       const copy=savedStatus==='approved'?'Your registration for this event is approved. Open your existing QR pass below.':savedStatus==='pending'?'Your registration for this event has already been submitted and is waiting for admin approval. You cannot submit another registration.':'Your previous pass for this event was revoked. Please contact an event admin; duplicate registration is disabled.';
       host.innerHTML='<section class="section card"><h2>'+safe(title)+'</h2><p>'+safe(copy)+'</p>'+(savedStatus==='approved'?'<div class="actions"><button class="btn primary" id="openExistingPass">Open my QR pass</button></div>':'')+'</section>';
       $('openExistingPass')?.addEventListener('click',()=>openPage('pass'));
+      return;
+    }
+    if(!preview&&state.role==='guest'&&!registrationIsOpen()) {
+      host.innerHTML='<section class="section card"><div class="section-title"><h2>🔒 Registration closed</h2><span class="status revoked">Closed</span></div><p>Registration for this event is currently closed. No new registration can be submitted. Existing registrations and QR passes remain valid. Please contact the event organisers for assistance.</p></section>';
       return;
     }
     const schema=ensureRegistrationSystemFields(parseJSON(state.event.registration_schema,defaultSchema()));
@@ -1591,7 +1601,13 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
       <div id="qrPassPreview"></div>
       </section>
       <section class="section card"><h2>Registration form builder</h2><p class="muted">Add, remove, rename, reorder and configure fields for this event. Keep Full name required.</p>${schemaEditor(Array.isArray(schema)&&schema.length?schema:defaultSchema())}<div class="actions"><button class="btn primary" id="saveSchema">Save registration form</button></div><div id="schemaMessage"></div></section>
-      ${botSettingsMarkup}\n      <section class="section card"><h2>Event lifecycle</h2><p class="muted">Draft events are private to admins until activated. Archiving closes an active event while retaining history.</p><div class="actions">${ev.status==='draft'?'<button class="btn success" id="activateEvent">Activate event</button>':''}${ev.status==='active'?'<button class="btn danger" id="archiveEvent">Archive this event</button>':''}<button class="btn" id="backToEvents">Back to all events</button></div><div id="archiveMessage"></div></section>`;
+      ${botSettingsMarkup}\n      <section class="section card" id="registrationManagement">
+        <div class="section-title"><h2>🔒 Registration management</h2><span class="status ${theme.registration_open===false?'revoked':'active'}">${theme.registration_open===false?'Closed':'Open'}</span></div>
+        <p class="muted">Close registration for this event without archiving it. Existing guests, pending approvals, QR passes, QR scanning, entry verification and food collection continue normally. You can reopen registration at any time.</p>
+        <div class="actions">${theme.registration_open===false?'<button class="btn success" type="button" id="reopenRegistration">Reopen registration</button>':'<button class="btn danger" type="button" id="closeRegistration">Close registration</button>'}</div>
+        <div id="registrationControlMessage" aria-live="polite"></div>
+      </section>
+      <section class="section card"><h2>Event lifecycle</h2><p class="muted">Draft events are private to admins until activated. Archiving closes an active event while retaining history.</p><div class="actions">${ev.status==='draft'?'<button class="btn success" id="activateEvent">Activate event</button>':''}${ev.status==='active'?'<button class="btn danger" id="archiveEvent">Archive this event</button>':''}<button class="btn" id="backToEvents">Back to all events</button></div><div id="archiveMessage"></div></section>`;
     [...host.children].forEach((section,index)=>{const heading=section.querySelector('h2');if(!heading)return;const details=document.createElement('details');details.className='settings-accordion';details.open=index===1;const summary=document.createElement('summary');summary.textContent=heading.textContent.trim();const content=document.createElement('div');content.className='settings-content';section.parentNode.insertBefore(details,section);details.appendChild(summary);details.appendChild(content);content.appendChild(section);});
     // Turn the QR pass controls into clear, collapsible mobile-friendly groups.
     const passSection=[...host.querySelectorAll('section.section,section.card')].find(sec=>sec.querySelector('#editPassBackgroundUpload'));
@@ -1761,6 +1777,8 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
       brand_logo_image:$('editBrandLogoImage').value,hero_banner_url:$('editHeroBanner').value,hero_banner_image:$('editHeroBannerImage').value,hero_badge:$('editHeroBadge').value,
       sponsor_enabled:$('editSponsorEnabled').checked,sponsor_label:$('editSponsorLabel').value,sponsor_logo_url:$('editSponsorLogo').value,sponsor_logo_image:$('editSponsorLogoImage').value,sponsor_alt:$('editSponsorAlt').value,
       food_collection_enabled:$('editFoodCollectionEnabled').checked,
+      // Preserve the independent Open/Closed registration flag during normal settings saves.
+      registration_open:theme.registration_open!==false,
       pass_background_image:$('editPassBackgroundImage').value,pass_background_fit:$('editPassBackgroundFit').value,pass_background_position_x:Number($('editPassBackgroundX').value),pass_background_position_y:Number($('editPassBackgroundY').value),pass_background_overlay:Number($('editPassBackgroundOverlay').value),pass_title_y:Number($('editPassTitleY').value),pass_sponsor_y:Number($('editPassSponsorY').value),pass_sponsor_width:Number($('editPassSponsorWidth').value),pass_content_y:Number($('editPassContentY').value),pass_qr_y:Number($('editPassQrY').value),pass_show_sponsor:$('editPassShowSponsor').checked,pass_text_color:$('editPassTextColor').value,pass_muted_text_color:$('editPassMutedTextColor').value,pass_subtitle_color:$('editPassSubtitleColor').value,pass_title_size:Number($('editPassTitleSize').value),pass_subtitle_size:Number($('editPassSubtitleSize').value),pass_name_size:Number($('editPassNameSize').value),pass_detail_size:Number($('editPassDetailSize').value),pass_sponsor_label:$('editPassSponsorLabel').value||'Powered by',pass_title:$('editPassTitle').value,pass_subtitle:$('editPassSubtitle').value,pass_guest_label:$('editPassGuestLabel').value,
       pass_name_label:$('editPassNameLabel').value,pass_phone_label:$('editPassPhoneLabel').value,pass_food_label:$('editPassFoodLabel').value,
       pass_residence_label:$('editPassResidenceLabel').value,pass_hostel_label:$('editPassHostelLabel').value,pass_apartment_label:$('editPassApartmentLabel').value,
@@ -2001,6 +2019,25 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
       }catch(err){$('schemaMessage').innerHTML=showNotice(err?.message||'Registration form could not be saved.','error');}
       finally{button.disabled=false;button.textContent=original;}
     });
+    const changeRegistrationStatus=async(open)=>{
+      if(!open&&!confirm(`Close registration for ${ev.name}? New guests will no longer be able to submit a registration. Existing passes, pending approvals and event-day scanning will remain available.`))return;
+      const closeButton=$('closeRegistration'),reopenButton=$('reopenRegistration');
+      if(closeButton)closeButton.disabled=true;if(reopenButton)reopenButton.disabled=true;
+      const message=$('registrationControlMessage');
+      if(message)message.innerHTML=showNotice(open?'Reopening registration…':'Closing registration…','good');
+      try{
+        const result=await adminCall('set_registration_status',{registration_open:open});
+        toast(result.message|| (open?'Registration reopened.':'Registration closed.'));
+        await loadEvent();
+        await renderAdminPage('settings');
+      }catch(err){
+        const target=$('registrationControlMessage');
+        if(target)target.innerHTML=showNotice(err?.message||'Registration status could not be changed.','error');
+        if(closeButton)closeButton.disabled=false;if(reopenButton)reopenButton.disabled=false;
+      }
+    };
+    $('closeRegistration')?.addEventListener('click',()=>changeRegistrationStatus(false));
+    $('reopenRegistration')?.addEventListener('click',()=>changeRegistrationStatus(true));
     $('activateEvent')?.addEventListener('click',async()=>{if(!confirm(`Activate ${ev.name}? It will become visible to guests and registration/scanning will open.`))return;const btn=$('activateEvent');btn.disabled=true;try{const r=await adminCall('activate_event');$('archiveMessage').innerHTML=showNotice(r.message||'Event activated.','good');await loadRole();await loadEvent();toast('Event activated');}catch(err){$('archiveMessage').innerHTML=showNotice(err.message,'error');btn.disabled=false;}});
     $('archiveEvent')?.addEventListener('click',async()=>{if(!confirm(`Archive ${ev.name}? New registrations and scans will stop.`))return;const btn=$('archiveEvent');btn.disabled=true;try{const r=await post('/api/admin',{action:'archive_event',event_id:state.eventId});$('archiveMessage').innerHTML=showNotice(r.message,'good');await loadRole();setTimeout(clearEvent,800);}catch(err){$('archiveMessage').innerHTML=showNotice(err.message,'error');btn.disabled=false;}});
     $('backToEvents').addEventListener('click',clearEvent);
