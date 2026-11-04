@@ -1,0 +1,72 @@
+#!/usr/bin/env python3
+"""Dependency-free validation for EventHub's inline browser JavaScript."""
+from html.parser import HTMLParser
+from pathlib import Path
+import subprocess
+import tempfile
+
+ROOT = Path(__file__).resolve().parents[1]
+FILES = ("index.html", "eventhub-preview.html")
+
+class ScriptExtractor(HTMLParser):
+    def __init__(self):
+        super().__init__(convert_charrefs=False)
+        self.parts = []
+        self.current = None
+
+    def handle_starttag(self, tag, attrs):
+        if tag.lower() != "script":
+            return
+        attrs = dict(attrs)
+        src = attrs.get("src")
+        kind = (attrs.get("type") or "").strip().lower()
+        if src or kind in {"application/json", "application/ld+json", "importmap"}:
+            self.current = None
+        else:
+            self.current = []
+
+    def handle_data(self, data):
+        if self.current is not None:
+            self.current.append(data)
+
+    def handle_endtag(self, tag):
+        if tag.lower() == "script" and self.current is not None:
+            self.parts.append("".join(self.current))
+            self.current = None
+
+def main():
+    contents = {}
+    for name in FILES:
+        path = ROOT / name
+        if not path.is_file():
+            raise SystemExit(f"FAIL: required frontend file missing: {name}")
+        contents[name] = path.read_text(encoding="utf-8")
+
+    if contents[FILES[0]] != contents[FILES[1]]:
+        raise SystemExit("FAIL: index.html and eventhub-preview.html differ")
+
+    total = 0
+    with tempfile.TemporaryDirectory() as tmp:
+        for name, source in contents.items():
+            parser = ScriptExtractor()
+            parser.feed(source)
+            parser.close()
+            for index, js in enumerate(parser.parts, start=1):
+                if not js.strip():
+                    continue
+                check_file = Path(tmp) / f"{Path(name).stem}-{index}.js"
+                check_file.write_text(js, encoding="utf-8")
+                result = subprocess.run(
+                    ["node", "--check", str(check_file)],
+                    text=True, capture_output=True
+                )
+                if result.returncode:
+                    print(result.stdout, end="")
+                    print(result.stderr, end="")
+                    raise SystemExit(f"FAIL: JavaScript syntax error in {name}, inline script {index}")
+                total += 1
+
+    print(f"PASS: both frontend files are byte-identical; Node parsed {total} inline JavaScript blocks.")
+
+if __name__ == "__main__":
+    main()
