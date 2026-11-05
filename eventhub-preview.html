@@ -446,6 +446,10 @@ body.theme-halloween .field input:focus,body.theme-halloween .field textarea:foc
 #interfaceEditorPanel .ui-editor-help{font-size:12px;color:var(--muted);margin:7px 0 12px}
 #interfaceEditorPanel .ui-editor-field{display:flex;flex-direction:column;gap:5px;margin:10px 0}
 #interfaceEditorPanel .ui-editor-field label{font-size:12px;font-weight:800;color:var(--muted)}
+#interfaceEditorPanel .ui-editor-image-tools{margin:12px 0;padding:12px;border:1px solid color-mix(in srgb,var(--gold) 42%,var(--line));border-radius:16px;background:color-mix(in srgb,var(--panel2) 78%,transparent)}
+#interfaceEditorPanel .ui-editor-image-title{font-size:14px;font-weight:900;letter-spacing:.2px}
+#interfaceEditorPanel .ui-editor-image-preview{display:grid;place-items:center;min-height:54px;margin:8px 0;padding:8px;border:1px dashed var(--line);border-radius:12px;background:color-mix(in srgb,var(--bg) 80%,transparent);text-align:center}
+#interfaceEditorPanel .ui-editor-image-preview img{max-width:100%;height:auto}
 #interfaceEditorPanel input:not([type=checkbox]):not([type=color]),#interfaceEditorPanel textarea,#interfaceEditorPanel select{width:100%;min-height:40px;padding:9px 11px;border:1px solid var(--line);border-radius:11px;background:var(--bg);color:var(--text);font:inherit}
 #interfaceEditorPanel textarea{min-height:74px;resize:vertical}
 #interfaceEditorPanel input[type=color]{width:100%;height:40px;padding:3px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
@@ -729,11 +733,28 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
       if(!Object.prototype.hasOwnProperty.call(el.dataset,'interfaceOriginalPadding'))el.dataset.interfaceOriginalPadding=el.style.padding||'';
       if(!Object.prototype.hasOwnProperty.call(el.dataset,'interfaceOriginalFontSize'))el.dataset.interfaceOriginalFontSize=el.style.fontSize||'';
       if(!Object.prototype.hasOwnProperty.call(el.dataset,'interfaceOriginalAlign'))el.dataset.interfaceOriginalAlign=el.style.textAlign||'';
+      if(!Object.prototype.hasOwnProperty.call(el.dataset,'interfaceOriginalSrc'))el.dataset.interfaceOriginalSrc=el.tagName==='IMG'?(el.getAttribute('src')||''):'';
+      if(!Object.prototype.hasOwnProperty.call(el.dataset,'interfaceOriginalBgImage'))el.dataset.interfaceOriginalBgImage=el.style.backgroundImage||'';
+      if(!Object.prototype.hasOwnProperty.call(el.dataset,'interfaceOriginalBgSize'))el.dataset.interfaceOriginalBgSize=el.style.backgroundSize||'';
+      if(!Object.prototype.hasOwnProperty.call(el.dataset,'interfaceOriginalBgPosition'))el.dataset.interfaceOriginalBgPosition=el.style.backgroundPosition||'';
+      if(!Object.prototype.hasOwnProperty.call(el.dataset,'interfaceOriginalBgRepeat'))el.dataset.interfaceOriginalBgRepeat=el.style.backgroundRepeat||'';
+      if(!Object.prototype.hasOwnProperty.call(el.dataset,'interfaceOriginalObjectFit'))el.dataset.interfaceOriginalObjectFit=el.style.objectFit||'';
+      if(!Object.prototype.hasOwnProperty.call(el.dataset,'interfaceOriginalObjectPosition'))el.dataset.interfaceOriginalObjectPosition=el.style.objectPosition||'';
       const originalStyle={backgroundColor:el.dataset.interfaceOriginalBg||'',color:el.dataset.interfaceOriginalColor||'',borderRadius:el.dataset.interfaceOriginalRadius||'',padding:el.dataset.interfaceOriginalPadding||'',fontSize:el.dataset.interfaceOriginalFontSize||'',textAlign:el.dataset.interfaceOriginalAlign||''};
       const item=saved[key]||{};
       interfaceSetDirectText(el,Object.prototype.hasOwnProperty.call(item,'text')?item.text:el.dataset.interfaceOriginalText);
-      if(el.tagName==='IMG')el.setAttribute('alt',Object.prototype.hasOwnProperty.call(item,'placeholder')?item.placeholder:el.dataset.interfaceOriginalPlaceholder);
-      else if(el.matches('input,textarea,select')||el.hasAttribute('placeholder'))el.setAttribute('placeholder',Object.prototype.hasOwnProperty.call(item,'placeholder')?item.placeholder:el.dataset.interfaceOriginalPlaceholder);
+      if(el.tagName==='IMG'){
+        el.setAttribute('alt',Object.prototype.hasOwnProperty.call(item,'placeholder')?item.placeholder:el.dataset.interfaceOriginalPlaceholder);
+        el.setAttribute('src',item.image||el.dataset.interfaceOriginalSrc||'');
+        el.style.objectFit=item.image?(item.image_fit||'cover'):el.dataset.interfaceOriginalObjectFit;
+        el.style.objectPosition=item.image?(item.image_position||'center'):el.dataset.interfaceOriginalObjectPosition;
+      }else{
+        if(el.matches('input,textarea,select')||el.hasAttribute('placeholder'))el.setAttribute('placeholder',Object.prototype.hasOwnProperty.call(item,'placeholder')?item.placeholder:el.dataset.interfaceOriginalPlaceholder);
+        el.style.backgroundImage=item.image?'url('+JSON.stringify(item.image)+')':el.dataset.interfaceOriginalBgImage;
+        el.style.backgroundSize=item.image?(item.image_fit==='contain'?'contain':item.image_fit==='fill'?'100% 100%':'cover'):el.dataset.interfaceOriginalBgSize;
+        el.style.backgroundPosition=item.image?(item.image_position||'center'):el.dataset.interfaceOriginalBgPosition;
+        el.style.backgroundRepeat=item.image?'no-repeat':el.dataset.interfaceOriginalBgRepeat;
+      }
       el.style.display=item.hidden===true?'none':el.dataset.interfaceOriginalDisplay;
       el.style.backgroundColor=item.bg||originalStyle.backgroundColor;
       el.style.color=item.color||originalStyle.color;
@@ -782,6 +803,14 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     $('interfaceEditorPadding').value=Object.prototype.hasOwnProperty.call(saved,'padding')?saved.padding:'';
     $('interfaceEditorFontSize').value=Object.prototype.hasOwnProperty.call(saved,'font_size')?saved.font_size:'';
     $('interfaceEditorAlign').value=saved.align||'';
+    $('interfaceEditorImageFit').value=saved.image_fit||'cover';
+    $('interfaceEditorImagePosition').value=saved.image_position||'center';
+    $('interfaceEditorImageUpload').value='';
+    const imagePreview=$('interfaceEditorImagePreview');
+    imagePreview.innerHTML=saved.image
+      ? '<img alt="Selected component image preview" src="'+safe(saved.image)+'" style="display:block;max-width:100%;max-height:150px;object-fit:contain;margin:auto;border-radius:10px;background:#fff;padding:4px">'
+      : '<p class="muted" style="margin:0">No custom image. Original image or background will be used.</p>';
+    $('interfaceEditorImageMode').textContent=item.el.tagName==='IMG'?'This replaces the selected image.':'This adds artwork behind the selected component.';
   }
   function interfaceEditorReadDraft(){
     const item=interfaceEditorSelected();if(!item)return;
@@ -801,11 +830,36 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
       else record[key]=Math.max(min,Math.min(max,Math.round(Number(raw)||min)));
     }
     const align=$('interfaceEditorAlign').value;if(align)record.align=align;else delete record.align;
+    if(record.image){
+      record.image_fit=$('interfaceEditorImageFit').value||'cover';
+      record.image_position=$('interfaceEditorImagePosition').value||'center';
+    }else{
+      delete record.image_fit;delete record.image_position;
+    }
     if(Object.keys(record).length)interfaceEditorDraft[interfaceEditorScope][item.key]=record;
     else delete interfaceEditorDraft[interfaceEditorScope][item.key];
     if(!Object.keys(interfaceEditorDraft[interfaceEditorScope]).length)delete interfaceEditorDraft[interfaceEditorScope];
     // Preview from the unsaved draft. Persisting happens only when Save is tapped.
     interfaceApplyOverrides(interfaceEditorDraft);
+  }
+  async function interfacePrepareComponentImage(file){
+    if(!file||!['image/png','image/jpeg','image/webp'].includes(file.type))throw new Error('Choose a PNG, JPG or WebP image.');
+    if(file.size>25*1024*1024)throw new Error('The original image is over 25 MB. Choose a smaller image.');
+    const source=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result||''));reader.onerror=()=>reject(new Error('Could not read this image.'));reader.readAsDataURL(file);});
+    const img=await new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=()=>reject(new Error('This image could not be decoded.'));image.src=source;});
+    if(!img.naturalWidth||!img.naturalHeight||img.naturalWidth*img.naturalHeight>50000000)throw new Error('Image dimensions are too large to process.');
+    const scale=Math.min(1,1200/Math.max(img.naturalWidth,img.naturalHeight));
+    const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(img.naturalWidth*scale));canvas.height=Math.max(1,Math.round(img.naturalHeight*scale));
+    const ctx=canvas.getContext('2d');if(!ctx)throw new Error('Your browser could not process this image.');
+    ctx.fillStyle='#ffffff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0,canvas.width,canvas.height);
+    let blob=null;
+    for(const quality of [0.88,0.82,0.76,0.70,0.64,0.58,0.52,0.46,0.40,0.34]){
+      blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',quality));
+      if(blob&&blob.size<=200*1024)break;
+    }
+    if(!blob||blob.size>200*1024)throw new Error('This image could not be compressed below 200 KB. Choose a smaller or simpler image.');
+    const dataUrl=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result||''));reader.onerror=()=>reject(new Error('Could not prepare the compressed image.'));reader.readAsDataURL(blob);});
+    return {dataUrl,blob,original:file.size,width:canvas.width,height:canvas.height};
   }
   function ensureInterfaceEditor(){
     let launcher=$('interfaceEditorLauncher'),panel=$('interfaceEditorPanel');
@@ -823,6 +877,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
         '<div class="ui-editor-field"><label for="interfaceEditorComponent">Individual component</label><select id="interfaceEditorComponent"></select></div>'+
         '<div class="ui-editor-field"><label for="interfaceEditorText">Display text (leave unchanged to keep the default)</label><textarea id="interfaceEditorText" maxlength="300"></textarea></div>'+
         '<div class="ui-editor-field"><label for="interfaceEditorPlaceholder">Input placeholder / image alt text</label><input id="interfaceEditorPlaceholder" maxlength="140"></div>'+
+        '<div class="ui-editor-image-tools"><div class="ui-editor-image-title">🖼️ Component image</div><p class="ui-editor-help" id="interfaceEditorImageMode">Upload artwork for this component.</p><input id="interfaceEditorImageUpload" type="file" accept="image/png,image/jpeg,image/webp" aria-label="Upload component image"><div id="interfaceEditorImagePreview" class="ui-editor-image-preview"></div><div class="ui-editor-grid"><div class="ui-editor-field"><label for="interfaceEditorImageFit">Image fit</label><select id="interfaceEditorImageFit"><option value="cover">Cover</option><option value="contain">Contain</option><option value="fill">Stretch / fill</option></select></div><div class="ui-editor-field"><label for="interfaceEditorImagePosition">Image focus</label><select id="interfaceEditorImagePosition"><option value="center">Centre</option><option value="top">Top</option><option value="bottom">Bottom</option><option value="left">Left</option><option value="right">Right</option></select></div></div><button class="btn small" id="removeInterfaceComponentImage" type="button">Remove component image</button><p class="muted" style="margin:6px 0 0;font-size:11px">PNG, JPG or WebP · automatically resized and compressed to 200 KB max. Transparent areas are converted to white.</p></div>'+
         '<label class="ui-editor-check"><input id="interfaceEditorVisible" type="checkbox" checked> Show this component</label>'+
         '<div class="ui-editor-grid"><div class="ui-editor-field"><label class="ui-editor-check"><input id="interfaceEditorBgEnabled" type="checkbox"> Custom background</label><input id="interfaceEditorBg" type="color" value="#211c2d"></div><div class="ui-editor-field"><label class="ui-editor-check"><input id="interfaceEditorColorEnabled" type="checkbox"> Custom text colour</label><input id="interfaceEditorColor" type="color" value="#f8f5fb"></div></div>'+
         '<div class="ui-editor-grid"><div class="ui-editor-field"><label for="interfaceEditorRadius">Corner radius (0–48 px)</label><input id="interfaceEditorRadius" type="number" min="0" max="48" placeholder="Default"></div><div class="ui-editor-field"><label for="interfaceEditorPadding">Inner spacing (0–60 px)</label><input id="interfaceEditorPadding" type="number" min="0" max="60" placeholder="Default"></div></div>'+
@@ -834,8 +889,44 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
       $('interfaceEditorPreviewRole').addEventListener('change',switchInterfacePreview);
       $('interfaceEditorPreviewPage').addEventListener('change',switchInterfacePreview);
       $('interfaceEditorVolunteerRole').addEventListener('change',switchInterfacePreview);
-      ['interfaceEditorText','interfaceEditorPlaceholder','interfaceEditorVisible','interfaceEditorBgEnabled','interfaceEditorBg','interfaceEditorColorEnabled','interfaceEditorColor','interfaceEditorRadius','interfaceEditorPadding','interfaceEditorFontSize','interfaceEditorAlign'].forEach(id=>{
+      ['interfaceEditorText','interfaceEditorPlaceholder','interfaceEditorVisible','interfaceEditorBgEnabled','interfaceEditorBg','interfaceEditorColorEnabled','interfaceEditorColor','interfaceEditorRadius','interfaceEditorPadding','interfaceEditorFontSize','interfaceEditorAlign','interfaceEditorImageFit','interfaceEditorImagePosition'].forEach(id=>{
         $(id).addEventListener('input',interfaceEditorReadDraft);$(id).addEventListener('change',interfaceEditorReadDraft);
+      });
+      $('interfaceEditorImageUpload').addEventListener('change',async()=>{
+        const input=$('interfaceEditorImageUpload'),file=input.files&&input.files[0],item=interfaceEditorSelected();
+        if(!file||!item)return;
+        const preview=$('interfaceEditorImagePreview'),button=$('saveInterfaceComponents');
+        const previous=interfaceEditorDraft?.[interfaceEditorScope]?.[item.key]?.image||'';
+        input.disabled=true;preview.innerHTML='<p class="muted">Preparing image…</p>';
+        try{
+          const prepared=await interfacePrepareComponentImage(file);
+          interfaceEditorReadDraft();
+          if(!interfaceEditorDraft[interfaceEditorScope])interfaceEditorDraft[interfaceEditorScope]={};
+          const record={...(interfaceEditorDraft[interfaceEditorScope][item.key]||{})};
+          record.image=prepared.dataUrl;
+          record.image_fit=$('interfaceEditorImageFit').value||'cover';
+          record.image_position=$('interfaceEditorImagePosition').value||'center';
+          interfaceEditorDraft[interfaceEditorScope][item.key]=record;
+          interfaceApplyOverrides(interfaceEditorDraft);
+          $('interfaceEditorImagePreview').innerHTML='<img alt="Selected component image preview" src="'+safe(prepared.dataUrl)+'" style="display:block;max-width:100%;max-height:150px;object-fit:contain;margin:auto;border-radius:10px;background:#fff;padding:4px"><p class="muted" style="margin:6px 0 0">Compressed '+Math.round(prepared.original/1024)+' KB → '+Math.round(prepared.blob.size/1024)+' KB · save this screen to publish.</p>';
+          toast('Component image ready. Save this screen to publish it.');
+        }catch(err){
+          const record=interfaceEditorDraft?.[interfaceEditorScope]?.[item.key];
+          if(record){if(previous)record.image=previous;else delete record.image;}
+          $('interfaceEditorImagePreview').innerHTML='<p class="muted">No new image was applied.</p>';
+          toast(err.message||'Image upload failed.',true);input.value='';
+        }finally{input.disabled=false;}
+      });
+      $('removeInterfaceComponentImage').addEventListener('click',()=>{
+        const item=interfaceEditorSelected();if(!item)return;
+        interfaceEditorReadDraft();
+        const record=interfaceEditorDraft?.[interfaceEditorScope]?.[item.key];
+        if(record){delete record.image;delete record.image_fit;delete record.image_position;if(!Object.keys(record).length)delete interfaceEditorDraft[interfaceEditorScope][item.key];}
+        if(interfaceEditorDraft?.[interfaceEditorScope]&&!Object.keys(interfaceEditorDraft[interfaceEditorScope]).length)delete interfaceEditorDraft[interfaceEditorScope];
+        interfaceApplyOverrides(interfaceEditorDraft);
+        $('interfaceEditorImageUpload').value='';
+        $('interfaceEditorImagePreview').innerHTML='<p class="muted" style="margin:0">No custom image. Original image or background will be used.</p>';
+        toast('Component image removed. Save this screen to publish the change.');
       });
       $('resetInterfaceComponent').addEventListener('click',()=>{
         const item=interfaceEditorSelected();if(!item)return;
