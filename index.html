@@ -564,7 +564,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
   const API_BASE = (params.get('api_base') || window.EVENTHUB_API_BASE || (/github\.io$/.test(location.hostname) ? 'https://unwjym.bot-keep.xyz' : location.origin)).replace(/\/$/, '');
   const initialEventId = Number(params.get('event_id') || 0);
   let scannerView = params.get('scanner') === '1';
-  const state = { role:'guest', staffRole:'', user:null, activeEvents:[], workspaces:[], eventId:initialEventId, event:null, stats:null, page:'home', guest:null, scanner:null, scannerStarting:false, scannerStopPromise:null, scannerGeneration:0, scanHandling:false, scanSource:'', scanCurrentQr:'', scanPendingAction:null, scanActionBusy:false, scanLookupBusy:false, scanProofPending:false, scanResumeTimer:null, scannerPaused:false, lastScannedQr:'', scanMisses:0, checkpointAccessBlocked:false, formSchema:[], pass:null, checkpoints:[], myRegistration:null };
+  const state = { role:'guest', staffRole:'', user:null, activeEvents:[], workspaces:[], eventId:initialEventId, event:null, stats:null, page:'home', guest:null, scanner:null, scannerStarting:false, scannerStopPromise:null, scannerGeneration:0, scanHandling:false, scanSource:'', scanCurrentQr:'', scanPendingAction:null, scanActionBusy:false, scanLookupBusy:false, scanProofPending:false, scanResumeTimer:null, scannerPaused:false, lastScannedQr:'', scanMisses:0, checkpointAccessBlocked:false, formSchema:[], pass:null, checkpoints:[], myRegistration:null, offlineScanBusy:false, lastLookupTransient:false };
   const $ = (id) => document.getElementById(id);
   const main = $('main');
   const safe = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -1466,7 +1466,19 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     else if(page==='pass') await renderPass(host);
     else if(page==='scanner' && state.role==='volunteer') await openScannerStandalone();
   }
+  async function refreshAdminOverviewStats(){
+    const top=$('eventOverviewStats');if(!top||state.role!=='admin'||state.page!=='overview')return;
+    try{
+      const result=await adminCall('stats'),s=result.stats||{};
+      top.innerHTML=[['Approved guests',Number(s.approvedGuests||0)],['Checked in',Number(s.checkedIn||0)],[foodCollectionIsEnabled()?'Meals served':'Food collection',foodCollectionIsEnabled()?Number(s.mealsServed||0):'Not applicable'],['Volunteers',Number(s.volunteers||0)]].map(([label,value])=>'<div class="stat"><strong>'+safe(value)+'</strong><span>'+safe(label)+'</span></div>').join('');
+      const food=$('eventFoodStats');
+      if(food)food.innerHTML='<div class="stat"><strong>'+Number(s.vegetarianGuests||0)+'</strong><span>🥗 Vegetarian meals required</span></div><div class="stat"><strong>'+Number(s.nonVegetarianGuests||0)+'</strong><span>🍗 Non-vegetarian meals required</span></div><div class="stat"><strong>'+Number(s.missingOrInvalidFoodPreference||0)+'</strong><span>Missing / invalid preference</span></div><div class="stat"><strong>'+Number(s.vegetarianServed||0)+' / '+Number(s.nonVegetarianServed||0)+'</strong><span>Veg / non-veg served</span></div>';
+      const updated=$('foodCountUpdated');if(updated)updated.textContent='Live count refreshed: '+new Date().toLocaleTimeString();
+    }catch(err){const stateNode=$('overviewRefreshState');if(stateNode)stateNode.textContent='Auto-refresh failed: '+String(err?.message||err)+' · '+new Date().toLocaleTimeString();}
+  }
   async function renderAdminPage(page) {
+    if(window.eventHubOverviewStatsTimer){clearInterval(window.eventHubOverviewStatsTimer);window.eventHubOverviewStatsTimer=null;}
+    if(window.eventHubOverviewHealthTimer){clearInterval(window.eventHubOverviewHealthTimer);window.eventHubOverviewHealthTimer=null;}
     document.body.classList.add('eventhub-pro-admin');
     state.page=page; if(page!=='scanner') await stopScanner(); const host=$('workspaceContent'); if(!host)return;
     document.querySelectorAll('[data-admin-page]').forEach(b=>b.classList.toggle('active',b.dataset.adminPage===page));
@@ -1474,9 +1486,10 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     if(page==='overview') {
       let statsError='';const r=await adminCall('stats').catch(e=>{statsError=e.message;return {stats:{}};}); const s=r.stats||{};
       host.innerHTML=`<div class="section-title"><h2>Event-day control centre</h2><span class="status ${safe(state.event.status||'active')}">${safe(state.event.status||'active')} · This event</span></div>
-        <div class="stat-grid">${[['Approved guests','approvedGuests'],['Checked in','checkedIn'],[foodCollectionIsEnabled()?'Meals served':'Food collection',foodCollectionIsEnabled()?'mealsServed':'foodNA'],['Volunteers','volunteers']].map(([l,k])=>`<div class="stat"><strong>${k==='foodNA'?'Not applicable':Number(s[k]||0)}</strong><span>${l}</span></div>`).join('')}</div>
+        <div class="stat-grid" id="eventOverviewStats">${[['Approved guests','approvedGuests'],['Checked in','checkedIn'],[foodCollectionIsEnabled()?'Meals served':'Food collection',foodCollectionIsEnabled()?'mealsServed':'foodNA'],['Volunteers','volunteers']].map(([l,k])=>`<div class="stat"><strong>${k==='foodNA'?'Not applicable':Number(s[k]||0)}</strong><span>${l}</span></div>`).join('')}</div>
+        <p class="footnote" id="overviewRefreshState">Live attendance and food counts refresh automatically every 15 seconds.</p>
         ${statsError?showNotice('Live statistics are unavailable: '+statsError,'error'):''}
-        ${foodCollectionIsEnabled()?'<article class="card" style="margin:14px 0"><div class="section-title"><h2>🍽️ Cooking & food count</h2><span class="status active">Live approved guests</span></div><p class="muted">Counts are calculated from the full approved guest database for the selected event, not the paginated guest list.</p><div class="stat-grid"><div class="stat"><strong>'+Number(s.vegetarianGuests||0)+'</strong><span>🥗 Vegetarian meals required</span></div><div class="stat"><strong>'+Number(s.nonVegetarianGuests||0)+'</strong><span>🍗 Non-vegetarian meals required</span></div><div class="stat"><strong>'+Number(s.missingOrInvalidFoodPreference||0)+'</strong><span>Missing / invalid preference</span></div><div class="stat"><strong>'+Number(s.vegetarianServed||0)+' / '+Number(s.nonVegetarianServed||0)+'</strong><span>Veg / non-veg served</span></div></div><p class="muted" id="foodCountUpdated">Count loaded: '+safe(new Date().toLocaleString())+'</p><div class="actions"><button class="btn small" id="downloadFoodSummary">Download cooking summary (CSV)</button><button class="btn small" id="refreshFoodSummary">Refresh food count</button></div><p class="footnote">Cooking quantities are registration counts. Add your own catering buffer; missing preferences must be resolved before finalizing quantities.</p></article>':''}
+        ${foodCollectionIsEnabled()?'<article class="card" style="margin:14px 0"><div class="section-title"><h2>🍽️ Cooking & food count</h2><span class="status active">Live approved guests</span></div><p class="muted">Counts are calculated from the full approved guest database for the selected event, not the paginated guest list.</p><div class="stat-grid" id="eventFoodStats"><div class="stat"><strong>'+Number(s.vegetarianGuests||0)+'</strong><span>🥗 Vegetarian meals required</span></div><div class="stat"><strong>'+Number(s.nonVegetarianGuests||0)+'</strong><span>🍗 Non-vegetarian meals required</span></div><div class="stat"><strong>'+Number(s.missingOrInvalidFoodPreference||0)+'</strong><span>Missing / invalid preference</span></div><div class="stat"><strong>'+Number(s.vegetarianServed||0)+' / '+Number(s.nonVegetarianServed||0)+'</strong><span>Veg / non-veg served</span></div></div><p class="muted" id="foodCountUpdated">Count loaded: '+safe(new Date().toLocaleString())+'</p><div class="actions"><button class="btn small" id="downloadFoodSummary">Download cooking summary (CSV)</button><button class="btn small" id="refreshFoodSummary">Refresh food count</button></div><p class="footnote">Cooking quantities are registration counts. Add your own catering buffer; missing preferences must be resolved before finalizing quantities.</p></article>':''}
         <div class="eventday-actions">
           <article class="eventday-primary"><div class="eyebrow">Main event-day action</div><h2 style="margin:7px 0">QR Scanner</h2><p class="muted">Open a dedicated full-screen scanner for entry, proof handling, ${foodCollectionIsEnabled()?'food collection and ':''}exit.</p><div class="actions"><button class="btn primary" data-admin-page="scanner">Open QR Scanner →</button></div></article>
           <article class="card"><h3>Google Sheets sync</h3><p id="sheetsStatus">Sync queue status has not been checked.</p><div class="actions"><button class="btn primary small" id="syncSheetsNow">Queue guest sync</button><button class="btn small" id="refreshSheetsStatus">Check sync status</button></div></article>
@@ -1496,6 +1509,8 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
         <p class="footnote">All sections are scoped to the selected event. Admin-only controls remain available only to authenticated admins.</p>`;
       $('checkServiceHealth')?.addEventListener('click',checkServiceHealth);
       checkServiceHealth();
+      window.eventHubOverviewStatsTimer=window.setInterval(refreshAdminOverviewStats,15000);
+      window.eventHubOverviewHealthTimer=window.setInterval(()=>{if($('serviceHealthState')?.isConnected)checkServiceHealth();},45000);
       $('refreshStats')?.addEventListener('click',()=>renderAdminPage('overview'));
       $('refreshFoodSummary')?.addEventListener('click',()=>renderAdminPage('overview'));
       $('downloadFoodSummary')?.addEventListener('click',()=>{
@@ -1655,6 +1670,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
       '<div class="scanner-actions"><button class="btn primary" id="startCamera">Start QR scanner</button><button class="btn" id="stopCamera" disabled>Stop camera</button></div>'+
       '<details class="manual-pass-entry"><summary>⌨️ Manual pass-code fallback</summary><div class="field"><label for="manualPassCode">Guest pass code</label><input id="manualPassCode" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="120" placeholder="Enter guest pass code"></div><button class="btn primary" type="button" id="verifyManualPass">Verify pass code</button></details>'+
       '<details class="scanner-help"><summary>Camera help and troubleshooting</summary><div class="scanner-hint">Camera permission is requested when you tap Start. If permission is denied, allow camera access for Telegram or your browser and retry. EventHub releases the camera when it moves to the background; tap Start when you return.</div></details>'+
+      '<div id="scanOfflineQueue" aria-live="polite"></div>'+
       '<div id="scanResult" aria-live="polite"></div>'+
     '</section><div class="actions"><button class="btn ghost" id="scannerBack">← Back to event workspace</button></div></section>':'<section class="section card"><div class="section-title"><h2>📷 QR Scanner</h2><span class="status active">'+safe(state.event.name)+'</span></div><p class="muted">Open the dedicated full-screen scanner before scanning passes.</p><div class="actions"><button class="btn primary" id="openDedicatedScanner">Open full-screen QR Scanner →</button></div></section>';
     $('verifyManualPass')?.addEventListener('click',async()=>{
@@ -1676,6 +1692,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
       try{const cp=await post('/api/checkpoints',{event_id:state.eventId});state.checkpoints=Array.isArray(cp.checkpoints)?cp.checkpoints:[];}
       catch(err){toast('Assigned checkpoints could not be loaded: '+String(err?.message||err),true);}
     }
+    refreshOfflineQueueNotice();
     if(state.scanHandling&&state.scanCurrentQr){
       document.body.classList.add('scanner-has-guest');
       if(state.scanPendingAction)showScanFeedback('danger','ACTION NOT YET CONFIRMED','A previous guest action still needs verification. Retry the save before scanning another guest.','RETRY / CHECK STATUS',retryPendingScanAction);
@@ -1703,6 +1720,10 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
       return false;
     }
   }
+  async function cameraPermissionState(){
+    try{if(!navigator.permissions?.query)return 'unknown';const permission=await navigator.permissions.query({name:'camera'});return String(permission?.state||'unknown');}
+    catch(_){return 'unknown';}
+  }
   async function startScanner() {
     if(state.checkpointAccessBlocked){showScanFeedback('danger','NO CHECKPOINT ASSIGNED','Ask an event admin to assign your name to an enabled checkpoint before scanning.','BACK TO WORKSPACE',()=>closeScannerStandalone());return;}
     if(state.scannerStarting||state.scanHandling)return;
@@ -1718,6 +1739,8 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
       if(!state.scanner)state.scanner=new Html5Qrcode('reader');
       $('startCamera').disabled=true;$('startCamera').textContent='Starting camera…';$('stopCamera').disabled=false;
       if(!navigator.mediaDevices?.getUserMedia)throw new Error('CAMERA_UNAVAILABLE');
+      const cameraPermission=await cameraPermissionState();
+      if(cameraPermission==='denied')throw new Error('CAMERA_PERMISSION_DENIED');
       await state.scanner.start({facingMode:'environment'},{fps:10,qrbox:{width:250,height:250},aspectRatio:1.0},async text=>{
         const scanned=String(text||'').trim();
         if(!scanned||state.scanHandling||scanned===state.lastScannedQr)return;
@@ -1735,7 +1758,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
       if($('startCamera')){$('startCamera').disabled=false;$('startCamera').textContent='Start QR scanner';}
       if($('stopCamera'))$('stopCamera').disabled=true;
       if(generation===state.scannerGeneration){
-        const msg=e?.message==='QR_LIBRARY_UNAVAILABLE'?'QR scanner library could not be downloaded. Check your connection or use manual pass-code verification.':e?.name==='NotAllowedError'?'Camera permission was denied. Allow camera access for Telegram or your browser, then tap Start again.':e?.name==='NotFoundError'?'No camera was found on this device. Please use a device with a working camera.':e?.message==='CAMERA_UNAVAILABLE'?'This browser does not support camera access. Open the Mini App in updated Telegram or Chrome.':'Camera could not start. Check permissions and make sure another app is not using the camera.';
+        const msg=e?.message==='QR_LIBRARY_UNAVAILABLE'?'QR scanner library could not be downloaded. Check your connection or use manual pass-code verification.':e?.message==='CAMERA_PERMISSION_DENIED'?'Camera access is blocked for this site. EventHub will not repeatedly request permission. Open Telegram or browser site settings, allow camera access, return here and tap Start again.':e?.name==='NotAllowedError'?'Camera permission was denied. Allow camera access for Telegram or your browser, then return and tap Start again.':e?.name==='NotFoundError'?'No camera was found on this device. Please use a device with a working camera.':e?.message==='CAMERA_UNAVAILABLE'?'This browser does not support camera access. Open the Mini App in updated Telegram or Chrome.':'Camera could not start. Check permissions and make sure another app is not using the camera.';
         showScanFeedback('danger','CAMERA NOT READY',msg,'TRY AGAIN',()=>startScanner());
       }
     } finally {state.scannerStarting=false;}
@@ -1796,6 +1819,16 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
       document.body.classList.add('scanner-has-guest');
       if($('scanResult'))$('scanResult').innerHTML='';
       const transient=Number(e?.status)>=500||/(network|did not respond|unreadable response|unexpected response|connection|busy|timed out|failed to fetch|within \d+s)/i.test(String(e?.message||''));
+      state.lastLookupTransient=transient;
+      if(transient && state.scanSource!=='offline-queue' && (!navigator.onLine || /failed to fetch|networkerror|network request failed|load failed/i.test(String(e?.message||'')))){
+        let queued=false;
+        try{queued=await enqueueOfflineScan(value);}catch(queueError){logOfflineQueueFailure(queueError);}
+        if(queued){
+          await refreshOfflineQueueNotice();
+          showScanFeedback('warning','PASS SAVED — NOT VERIFIED','The connection interrupted server verification. This pass has been saved on this device for later checking. It is NOT approved or admitted yet, and no entry/food action has been recorded. Reconnect and verify it before proceeding.','CONTINUE SCANNING',releaseGuestScanLock);
+          return false;
+        }
+      }
       if(transient){
         showScanFeedback('danger','NETWORK / SERVER ERROR','Guest verification could not be completed. Do not admit this guest until the pass is verified. '+e.message,'RETRY VERIFY',()=>lookupGuest(value));
       }else{
@@ -1863,6 +1896,93 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     if(state.scanResumeTimer){clearTimeout(state.scanResumeTimer);state.scanResumeTimer=null;}
     $('scanFeedbackLayer')?.remove();
   }
+  // Offline queue stores only scanned QR/pass strings and event IDs. It never records an entry,
+  // food collection or other attendance action while the server is unreachable.
+  let offlineScanDbPromise=null;
+  function openOfflineScanDb(){
+    if(!('indexedDB' in window))return Promise.reject(new Error('Offline storage is unavailable in this browser.'));
+    if(offlineScanDbPromise)return offlineScanDbPromise;
+    offlineScanDbPromise=new Promise((resolve,reject)=>{
+      const request=indexedDB.open('eventhub-offline-scan-queue',1);
+      request.onupgradeneeded=()=>{const db=request.result;if(!db.objectStoreNames.contains('scans'))db.createObjectStore('scans',{keyPath:'id'});};
+      request.onsuccess=()=>resolve(request.result);
+      request.onerror=()=>{offlineScanDbPromise=null;reject(request.error||new Error('Could not open offline scan storage.'));};
+      request.onblocked=()=>{offlineScanDbPromise=null;reject(new Error('Offline scan storage is busy in another EventHub tab.'));};
+    });
+    return offlineScanDbPromise;
+  }
+  async function offlineScanItems(eventId=state.eventId){
+    const db=await openOfflineScanDb();
+    return new Promise((resolve,reject)=>{
+      const tx=db.transaction('scans','readwrite'),store=tx.objectStore('scans'),request=store.getAll();
+      request.onsuccess=()=>{
+        const cutoff=Date.now()-24*60*60*1000,all=Array.isArray(request.result)?request.result:[];
+        const valid=[];
+        all.forEach(item=>{
+          if(!item||!item.id||!item.qr||!Number.isFinite(Number(item.createdAt))||Number(item.createdAt)<cutoff){if(item?.id)store.delete(item.id);return;}
+          valid.push(item);
+        });
+        resolve(valid.filter(item=>Number(item.eventId)===Number(eventId)).sort((a,b)=>Number(a.createdAt)-Number(b.createdAt)));
+      };
+      request.onerror=()=>reject(request.error||new Error('Could not read the offline scan queue.'));
+    });
+  }
+  function logOfflineQueueFailure(err){try{console.warn('EventHub offline scan queue:',String(err?.message||err).slice(0,160));}catch(_){}}
+  async function enqueueOfflineScan(qr){
+    const value=String(qr||'').trim();
+    if(!value||value.length>512||!state.eventId)return false;
+    const db=await openOfflineScanDb();
+    return new Promise((resolve,reject)=>{
+      const tx=db.transaction('scans','readwrite'),store=tx.objectStore('scans'),request=store.getAll();
+      request.onsuccess=()=>{
+        const all=Array.isArray(request.result)?request.result:[];
+        const cutoff=Date.now()-24*60*60*1000;
+        const live=all.filter(item=>item&&Number(item.createdAt)>=cutoff);
+        const duplicate=live.some(item=>Number(item.eventId)===Number(state.eventId)&&String(item.qr)===value);
+        if(duplicate){resolve(true);return;}
+        if(live.length>=50){resolve(false);return;}
+        const id=(window.crypto?.randomUUID?.()||('scan-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,10)));
+        store.put({id,eventId:Number(state.eventId),qr:value,createdAt:Date.now()});
+        resolve(true);
+      };
+      request.onerror=()=>reject(request.error||new Error('Could not save the scanned pass locally.'));
+    });
+  }
+  async function deleteOfflineScan(id){
+    const db=await openOfflineScanDb();
+    return new Promise((resolve,reject)=>{
+      const tx=db.transaction('scans','readwrite');tx.objectStore('scans').delete(String(id));
+      tx.oncomplete=()=>resolve(true);tx.onerror=()=>reject(tx.error||new Error('Could not update the offline scan queue.'));
+    });
+  }
+  async function refreshOfflineQueueNotice(){
+    const host=$('scanOfflineQueue');if(!host)return;
+    try{
+      const items=await offlineScanItems(state.eventId),count=items.length;
+      host.innerHTML=count?('<section class="notice '+(navigator.onLine?'warning':'error')+'" style="margin:12px 0"><strong>📥 '+count+' pass scan'+(count===1?'':'s')+' waiting for verification</strong><p class="muted">'+(navigator.onLine?'Internet is available. Verify queued passes one at a time.':'Offline. Scans are saved on this device for up to 24 hours. They are not verified and no attendance action has been recorded.')+'</p><button class="btn small primary" id="verifyQueuedScan" type="button" '+(!navigator.onLine||state.scanHandling||state.offlineScanBusy?'disabled':'')+'>Verify next queued pass</button></section>'):'';
+      $('verifyQueuedScan')?.addEventListener('click',syncNextOfflineScan);
+    }catch(err){
+      host.innerHTML='<div class="notice error">Offline queue unavailable: '+safe(err?.message||'Local storage error')+'</div>';
+    }
+  }
+  async function syncNextOfflineScan(){
+    if(state.offlineScanBusy||state.scanHandling||!navigator.onLine)return false;
+    let items;
+    try{items=await offlineScanItems(state.eventId);}catch(err){toast(err?.message||'Offline queue could not be opened.',true);return false;}
+    const item=items[0];if(!item){await refreshOfflineQueueNotice();return false;}
+    if(!beginGuestScanLock(item.qr,'offline-queue'))return false;
+    state.offlineScanBusy=true;state.lastLookupTransient=false;
+    try{
+      const verified=await lookupGuest(item.qr);
+      if(verified){await deleteOfflineScan(item.id);toast('Queued pass verified by the server. Review the guest and record the required action.');}
+      else if(!state.lastLookupTransient){await deleteOfflineScan(item.id);}
+      await refreshOfflineQueueNotice();
+      return verified;
+    }catch(err){toast(err?.message||'Queued pass verification failed.',true);return false;}
+    finally{state.offlineScanBusy=false;await refreshOfflineQueueNotice();}
+  }
+  window.addEventListener('online',()=>{if(scannerView){refreshOfflineQueueNotice();toast('Connection restored. Verify queued passes when ready.');}});
+  window.addEventListener('offline',()=>{if(scannerView){refreshOfflineQueueNotice();toast('Connection lost. New scans will be queued for later verification.',true);}});
   function beginGuestScanLock(qr,source) {
     if(state.scanHandling)return false;
     state.scanHandling=true;state.scanSource=source||'camera';state.scanCurrentQr=String(qr||'').trim();
@@ -1904,6 +2024,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
       if($('startCamera')){$('startCamera').disabled=false;$('startCamera').textContent='Start QR scanner';}
       if($('stopCamera'))$('stopCamera').disabled=true;
     }
+    refreshOfflineQueueNotice();
     return true;
   }
   async function fetchFreshGuest(passCode) {
