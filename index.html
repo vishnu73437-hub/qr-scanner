@@ -1692,7 +1692,8 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
       try{const cp=await post('/api/checkpoints',{event_id:state.eventId});state.checkpoints=Array.isArray(cp.checkpoints)?cp.checkpoints:[];}
       catch(err){toast('Assigned checkpoints could not be loaded: '+String(err?.message||err),true);}
     }
-    refreshOfflineQueueNotice();\n    if(state.scanHandling&&state.scanCurrentQr){
+    refreshOfflineQueueNotice();
+    if(state.scanHandling&&state.scanCurrentQr){
       document.body.classList.add('scanner-has-guest');
       if(state.scanPendingAction)showScanFeedback('danger','ACTION NOT YET CONFIRMED','A previous guest action still needs verification. Retry the save before scanning another guest.','RETRY / CHECK STATUS',retryPendingScanAction);
       else if(state.guest){renderScannedGuest();if(state.scanProofPending)showScanFeedback('warning','PROOF STILL REQUIRED','Store the guest ID proof or explicitly record No Proof Provided before scanning the next guest.','CONTINUE TO PROOF',()=>hideScanFeedback());}
