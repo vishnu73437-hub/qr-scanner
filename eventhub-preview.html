@@ -564,7 +564,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
   const API_BASE = (params.get('api_base') || window.EVENTHUB_API_BASE || (/github\.io$/.test(location.hostname) ? 'https://unwjym.bot-keep.xyz' : location.origin)).replace(/\/$/, '');
   const initialEventId = Number(params.get('event_id') || 0);
   let scannerView = params.get('scanner') === '1';
-  const state = { role:'guest', staffRole:'', user:null, activeEvents:[], workspaces:[], eventId:initialEventId, event:null, stats:null, page:'home', guest:null, scanner:null, scannerStarting:false, scannerStopPromise:null, scannerGeneration:0, scanHandling:false, scanSource:'', scanCurrentQr:'', scanPendingAction:null, scanActionBusy:false, scanLookupBusy:false, scanProofPending:false, scanResumeTimer:null, scannerPaused:false, lastScannedQr:'', scanMisses:0, checkpointAccessBlocked:false, formSchema:[], pass:null, checkpoints:[], myRegistration:null };
+  const state = { role:'guest', staffRole:'', user:null, activeEvents:[], workspaces:[], eventId:initialEventId, event:null, stats:null, page:'home', guest:null, scanner:null, scannerStarting:false, scannerStopPromise:null, scannerGeneration:0, scanHandling:false, scanSource:'', scanCurrentQr:'', scanPendingAction:null, scanActionBusy:false, scanLookupBusy:false, scanProofPending:false, scanResumeTimer:null, scannerPaused:false, lastScannedQr:'', scanMisses:0, checkpointAccessBlocked:false, formSchema:[], pass:null, checkpoints:[], myRegistration:null, offlineScanBusy:false, lastLookupTransient:false };
   const $ = (id) => document.getElementById(id);
   const main = $('main');
   const safe = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -1655,7 +1655,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
       '<div class="scanner-actions"><button class="btn primary" id="startCamera">Start QR scanner</button><button class="btn" id="stopCamera" disabled>Stop camera</button></div>'+
       '<details class="manual-pass-entry"><summary>⌨️ Manual pass-code fallback</summary><div class="field"><label for="manualPassCode">Guest pass code</label><input id="manualPassCode" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="120" placeholder="Enter guest pass code"></div><button class="btn primary" type="button" id="verifyManualPass">Verify pass code</button></details>'+
       '<details class="scanner-help"><summary>Camera help and troubleshooting</summary><div class="scanner-hint">Camera permission is requested when you tap Start. If permission is denied, allow camera access for Telegram or your browser and retry. EventHub releases the camera when it moves to the background; tap Start when you return.</div></details>'+
-      '<div id="scanResult" aria-live="polite"></div>'+
+      '<div id="scanOfflineQueue" aria-live="polite"></div>'+\n      '<div id="scanResult" aria-live="polite"></div>'+
     '</section><div class="actions"><button class="btn ghost" id="scannerBack">← Back to event workspace</button></div></section>':'<section class="section card"><div class="section-title"><h2>📷 QR Scanner</h2><span class="status active">'+safe(state.event.name)+'</span></div><p class="muted">Open the dedicated full-screen scanner before scanning passes.</p><div class="actions"><button class="btn primary" id="openDedicatedScanner">Open full-screen QR Scanner →</button></div></section>';
     $('verifyManualPass')?.addEventListener('click',async()=>{
       if(state.checkpointAccessBlocked){showScanFeedback('danger','NO CHECKPOINT ASSIGNED','Ask an event admin to assign your name to an enabled checkpoint before scanning.','BACK TO WORKSPACE',()=>closeScannerStandalone());return;}
@@ -1676,7 +1676,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
       try{const cp=await post('/api/checkpoints',{event_id:state.eventId});state.checkpoints=Array.isArray(cp.checkpoints)?cp.checkpoints:[];}
       catch(err){toast('Assigned checkpoints could not be loaded: '+String(err?.message||err),true);}
     }
-    if(state.scanHandling&&state.scanCurrentQr){
+    refreshOfflineQueueNotice();\n    if(state.scanHandling&&state.scanCurrentQr){
       document.body.classList.add('scanner-has-guest');
       if(state.scanPendingAction)showScanFeedback('danger','ACTION NOT YET CONFIRMED','A previous guest action still needs verification. Retry the save before scanning another guest.','RETRY / CHECK STATUS',retryPendingScanAction);
       else if(state.guest){renderScannedGuest();if(state.scanProofPending)showScanFeedback('warning','PROOF STILL REQUIRED','Store the guest ID proof or explicitly record No Proof Provided before scanning the next guest.','CONTINUE TO PROOF',()=>hideScanFeedback());}
@@ -1796,6 +1796,16 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
       document.body.classList.add('scanner-has-guest');
       if($('scanResult'))$('scanResult').innerHTML='';
       const transient=Number(e?.status)>=500||/(network|did not respond|unreadable response|unexpected response|connection|busy|timed out|failed to fetch|within \d+s)/i.test(String(e?.message||''));
+      state.lastLookupTransient=transient;
+      if(transient && state.scanSource!=='offline-queue' && (!navigator.onLine || /failed to fetch|networkerror|network request failed|load failed/i.test(String(e?.message||'')))){
+        let queued=false;
+        try{queued=await enqueueOfflineScan(value);}catch(queueError){logOfflineQueueFailure(queueError);}
+        if(queued){
+          await refreshOfflineQueueNotice();
+          showScanFeedback('warning','PASS SAVED — NOT VERIFIED','The connection interrupted server verification. This pass has been saved on this device for later checking. It is NOT approved or admitted yet, and no entry/food action has been recorded. Reconnect and verify it before proceeding.','CONTINUE SCANNING',releaseGuestScanLock);
+          return false;
+        }
+      }
       if(transient){
         showScanFeedback('danger','NETWORK / SERVER ERROR','Guest verification could not be completed. Do not admit this guest until the pass is verified. '+e.message,'RETRY VERIFY',()=>lookupGuest(value));
       }else{
@@ -1863,6 +1873,93 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     if(state.scanResumeTimer){clearTimeout(state.scanResumeTimer);state.scanResumeTimer=null;}
     $('scanFeedbackLayer')?.remove();
   }
+  // Offline queue stores only scanned QR/pass strings and event IDs. It never records an entry,
+  // food collection or other attendance action while the server is unreachable.
+  let offlineScanDbPromise=null;
+  function openOfflineScanDb(){
+    if(!('indexedDB' in window))return Promise.reject(new Error('Offline storage is unavailable in this browser.'));
+    if(offlineScanDbPromise)return offlineScanDbPromise;
+    offlineScanDbPromise=new Promise((resolve,reject)=>{
+      const request=indexedDB.open('eventhub-offline-scan-queue',1);
+      request.onupgradeneeded=()=>{const db=request.result;if(!db.objectStoreNames.contains('scans'))db.createObjectStore('scans',{keyPath:'id'});};
+      request.onsuccess=()=>resolve(request.result);
+      request.onerror=()=>{offlineScanDbPromise=null;reject(request.error||new Error('Could not open offline scan storage.'));};
+      request.onblocked=()=>{offlineScanDbPromise=null;reject(new Error('Offline scan storage is busy in another EventHub tab.'));};
+    });
+    return offlineScanDbPromise;
+  }
+  async function offlineScanItems(eventId=state.eventId){
+    const db=await openOfflineScanDb();
+    return new Promise((resolve,reject)=>{
+      const tx=db.transaction('scans','readwrite'),store=tx.objectStore('scans'),request=store.getAll();
+      request.onsuccess=()=>{
+        const cutoff=Date.now()-24*60*60*1000,all=Array.isArray(request.result)?request.result:[];
+        const valid=[];
+        all.forEach(item=>{
+          if(!item||!item.id||!item.qr||!Number.isFinite(Number(item.createdAt))||Number(item.createdAt)<cutoff){if(item?.id)store.delete(item.id);return;}
+          valid.push(item);
+        });
+        resolve(valid.filter(item=>Number(item.eventId)===Number(eventId)).sort((a,b)=>Number(a.createdAt)-Number(b.createdAt)));
+      };
+      request.onerror=()=>reject(request.error||new Error('Could not read the offline scan queue.'));
+    });
+  }
+  function logOfflineQueueFailure(err){try{console.warn('EventHub offline scan queue:',String(err?.message||err).slice(0,160));}catch(_){}}
+  async function enqueueOfflineScan(qr){
+    const value=String(qr||'').trim();
+    if(!value||value.length>512||!state.eventId)return false;
+    const db=await openOfflineScanDb();
+    return new Promise((resolve,reject)=>{
+      const tx=db.transaction('scans','readwrite'),store=tx.objectStore('scans'),request=store.getAll();
+      request.onsuccess=()=>{
+        const all=Array.isArray(request.result)?request.result:[];
+        const cutoff=Date.now()-24*60*60*1000;
+        const live=all.filter(item=>item&&Number(item.createdAt)>=cutoff);
+        const duplicate=live.some(item=>Number(item.eventId)===Number(state.eventId)&&String(item.qr)===value);
+        if(duplicate){resolve(true);return;}
+        if(live.length>=50){resolve(false);return;}
+        const id=(window.crypto?.randomUUID?.()||('scan-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,10)));
+        store.put({id,eventId:Number(state.eventId),qr:value,createdAt:Date.now()});
+        resolve(true);
+      };
+      request.onerror=()=>reject(request.error||new Error('Could not save the scanned pass locally.'));
+    });
+  }
+  async function deleteOfflineScan(id){
+    const db=await openOfflineScanDb();
+    return new Promise((resolve,reject)=>{
+      const tx=db.transaction('scans','readwrite');tx.objectStore('scans').delete(String(id));
+      tx.oncomplete=()=>resolve(true);tx.onerror=()=>reject(tx.error||new Error('Could not update the offline scan queue.'));
+    });
+  }
+  async function refreshOfflineQueueNotice(){
+    const host=$('scanOfflineQueue');if(!host)return;
+    try{
+      const items=await offlineScanItems(state.eventId),count=items.length;
+      host.innerHTML=count?('<section class="notice '+(navigator.onLine?'warning':'error')+'" style="margin:12px 0"><strong>📥 '+count+' pass scan'+(count===1?'':'s')+' waiting for verification</strong><p class="muted">'+(navigator.onLine?'Internet is available. Verify queued passes one at a time.':'Offline. Scans are saved on this device for up to 24 hours. They are not verified and no attendance action has been recorded.')+'</p><button class="btn small primary" id="verifyQueuedScan" type="button" '+(!navigator.onLine||state.scanHandling||state.offlineScanBusy?'disabled':'')+'>Verify next queued pass</button></section>'):'';
+      $('verifyQueuedScan')?.addEventListener('click',syncNextOfflineScan);
+    }catch(err){
+      host.innerHTML='<div class="notice error">Offline queue unavailable: '+safe(err?.message||'Local storage error')+'</div>';
+    }
+  }
+  async function syncNextOfflineScan(){
+    if(state.offlineScanBusy||state.scanHandling||!navigator.onLine)return false;
+    let items;
+    try{items=await offlineScanItems(state.eventId);}catch(err){toast(err?.message||'Offline queue could not be opened.',true);return false;}
+    const item=items[0];if(!item){await refreshOfflineQueueNotice();return false;}
+    if(!beginGuestScanLock(item.qr,'offline-queue'))return false;
+    state.offlineScanBusy=true;state.lastLookupTransient=false;
+    try{
+      const verified=await lookupGuest(item.qr);
+      if(verified){await deleteOfflineScan(item.id);toast('Queued pass verified by the server. Review the guest and record the required action.');}
+      else if(!state.lastLookupTransient){await deleteOfflineScan(item.id);}
+      await refreshOfflineQueueNotice();
+      return verified;
+    }catch(err){toast(err?.message||'Queued pass verification failed.',true);return false;}
+    finally{state.offlineScanBusy=false;await refreshOfflineQueueNotice();}
+  }
+  window.addEventListener('online',()=>{if(scannerView){refreshOfflineQueueNotice();toast('Connection restored. Verify queued passes when ready.');}});
+  window.addEventListener('offline',()=>{if(scannerView){refreshOfflineQueueNotice();toast('Connection lost. New scans will be queued for later verification.',true);}});
   function beginGuestScanLock(qr,source) {
     if(state.scanHandling)return false;
     state.scanHandling=true;state.scanSource=source||'camera';state.scanCurrentQr=String(qr||'').trim();
@@ -1904,6 +2001,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
       if($('startCamera')){$('startCamera').disabled=false;$('startCamera').textContent='Start QR scanner';}
       if($('stopCamera'))$('stopCamera').disabled=true;
     }
+    refreshOfflineQueueNotice();
     return true;
   }
   async function fetchFreshGuest(passCode) {
