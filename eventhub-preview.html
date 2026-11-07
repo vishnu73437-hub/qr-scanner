@@ -3010,26 +3010,86 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
   async function renderStaff(host) {
     const archived=state.event?.status==='archived';
     host.innerHTML=(archived?showNotice('Archived event team assignments are read-only.','error'):'')+
-      '<div class="section-title"><div><div class="eyebrow">Admin only</div><h2>Volunteer access & desk roles</h2></div><button class="btn small" id="refreshStaff">↻ Refresh</button></div>'+
-      (archived?'':'<section class="card"><h3>Assign volunteer to this event</h3><form id="eventVolunteerForm"><div class="field"><label for="eventVolunteerPerson">Volunteer name</label><select id="eventVolunteerPerson" required><option value="">Loading volunteer names…</option></select></div><div class="field"><label for="eventVolunteerRole">Desk role</label><select id="eventVolunteerRole"><option value="scanner">Full event scanner</option><option value="event_lead">Event lead</option><option value="entry">Entry desk</option><option value="proof">ID proof & exit desk</option>'+(foodCollectionIsEnabled()?'<option value="food">Food desk</option>':'')+'<option value="checkpoint">Additional checkpoint desk</option></select></div><button class="btn primary" type="submit">＋ Assign volunteer</button></form><p class="footnote">Volunteers appear by name after they open the EventHub Telegram bot at least once. Each event role is limited to the selected event.</p><div id="eventVolunteerMessage"></div></section>')+
-      '<section class="card"><h3>Core / global volunteer access</h3><form id="globalVolunteerForm"><div class="field"><label for="globalVolunteerPerson">Volunteer name</label><select id="globalVolunteerPerson" required><option value="">Loading volunteer names…</option></select></div><button class="btn" type="submit">＋ Grant core access</button></form><p class="footnote">Core volunteers can access all active event workspaces. Grant this only to trusted organisers who genuinely need cross-event access.</p></section>'+
+      '<div class="section-title"><div><div class="eyebrow">Admin only</div><h2>Volunteer access & desk roles</h2></div><button class="btn small" id="refreshStaff" type="button">↻ Refresh</button></div>'+
+      '<div id="staffCandidateStatus" role="status" aria-live="polite" aria-atomic="true"></div>'+
+      (archived?'':'<section class="card"><h3>Assign volunteer to this event</h3><form id="eventVolunteerForm"><div class="field"><label for="eventVolunteerPerson">Volunteer name</label><select id="eventVolunteerPerson" required disabled><option value="">Loading volunteer names…</option></select></div><div class="field"><label for="eventVolunteerRole">Desk role</label><select id="eventVolunteerRole"><option value="scanner">Full event scanner</option><option value="event_lead">Event lead</option><option value="entry">Entry desk</option><option value="proof">ID proof & exit desk</option>'+(foodCollectionIsEnabled()?'<option value="food">Food desk</option>':'')+'<option value="checkpoint">Additional checkpoint desk</option></select></div><button class="btn primary" type="submit">＋ Assign volunteer</button></form><p class="footnote">Volunteers appear by name after they open the EventHub Telegram bot at least once. Each event role is limited to the selected event.</p><div id="eventVolunteerMessage"></div></section>')+
+      '<section class="card"><h3>Core / global volunteer access</h3><form id="globalVolunteerForm"><div class="field"><label for="globalVolunteerPerson">Volunteer name</label><select id="globalVolunteerPerson" required disabled><option value="">Loading volunteer names…</option></select></div><button class="btn" type="submit">＋ Grant core access</button></form><p class="footnote">Core volunteers can access all active event workspaces. Grant this only to trusted organisers who genuinely need cross-event access.</p></section>'+
       '<section class="section"><div class="section-title"><h3>Event-specific volunteer team</h3><span class="muted">Selected event only</span></div><div id="eventVolunteerList" class="list"><div class="empty">Loading…</div></div></section>'+
       '<section class="section"><div class="section-title"><h3>Core / global volunteers</h3><span class="muted">All active events</span></div><div id="globalVolunteerList" class="list"><div class="empty">Loading…</div></div></section>';
+
+    let loadVersion=0;
+    const setSelectMessage=(id,message)=>{
+      const select=$(id);
+      if(!select)return;
+      select.innerHTML='<option value="">'+safe(message)+'</option>';
+      select.disabled=true;
+    };
+    const fillCandidateSelect=(id,candidates)=>{
+      const select=$(id);
+      if(!select)return;
+      if(!candidates.length){setSelectMessage(id,'No eligible volunteers found');return;}
+      const options=candidates.map(v=>{
+        const telegramId=Number(v.telegram_id);
+        const name=String(v.name||'').trim()||('Telegram user · '+String(telegramId).slice(-5));
+        return '<option value="'+telegramId+'">'+safe(name)+(v.username?' · @'+safe(String(v.username).replace(/^@/,'')):'')+'</option>';
+      }).join('');
+      select.innerHTML='<option value="">Choose volunteer by name…</option>'+options;
+      select.disabled=false;
+    };
     const load=async()=>{
-      try{
-        const [team,candidateResult]=await Promise.all([adminCall('event_volunteers'),adminCall('event_volunteer_candidates')]);
-        const candidates=Array.isArray(candidateResult.candidates)?candidateResult.candidates:[];
-        const options=candidates.map(v=>'<option value="'+Number(v.telegram_id)+'">'+safe(v.name)+(v.username?' · @'+safe(v.username):'')+'</option>').join('');
-        if($('eventVolunteerPerson'))$('eventVolunteerPerson').innerHTML='<option value="">Choose volunteer by name…</option>'+options;
-        if($('globalVolunteerPerson'))$('globalVolunteerPerson').innerHTML='<option value="">Choose volunteer by name…</option>'+options;
-        $('eventVolunteerList').innerHTML=(team.assignments||[]).map(v=>{
+      const version=++loadVersion;
+      const refreshButton=$('refreshStaff');
+      if(refreshButton){refreshButton.disabled=true;refreshButton.textContent='Loading…';}
+      setSelectMessage('eventVolunteerPerson','Loading volunteer names…');
+      setSelectMessage('globalVolunteerPerson','Loading volunteer names…');
+      const withTimeout=(promise,label)=>{
+        let timer=0;
+        return Promise.race([
+          promise,
+          new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error(label)),20000);})
+        ]).finally(()=>{if(timer)clearTimeout(timer);});
+      };
+      const results=await Promise.allSettled([
+        withTimeout(adminCall('event_volunteers'),'Volunteer team request timed out after 20 seconds. Tap Refresh to retry.'),
+        withTimeout(adminCall('event_volunteer_candidates'),'Volunteer names request timed out after 20 seconds. Tap Refresh to retry.')
+      ]);
+      if(version!==loadVersion||!host.isConnected)return;
+
+      const teamResult=results[0];
+      const candidateResult=results[1];
+      const status=$('staffCandidateStatus');
+      if(candidateResult.status==='fulfilled'){
+        const candidateData=candidateResult.value||{};
+        if(!Array.isArray(candidateData.candidates)){
+          setSelectMessage('eventVolunteerPerson','Volunteer list response was invalid');
+          setSelectMessage('globalVolunteerPerson','Volunteer list response was invalid');
+          if(status)status.innerHTML=showNotice('The server response did not include a valid volunteer list. Check the Botkeep API version, then tap Refresh.','error');
+        }else{
+          const candidates=candidateData.candidates.filter(v=>v&&Number.isSafeInteger(Number(v.telegram_id))&&Number(v.telegram_id)>0);
+          fillCandidateSelect('eventVolunteerPerson',candidates);
+          fillCandidateSelect('globalVolunteerPerson',candidates);
+          if(status){
+            status.innerHTML=candidates.length
+              ? ''
+              : showNotice('No eligible volunteer accounts were found. Ask each volunteer to open the EventHub Telegram bot once, then tap Refresh.','');
+          }
+        }
+      }else{
+        const message=String(candidateResult.reason?.message||'Unknown API error');
+        setSelectMessage('eventVolunteerPerson','Could not load names — tap Refresh');
+        setSelectMessage('globalVolunteerPerson','Could not load names — tap Refresh');
+        if(status)status.innerHTML=showNotice('Volunteer names could not be loaded: '+message+' Tap Refresh to retry.','error');
+      }
+
+      if(teamResult.status==='fulfilled'){
+        const team=teamResult.value||{};
+        const assignments=Array.isArray(team.assignments)?team.assignments:[];
+        const globalVolunteers=Array.isArray(team.global_volunteers)?team.global_volunteers:[];
+        $('eventVolunteerList').innerHTML=assignments.map(v=>{
           const roleLabels={scanner:'Full event scanner',event_lead:'Event lead',entry:'Entry desk',food:'Food desk',proof:'Proof & exit desk',checkpoint:'Checkpoint desk'};
           return '<article class="list-item row"><div><strong>'+safe(v.display_name||('Telegram user · '+String(v.telegram_id).slice(-5)))+'</strong><div class="sub">'+(v.username?'@'+safe(v.username)+' · ':'')+safe(roleLabels[v.role]||v.role)+' · Assigned '+safe(v.assigned_at||'')+(Number(v.also_global)?' · Also core/global':'')+'</div></div>'+(archived?'':'<button class="btn danger small" type="button" data-remove-event-volunteer="'+Number(v.telegram_id)+'">Remove event access</button>')+'</article>';
         }).join('')||'<div class="empty">No event-specific volunteers assigned.</div>';
-        $('globalVolunteerList').innerHTML=(team.global_volunteers||[]).map(v=>'<article class="list-item row"><div><strong>'+safe(v.display_name||('Telegram user · '+String(v.telegram_id).slice(-5)))+'</strong><div class="sub">'+(v.username?'@'+safe(v.username)+' · ':'')+'Core access · Added '+safe(v.added_at||'')+'</div></div><button class="btn danger small" type="button" data-remove-global-volunteer="'+Number(v.telegram_id)+'">Remove core access</button></article>').join('')||'<div class="empty">No core/global volunteers assigned.</div>';
-        if(!candidates.length){
-          $('eventVolunteerList').insertAdjacentHTML('afterbegin','<div class="notice">No volunteer names found yet. Ask each volunteer to open the EventHub bot once, then refresh.</div>');
-        }
+        $('globalVolunteerList').innerHTML=globalVolunteers.map(v=>'<article class="list-item row"><div><strong>'+safe(v.display_name||('Telegram user · '+String(v.telegram_id).slice(-5)))+'</strong><div class="sub">'+(v.username?'@'+safe(v.username)+' · ':'')+'Core access · Added '+safe(v.added_at||'')+'</div></div><button class="btn danger small" type="button" data-remove-global-volunteer="'+Number(v.telegram_id)+'">Remove core access</button></article>').join('')||'<div class="empty">No core/global volunteers assigned.</div>';
         document.querySelectorAll('[data-remove-event-volunteer]').forEach(btn=>btn.addEventListener('click',async()=>{
           if(!confirm('Remove this person from this event? Other event/global access remains separate.'))return;
           btn.disabled=true;
@@ -3042,10 +3102,12 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
           try{const rr=await adminCall('remove_volunteer',{telegram_id:Number(btn.dataset.removeGlobalVolunteer)});toast(rr.message||'Core access removed');await load();}
           catch(err){toast(err.message,true);btn.disabled=false;}
         }));
-      }catch(err){
-        $('eventVolunteerList').innerHTML=showNotice(err.message,'error');
-        $('globalVolunteerList').innerHTML=showNotice(err.message,'error');
+      }else{
+        const message=String(teamResult.reason?.message||'Unknown API error');
+        $('eventVolunteerList').innerHTML=showNotice('Event volunteer assignments could not be loaded: '+message,'error');
+        $('globalVolunteerList').innerHTML=showNotice('Core volunteer assignments could not be loaded: '+message,'error');
       }
+      if(refreshButton&&version===loadVersion){refreshButton.disabled=false;refreshButton.textContent='↻ Refresh';}
     };
     $('refreshStaff')?.addEventListener('click',load);
     $('eventVolunteerForm')?.addEventListener('submit',async e=>{
@@ -3066,6 +3128,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     });
     await load();
   }
+
   async function refresh() { try{await stopScanner();await loadRole();if(state.eventId)await loadEvent();else renderEventList();toast('Updated');}catch(e){toast(e.message,true);} }
   $('refreshBtn').addEventListener('click',refresh);$('backBtn').addEventListener('click',()=>scannerView?closeScannerStandalone():clearEvent());
   window.addEventListener('pagehide',()=>{if(state.scanner||state.scannerStarting)stopScanner();});
