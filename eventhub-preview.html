@@ -2957,7 +2957,7 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
         $('checkpointList').innerHTML=checkpoints.map(c=>{
           const id=Number(c.id),assigned=assignments.filter(a=>Number(a.checkpoint_id)===id);
           const assignedHtml=assigned.map(v=>'<div class="row" style="gap:8px"><div><strong>'+safe(v.name)+'</strong><div class="sub">'+(v.username?'@'+safe(v.username)+' · ':'')+safe(v.role||'checkpoint')+'</div></div>'+(archived?'':'<button class="btn danger small" type="button" data-remove-checkpoint-volunteer="'+id+'" data-volunteer-id="'+Number(v.telegram_id)+'">Remove</button>')+'</div>').join('');
-          const assignHtml=archived?'':'<section class="staff-assignment-form"><div class="field"><label for="assignCheckpoint-'+id+'">Assign volunteer by name</label><select id="assignCheckpoint-'+id+'" data-checkpoint-person="'+id+'"><option value="">Choose volunteer…</option>'+candidateOptions+'</select></div>'+(Number(c.enabled)?'<button class="btn primary" type="button" data-assign-checkpoint="'+id+'">＋ Assign to this checkpoint</button>':'<div class="notice">Enable this checkpoint before assigning volunteers.</div>')+'<p class="footnote">Select a volunteer by name. Checkpoint-only volunteers can scan only their assigned stations. Core/global volunteers keep their existing event-wide access.</p></section>';
+          const assignHtml=archived?'':'<section class="staff-assignment-form"><div class="field"><label for="checkpointVolunteerSearch-'+id+'">Search volunteers</label><input type="search" autocomplete="off" placeholder="Name, username or Telegram ID" id="checkpointVolunteerSearch-'+id+'" data-checkpoint-search="'+id+'"></div><div class="field"><label for="assignCheckpoint-'+id+'">Assign volunteer by name</label><select id="assignCheckpoint-'+id+'" data-checkpoint-person="'+id+'"><option value="">Choose volunteer…</option>'+candidateOptions+'</select></div>'+(Number(c.enabled)?'<button class="btn primary" type="button" data-assign-checkpoint="'+id+'">＋ Assign to this checkpoint</button>':'<div class="notice">Enable this checkpoint before assigning volunteers.</div>')+'<p class="footnote">Select a volunteer by name. Checkpoint-only volunteers can scan only their assigned stations. Core/global volunteers keep their existing event-wide access.</p></section>';
           const editHtml=archived?'':'<form data-checkpoint-edit="'+id+'"><div class="inline-fields"><div class="field"><label>Name</label><input name="name" required maxlength="100" value="'+safe(c.name)+'"></div><div class="field"><label>Type</label><select name="checkpoint_type"><option value="entry" '+(c.checkpoint_type==='entry'?'selected':'')+'>Entry</option><option value="food" '+(c.checkpoint_type==='food'?'selected':'')+'>Food'+(foodCollectionIsEnabled()?'':' (disabled for this event)')+'</option><option value="workshop" '+(c.checkpoint_type==='workshop'?'selected':'')+'>Workshop</option><option value="other" '+(c.checkpoint_type==='other'?'selected':'')+'>Other</option></select></div></div><label><input name="enabled" type="checkbox" '+(Number(c.enabled)?'checked':'')+' style="width:auto;min-height:0"> Enabled for scanning</label><div class="actions"><button class="btn primary small" type="submit">Save</button><button class="btn danger small" type="button" data-delete-checkpoint="'+id+'">Delete</button></div></form>';
           return '<article class="list-item" data-checkpoint-id="'+id+'"><div class="row"><strong>'+safe(c.name)+'</strong><span class="pill '+(Number(c.enabled)?'good':'warn')+'">'+(Number(c.enabled)?'Enabled':'Disabled')+'</span></div><div class="sub">'+safe(c.checkpoint_type)+' · Checkpoint #'+id+'</div><section class="section"><strong>Assigned volunteers ('+assigned.length+')</strong>'+(assignedHtml||'<p class="muted">No volunteer assigned yet.</p>')+'</section>'+assignHtml+editHtml+'</article>';
         }).join('')||'<div class="empty">No checkpoints created for this event.</div>';
@@ -2970,6 +2970,24 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
           document.querySelectorAll('[data-delete-checkpoint]').forEach(btn=>btn.addEventListener('click',async()=>{
             if(!confirm('Delete this checkpoint? Checkpoints with scan history cannot be deleted; disable them instead.'))return;
             btn.disabled=true;try{const rr=await adminCall('delete_checkpoint',{checkpoint_id:Number(btn.dataset.deleteCheckpoint)});toast(rr.message||'Checkpoint deleted');await load();}catch(err){toast(err.message,true);btn.disabled=false;}
+          }));
+          document.querySelectorAll('[data-checkpoint-search]').forEach(input=>input.addEventListener('input',()=>{
+            const checkpointId=input.dataset.checkpointSearch;
+            const select=$('[data-checkpoint-person="'+checkpointId+'"]');
+            if(!select)return;
+            const query=String(input.value||'').trim().toLocaleLowerCase();
+            const options=Array.from(select.options);
+            const placeholder=options.find(option=>!option.value);
+            const matches=options.filter(option=>option.value&&option.textContent.toLocaleLowerCase().includes(query));
+            const previous=select.value;
+            select.replaceChildren();
+            if(placeholder){
+              const empty=placeholder.cloneNode(true);
+              empty.textContent=matches.length?'Choose volunteer…':(query?'No matching volunteers':'Choose volunteer…');
+              select.append(empty);
+            }
+            matches.forEach(option=>select.append(option.cloneNode(true)));
+            select.value=matches.some(option=>option.value===previous)?previous:'';
           }));
           document.querySelectorAll('[data-assign-checkpoint]').forEach(btn=>btn.addEventListener('click',async()=>{
             const checkpointId=Number(btn.dataset.assignCheckpoint),select=$('[data-checkpoint-person="'+checkpointId+'"]'),telegramId=Number(select?.value||0);
@@ -3015,29 +3033,39 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     host.innerHTML=(archived?showNotice('Archived event team assignments are read-only.','error'):'')+
       '<div class="section-title"><div><div class="eyebrow">Admin only</div><h2>Volunteer access & desk roles</h2></div><button class="btn small" id="refreshStaff" type="button">↻ Refresh</button></div>'+
       '<div id="staffCandidateStatus" role="status" aria-live="polite" aria-atomic="true"></div>'+
-      (archived?'':'<section class="card"><h3>Assign volunteer to this event</h3><form id="eventVolunteerForm"><div class="field"><label for="eventVolunteerPerson">Volunteer name</label><select id="eventVolunteerPerson" required disabled><option value="">Loading volunteer names…</option></select></div><div class="field"><label for="eventVolunteerRole">Desk role</label><select id="eventVolunteerRole"><option value="scanner">Full event scanner</option><option value="event_lead">Event lead</option><option value="entry">Entry desk</option><option value="proof">ID proof & exit desk</option>'+(foodCollectionIsEnabled()?'<option value="food">Food desk</option>':'')+'<option value="checkpoint">Additional checkpoint desk</option></select></div><button class="btn primary" type="submit">＋ Assign volunteer</button></form><p class="footnote">Volunteers appear by name after they open the EventHub Telegram bot at least once. Each event role is limited to the selected event.</p><div id="eventVolunteerMessage"></div></section>')+
-      '<section class="card"><h3>Core / global volunteer access</h3><form id="globalVolunteerForm"><div class="field"><label for="globalVolunteerPerson">Volunteer name</label><select id="globalVolunteerPerson" required disabled><option value="">Loading volunteer names…</option></select></div><button class="btn" type="submit">＋ Grant core access</button></form><p class="footnote">Core volunteers can access all active event workspaces. Grant this only to trusted organisers who genuinely need cross-event access.</p></section>'+
+      (archived?'':'<section class="card"><h3>Assign volunteer to this event</h3><form id="eventVolunteerForm"><div class="field"><label for="eventVolunteerSearch">Search volunteers</label><input id="eventVolunteerSearch" type="search" autocomplete="off" placeholder="Name, username or Telegram ID"></div><div class="field"><label for="eventVolunteerPerson">Volunteer name</label><select id="eventVolunteerPerson" required disabled><option value="">Loading volunteer names…</option></select></div><div class="field"><label for="eventVolunteerRole">Desk role</label><select id="eventVolunteerRole"><option value="scanner">Full event scanner</option><option value="event_lead">Event lead</option><option value="entry">Entry desk</option><option value="proof">ID proof & exit desk</option>'+(foodCollectionIsEnabled()?'<option value="food">Food desk</option>':'')+'<option value="checkpoint">Additional checkpoint desk</option></select></div><button class="btn primary" type="submit">＋ Assign volunteer</button></form><p class="footnote">Volunteers appear by name after they open the EventHub Telegram bot at least once. Each event role is limited to the selected event.</p><div id="eventVolunteerMessage"></div></section>')+
+      '<section class="card"><h3>Core / global volunteer access</h3><form id="globalVolunteerForm"><div class="field"><label for="globalVolunteerSearch">Search volunteers</label><input id="globalVolunteerSearch" type="search" autocomplete="off" placeholder="Name, username or Telegram ID"></div><div class="field"><label for="globalVolunteerPerson">Volunteer name</label><select id="globalVolunteerPerson" required disabled><option value="">Loading volunteer names…</option></select></div><button class="btn" type="submit">＋ Grant core access</button></form><p class="footnote">Core volunteers can access all active event workspaces. Grant this only to trusted organisers who genuinely need cross-event access.</p></section>'+
       '<section class="section"><div class="section-title"><h3>Event-specific volunteer team</h3><span class="muted">Selected event only</span></div><div id="eventVolunteerList" class="list"><div class="empty">Loading…</div></div></section>'+
       '<section class="section"><div class="section-title"><h3>Core / global volunteers</h3><span class="muted">All active events</span></div><div id="globalVolunteerList" class="list"><div class="empty">Loading…</div></div></section>';
 
     let loadVersion=0;
+    let staffCandidates=[];
     const setSelectMessage=(id,message)=>{
       const select=$(id);
       if(!select)return;
       select.innerHTML='<option value="">'+safe(message)+'</option>';
       select.disabled=true;
     };
-    const fillCandidateSelect=(id,candidates)=>{
+    const fillCandidateSelect=(id,candidates,searchValue='')=>{
       const select=$(id);
       if(!select)return;
-      if(!candidates.length){setSelectMessage(id,'No eligible volunteers found');return;}
-      const options=candidates.map(v=>{
+      const query=String(searchValue||'').trim().toLocaleLowerCase();
+      const filtered=candidates.filter(v=>{
+        const telegramId=String(v.telegram_id||'');
+        const name=String(v.name||'').trim()||('Telegram user · '+telegramId.slice(-5));
+        const username=String(v.username||'').replace(/^@/,'');
+        return !query||[name,username,telegramId].some(value=>String(value).toLocaleLowerCase().includes(query));
+      });
+      if(!filtered.length){setSelectMessage(id,query?'No matching volunteers — change your search':'No eligible volunteers found');return;}
+      const previous=select.value;
+      const options=filtered.map(v=>{
         const telegramId=Number(v.telegram_id);
         const name=String(v.name||'').trim()||('Telegram user · '+String(telegramId).slice(-5));
         return '<option value="'+telegramId+'">'+safe(name)+(v.username?' · @'+safe(String(v.username).replace(/^@/,'')):'')+'</option>';
       }).join('');
       select.innerHTML='<option value="">Choose volunteer by name…</option>'+options;
       select.disabled=false;
+      if(previous&&filtered.some(v=>String(Number(v.telegram_id))===previous))select.value=previous;
     };
     const load=async()=>{
       const version=++loadVersion;
@@ -3069,8 +3097,9 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
           if(status)status.innerHTML=showNotice('The server response did not include a valid volunteer list. Check the Botkeep API version, then tap Refresh.','error');
         }else{
           const candidates=candidateData.candidates.filter(v=>v&&Number.isSafeInteger(Number(v.telegram_id))&&Number(v.telegram_id)>0);
-          fillCandidateSelect('eventVolunteerPerson',candidates);
-          fillCandidateSelect('globalVolunteerPerson',candidates);
+          staffCandidates=candidates;
+          fillCandidateSelect('eventVolunteerPerson',staffCandidates,$('eventVolunteerSearch')?.value||'');
+          fillCandidateSelect('globalVolunteerPerson',staffCandidates,$('globalVolunteerSearch')?.value||'');
           if(status){
             status.innerHTML=candidates.length
               ? ''
@@ -3113,6 +3142,9 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
       if(refreshButton&&version===loadVersion){refreshButton.disabled=false;refreshButton.textContent='↻ Refresh';}
     };
     $('refreshStaff')?.addEventListener('click',load);
+    [['eventVolunteerSearch','eventVolunteerPerson'],['globalVolunteerSearch','globalVolunteerPerson']].forEach(([searchId,selectId])=>{
+      $(searchId)?.addEventListener('input',()=>fillCandidateSelect(selectId,staffCandidates,$(searchId).value));
+    });
     $('eventVolunteerForm')?.addEventListener('submit',async e=>{
       e.preventDefault();const btn=e.currentTarget.querySelector('button[type=submit]'),telegramId=Number($('eventVolunteerPerson').value||0),role=$('eventVolunteerRole').value;
       if(!telegramId){toast('Choose a volunteer by name.',true);return;}
