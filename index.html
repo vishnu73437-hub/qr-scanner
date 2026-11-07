@@ -2046,7 +2046,8 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
     await executePendingScanAction(button);
   }
   async function recordAction(action,button) {
-    if(action==='food'&&state.guest?.foodEligible===false){toast('This guest is marked ENTRY ONLY — NO FOOD.',true);return;}\n    if(action==='food'&&!foodCollectionIsEnabled()){toast('Food collection is disabled for this event.',true);return;}
+    if(action==='food'&&state.guest?.foodEligible===false){toast('This guest is marked ENTRY ONLY — NO FOOD.',true);return;}
+    if(action==='food'&&!foodCollectionIsEnabled()){toast('Food collection is disabled for this event.',true);return;}
     if(!state.guest||state.guest.status!=='approved'||state.guest.exitRecorded){toast('This pass is no longer eligible for event-day actions.',true);return;}
     if(!state.scanHandling)beginGuestScanLock(state.guest.passCode,'manual');
     state.scanPendingAction={action,checkpointId:0,passCode:state.guest.passCode};
