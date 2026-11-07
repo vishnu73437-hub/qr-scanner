@@ -2976,18 +2976,20 @@ body.eventhub-pro-admin #workspaceContent button:focus-visible,body.eventhub-pro
             const select=$('[data-checkpoint-person="'+checkpointId+'"]');
             if(!select)return;
             const query=String(input.value||'').trim().toLocaleLowerCase();
-            const options=Array.from(select.options);
-            const placeholder=options.find(option=>!option.value);
-            const matches=options.filter(option=>option.value&&option.textContent.toLocaleLowerCase().includes(query));
+            const matching=candidates.filter(v=>{
+              const telegramId=String(v.telegram_id||'');
+              const role=String(v.role||'');
+              return !query||[v.name,v.username,telegramId,role].some(value=>String(value||'').toLocaleLowerCase().replace(/^@/,'').includes(query));
+            });
             const previous=select.value;
-            select.replaceChildren();
-            if(placeholder){
-              const empty=placeholder.cloneNode(true);
-              empty.textContent=matches.length?'Choose volunteer…':(query?'No matching volunteers':'Choose volunteer…');
-              select.append(empty);
-            }
-            matches.forEach(option=>select.append(option.cloneNode(true)));
-            select.value=matches.some(option=>option.value===previous)?previous:'';
+            const options=matching.map(v=>{
+              const role=String(v.role||'');
+              const canAssign=!role||role==='volunteer'||role==='checkpoint'||role==='global';
+              const label=safe(v.name)+(v.username?' · @'+safe(v.username):'')+(role?' · '+safe(role.replaceAll('_',' ')):' · not assigned yet');
+              return '<option value="'+Number(v.telegram_id)+'" '+(canAssign?'':'disabled')+'>'+label+'</option>';
+            }).join('');
+            select.innerHTML='<option value="">'+(matching.length?'Choose volunteer…':(query?'No matching volunteers':'No volunteers available'))+'</option>'+options;
+            select.value=matching.some(v=>String(Number(v.telegram_id))===previous)?previous:'';
           }));
           document.querySelectorAll('[data-assign-checkpoint]').forEach(btn=>btn.addEventListener('click',async()=>{
             const checkpointId=Number(btn.dataset.assignCheckpoint),select=$('[data-checkpoint-person="'+checkpointId+'"]'),telegramId=Number(select?.value||0);
